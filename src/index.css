@@ -308,6 +308,14 @@
     color: hsl(var(--foreground-secondary));
   }
 
+  .gradient-bg {
+    background: linear-gradient(180deg,
+      hsl(var(--gradient-start)) 0%,
+      hsl(var(--gradient-mid)) 50%,
+      hsl(var(--gradient-end)) 100%
+    );
+  }
+
   .soft-glow {
     box-shadow: 0 0 60px 20px hsl(var(--glow) / 0.08);
   }

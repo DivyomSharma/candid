@@ -10,7 +10,7 @@ import WaitlistSection from "@/components/WaitlistSection";
 
 export default function Index() {
   return (
-    <div className="min-h-screen grain">
+    <div className="min-h-screen gradient-bg grain">
       <Navbar />
       <HeroSection />
       <ChatDemo />
