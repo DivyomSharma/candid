@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export type ThemeMode = "light" | "dark";
-export type ThemeAccent = "rose" | "sky" | "lavender" | "honey";
+export type ThemeAccent = "rose" | "sky" | "lavender" | "honey" | "sand";
 
 interface ThemeContextType {
   mode: ThemeMode;
@@ -13,13 +13,14 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType>({
   mode: "dark",
   setMode: () => {},
-  accent: "rose",
+  accent: "sand",
   setAccent: () => {},
 });
 
 export const useTheme = () => useContext(ThemeContext);
 
 export const accents: { name: ThemeAccent; label: string; color: string }[] = [
+  { name: "sand", label: "Sand", color: "#EAE3D9" },
   { name: "rose", label: "Rose", color: "#F8EDEE" },
   { name: "sky", label: "Sky", color: "#EEF4F8" },
   { name: "lavender", label: "Lavender", color: "#F3EFF7" },
@@ -34,7 +35,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const [accent, setAccentState] = useState<ThemeAccent>(() => {
     const saved = localStorage.getItem("candor-accent");
-    return (saved as ThemeAccent) || "rose";
+    return (saved as ThemeAccent) || "sand";
   });
 
   const setMode = (m: ThemeMode) => {

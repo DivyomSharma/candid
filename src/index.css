@@ -5,6 +5,59 @@
 @tailwind utilities;
 
 @layer base {
+  /* --- SAND --- */
+  [data-theme="light"][data-accent="sand"], :root[data-theme="light"][data-accent="sand"] {
+    --background: 28 12% 96%;
+    --surface: 28 10% 92%;
+    --surface-secondary: 28 8% 89%;
+    --foreground: 28 16% 25%;
+    --foreground-secondary: 28 10% 45%;
+    --accent: 28 15% 82%;
+    --accent-foreground: 28 16% 25%;
+    --primary: 28 15% 72%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 28 10% 92%;
+    --secondary-foreground: 28 16% 25%;
+    --muted: 28 12% 90%;
+    --muted-foreground: 28 10% 45%;
+    --card: 28 10% 92%;
+    --card-foreground: 28 16% 25%;
+    --popover: 28 10% 92%;
+    --popover-foreground: 28 16% 25%;
+    --border: 28 8% 85%;
+    --input: 28 8% 85%;
+    --ring: 28 15% 72%;
+    --gradient-start: 28 12% 96%;
+    --gradient-mid: 28 10% 94%;
+    --gradient-end: 20 14% 96%;
+    --glow: 28 30% 80%;
+  }
+  [data-theme="dark"][data-accent="sand"], :root[data-theme="dark"][data-accent="sand"] {
+    --background: 24 12% 9%;
+    --surface: 24 10% 12%;
+    --surface-secondary: 24 8% 15%;
+    --foreground: 30 16% 90%;
+    --foreground-secondary: 27 6% 69%;
+    --accent: 28 9% 61%;
+    --accent-foreground: 30 16% 9%;
+    --primary: 28 9% 61%;
+    --primary-foreground: 24 12% 9%;
+    --secondary: 24 8% 15%;
+    --secondary-foreground: 30 16% 90%;
+    --muted: 24 10% 12%;
+    --muted-foreground: 27 6% 69%;
+    --card: 24 10% 12%;
+    --card-foreground: 30 16% 90%;
+    --popover: 24 10% 12%;
+    --popover-foreground: 30 16% 90%;
+    --border: 24 6% 20%;
+    --input: 24 6% 20%;
+    --ring: 28 9% 61%;
+    --gradient-start: 24 12% 9%;
+    --gradient-mid: 30 10% 11%;
+    --gradient-end: 20 14% 10%;
+    --glow: 30 20% 50%;
+  }
   /* --- ROSE --- */
   [data-theme="light"][data-accent="rose"], :root[data-theme="light"][data-accent="rose"] {
     --background: 355 40% 95%;
