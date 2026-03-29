@@ -1,13 +1,23 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 export default function WaitlistSection() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) setSubmitted(true);
+    if (!email) return;
+    
+    setIsLoading(true);
+    // Simulate network request
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setIsLoading(false);
+    
+    toast.success("You've been added to the waitlist!");
+    setSubmitted(true);
   };
 
   return (
@@ -38,12 +48,13 @@ export default function WaitlistSection() {
                          placeholder:text-foreground-secondary/50 focus:outline-none focus:ring-1 focus:ring-accent/40
                          transition-all duration-300"
             />
-            <button
+              <button
               type="submit"
+              disabled={isLoading}
               className="px-7 py-3.5 rounded-full bg-accent text-primary-foreground text-sm font-medium
-                         hover:scale-105 transition-transform duration-300 soft-shadow whitespace-nowrap"
+                         hover:scale-105 transition-transform duration-300 soft-shadow whitespace-nowrap disabled:opacity-70 disabled:hover:scale-100"
             >
-              Join the waitlist
+              {isLoading ? "Joining..." : "Join the waitlist"}
             </button>
           </form>
         ) : (

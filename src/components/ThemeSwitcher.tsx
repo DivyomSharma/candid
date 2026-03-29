@@ -1,35 +1,39 @@
 import { motion } from "framer-motion";
-import { useTheme, themes } from "@/contexts/ThemeContext";
+import { useTheme, accents } from "@/contexts/ThemeContext";
+import { Moon, Sun } from "lucide-react";
 
 export default function ThemeSwitcher() {
-  const { theme, setTheme } = useTheme();
+  const { mode, setMode, accent, setAccent } = useTheme();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1.5, duration: 0.6 }}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
-    >
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-full surface soft-shadow backdrop-blur-sm border border-border/50">
-        {themes.map((t) => (
-          <button
-            key={t.name}
-            onClick={() => setTheme(t.name)}
-            className="relative w-7 h-7 rounded-full transition-transform duration-300 hover:scale-110"
-            style={{ backgroundColor: t.color }}
-            title={t.label}
-          >
-            {theme === t.name && (
-              <motion.div
-                layoutId="theme-indicator"
-                className="absolute inset-0 rounded-full border-2 border-accent"
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              />
-            )}
-          </button>
-        ))}
-      </div>
-    </motion.div>
+    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full surface soft-shadow backdrop-blur-sm border border-border/50">
+      <button
+        onClick={() => setMode(mode === "light" ? "dark" : "light")}
+        className="w-5 h-5 flex items-center justify-center text-foreground-secondary hover:text-foreground transition-colors mr-1"
+        title="Toggle dark mode"
+      >
+        {mode === "light" ? <Moon size={14} /> : <Sun size={14} />}
+      </button>
+
+      <div className="w-[1px] h-4 bg-border/50 mx-1"></div>
+
+      {accents.map((t) => (
+        <button
+          key={t.name}
+          onClick={() => setAccent(t.name)}
+          className="relative w-5 h-5 rounded-full transition-transform duration-300 hover:scale-110"
+          style={{ backgroundColor: t.color }}
+          title={t.label}
+        >
+          {accent === t.name && (
+            <motion.div
+              layoutId="theme-indicator"
+              className="absolute inset-0 rounded-full border-2 border-accent"
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+          )}
+        </button>
+      ))}
+    </div>
   );
 }

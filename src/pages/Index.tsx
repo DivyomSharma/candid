@@ -7,7 +7,6 @@ import AIChatPreview from "@/components/AIChatPreview";
 import PrivacySection from "@/components/PrivacySection";
 import EmotionalSection from "@/components/EmotionalSection";
 import WaitlistSection from "@/components/WaitlistSection";
-import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 export default function Index() {
   return (
@@ -21,7 +20,6 @@ export default function Index() {
       <PrivacySection />
       <EmotionalSection />
       <WaitlistSection />
-      <ThemeSwitcher />
 
       <footer className="py-10 text-center text-xs text-foreground-secondary/40 font-light">
         © 2026 Candor. A quieter way to connect.
