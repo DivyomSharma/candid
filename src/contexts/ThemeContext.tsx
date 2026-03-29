@@ -19,12 +19,12 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-export const accents: { name: ThemeAccent; label: string; color: string }[] = [
-  { name: "sand", label: "Sand", color: "#EAE3D9" },
-  { name: "rose", label: "Rose", color: "#F8EDEE" },
-  { name: "sky", label: "Sky", color: "#EEF4F8" },
-  { name: "lavender", label: "Lavender", color: "#F3EFF7" },
-  { name: "honey", label: "Honey", color: "#F9F6E9" },
+export const accents: { name: ThemeAccent; label: string; lightColor: string; darkColor: string }[] = [
+  { name: "sand", label: "Sand", lightColor: "hsl(28, 15%, 82%)", darkColor: "hsl(28, 9%, 61%)" },
+  { name: "rose", label: "Rose", lightColor: "hsl(348, 40%, 82%)", darkColor: "hsl(350, 40%, 65%)" },
+  { name: "sky", label: "Sky", lightColor: "hsl(207, 50%, 82%)", darkColor: "hsl(207, 50%, 60%)" },
+  { name: "lavender", label: "Lavender", lightColor: "hsl(268, 40%, 82%)", darkColor: "hsl(268, 40%, 65%)" },
+  { name: "honey", label: "Honey", lightColor: "hsl(48, 50%, 80%)", darkColor: "hsl(40, 45%, 65%)" },
 ];
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import CustomCursor from "@/components/CustomCursor";
+import FloatingDoodles from "@/components/FloatingDoodles";
 
 const queryClient = new QueryClient();
 
@@ -13,6 +15,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
+        <CustomCursor />
+        <FloatingDoodles />
         <Toaster />
         <Sonner />
         <BrowserRouter>

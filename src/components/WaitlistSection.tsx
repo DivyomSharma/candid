@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import DoodleArrow from "./DoodleArrow";
-
 export default function WaitlistSection() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -50,15 +48,6 @@ export default function WaitlistSection() {
                          transition-all duration-300"
             />
             <div className="relative flex items-center">
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-                className="absolute -left-8 md:-left-10"
-              >
-                <DoodleArrow direction="right" size="sm" />
-              </motion.div>
               <button
                 type="submit"
                 disabled={isLoading}

@@ -1,7 +1,5 @@
 import { motion } from "framer-motion";
 import ThemeSwitcher from "./ThemeSwitcher";
-import DoodleArrow from "./DoodleArrow";
-
 export default function Navbar() {
   return (
     <motion.nav
@@ -18,13 +16,6 @@ export default function Navbar() {
           className="text-xs text-foreground-secondary hover:text-foreground transition-colors duration-300 tracking-wide flex items-center gap-1"
         >
           join waitlist
-          <motion.span
-            initial={{ opacity: 0, x: -5 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-          >
-            <DoodleArrow direction="down" size="sm" />
-          </motion.span>
         </a>
       </div>
     </motion.nav>

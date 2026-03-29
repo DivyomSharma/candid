@@ -22,7 +22,7 @@ export default function ThemeSwitcher() {
           key={t.name}
           onClick={() => setAccent(t.name)}
           className="relative w-5 h-5 rounded-full transition-transform duration-300 hover:scale-110"
-          style={{ backgroundColor: t.color }}
+          style={{ backgroundColor: mode === "light" ? t.lightColor : t.darkColor }}
           title={t.label}
         >
           {accent === t.name && (

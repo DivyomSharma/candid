@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import DoodleArrow from "./DoodleArrow";
 
 export default function HeroSection() {
   return (
@@ -50,14 +49,6 @@ export default function HeroSection() {
           transition={{ delay: 0.8, duration: 0.6 }}
           className="relative inline-block"
         >
-          <motion.div
-            initial={{ opacity: 0, rotate: -10, x: 10 }}
-            animate={{ opacity: 1, rotate: 0, x: 0 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
-            className="absolute -right-10 top-1/2 -translate-y-1/2 hidden md:block"
-          >
-            <DoodleArrow direction="down" size="md" />
-          </motion.div>
           <a
             href="#waitlist"
             className="inline-block px-8 py-3.5 rounded-full bg-accent text-primary-foreground font-medium text-sm tracking-wide
