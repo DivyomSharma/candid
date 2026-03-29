@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { joinWaitlist } from "@/lib/supabase";
+
 export default function WaitlistSection() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -11,12 +13,17 @@ export default function WaitlistSection() {
     if (!email) return;
 
     setIsLoading(true);
-    // Simulate network request
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const result = await joinWaitlist(email);
     setIsLoading(false);
 
-    toast.success("You've been added to the waitlist!");
-    setSubmitted(true);
+    if (result === "success") {
+      toast.success("You've been added to the waitlist!");
+      setSubmitted(true);
+    } else if (result === "duplicate") {
+      toast.error("This email is already on the waitlist!");
+    } else {
+      toast.error("Something went wrong. Please try again.");
+    }
   };
 
   return (
