@@ -7,10 +7,19 @@ import AIChatPreview from "@/components/AIChatPreview";
 import PrivacySection from "@/components/PrivacySection";
 import EmotionalSection from "@/components/EmotionalSection";
 import WaitlistSection from "@/components/WaitlistSection";
+import DoodleArrow from "@/components/DoodleArrow";
 
 export default function Index() {
   return (
     <div className="min-h-screen gradient-bg grain">
+      {/* Decorative accent arrows */}
+      <div className="fixed top-1/4 left-4 md:left-10 z-0 hidden lg:block pointer-events-none">
+        <DoodleArrow direction="down" size="sm" animated />
+      </div>
+      <div className="fixed bottom-1/3 right-4 md:right-10 z-0 hidden lg:block pointer-events-none">
+        <DoodleArrow direction="up" size="sm" animated />
+      </div>
+
       <Navbar />
       <HeroSection />
       <ChatDemo />
