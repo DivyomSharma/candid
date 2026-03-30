@@ -6,8 +6,19 @@ export default function CustomCursor() {
   const [isHovering, setIsHovering] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [isDesktop, setIsDesktop] = useState(true);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(pointer: fine)");
+    setIsDesktop(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!isDesktop) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
 
@@ -69,7 +80,9 @@ export default function CustomCursor() {
       document.removeEventListener("scroll", handleActivity);
       clearTimeout(hideTimeout);
     };
-  }, [lastMousePos]);
+  }, [lastMousePos, isDesktop]);
+
+  if (!isDesktop) return null;
 
   return (
     <>

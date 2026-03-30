@@ -288,12 +288,17 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', sans-serif;
     transition: background-color 600ms ease, color 600ms ease;
-    cursor: none;
   }
 
-  /* Make sure links and buttons hide their default pointer cursor so our CustomCursor handles it */
-  a, button, input, [role="button"] {
-    cursor: none;
+  @media (pointer: fine) {
+    body {
+      cursor: none;
+    }
+    
+    /* Make sure links and buttons hide their default pointer cursor so our CustomCursor handles it */
+    a, button, input, [role="button"] {
+      cursor: none;
+    }
   }
 
   [data-theme] * {

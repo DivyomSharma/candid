@@ -288,6 +288,15 @@ function Doodle({ type, delay, duration, startX, startY, scale, rotation }: Dood
 export default function FloatingDoodles() {
   const [doodles, setDoodles] = useState<DoodleProps[]>([]);
   const [scrollHeight, setScrollHeight] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(pointer: fine)");
+    setIsDesktop(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
 
   useEffect(() => {
     const updateSize = () => {
@@ -319,6 +328,8 @@ export default function FloatingDoodles() {
 
     generateDoodles();
   }, [scrollHeight]);
+
+  if (!isDesktop) return null;
 
   return (
     <div className="absolute top-0 left-0 w-full pointer-events-none z-40 overflow-hidden" style={{ height: scrollHeight }}>
