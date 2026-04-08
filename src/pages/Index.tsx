@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import InteractivePreview from "@/components/InteractivePreview";
 import ChatDemo from "@/components/ChatDemo";
 import UnlockSection from "@/components/UnlockSection";
 import MatchReveal from "@/components/MatchReveal";
@@ -13,6 +14,7 @@ export default function Index() {
     <div className="min-h-screen gradient-bg grain">
       <Navbar />
       <HeroSection />
+      <InteractivePreview />
       <ChatDemo />
       <UnlockSection />
       <MatchReveal />
