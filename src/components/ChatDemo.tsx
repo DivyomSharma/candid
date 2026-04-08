@@ -76,25 +76,53 @@ export default function ChatDemo() {
 
         <div className="surface rounded-3xl p-6 md:p-8 soft-shadow space-y-3 min-h-[340px]">
           <AnimatePresence>
-            {conversation.slice(0, visibleCount).map((msg, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] px-5 py-3 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-accent/20 text-foreground"
-                      : "surface-secondary text-foreground-secondary"
-                  } ${msg.cursive ? "font-cursive text-lg text-accent" : ""}`}
+            {conversation.slice(0, visibleCount).map((msg, i) => {
+              const isUser = msg.role === "user";
+              // Only show label if first message or different sender from previous
+              const showLabel = i === 0 || conversation[i - 1].role !== msg.role;
+
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}
                 >
-                  {msg.text}
-                </div>
-              </motion.div>
-            ))}
+                  {showLabel && (
+                    <div className={`flex items-center gap-1.5 mb-1 px-1 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+                      {/* Curly arrow accent */}
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="hsl(var(--accent))"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ transform: isUser ? "scaleX(-1)" : "none" }}
+                      >
+                        <path d="M4 17c0-7 6-10 12-10" />
+                        <path d="M12 7l4 0l0 4" />
+                      </svg>
+                      <span className="text-[11px] font-medium tracking-wide uppercase text-accent">
+                        {isUser ? "You" : "Candor AI"}
+                      </span>
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[80%] px-5 py-3 rounded-2xl text-sm leading-relaxed ${
+                      isUser
+                        ? "bg-accent/20 text-foreground"
+                        : "surface-secondary text-foreground-secondary"
+                    } ${msg.cursive ? "font-cursive text-lg text-accent" : ""}`}
+                  >
+                    {msg.text}
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
 
           {showTyping && visibleCount < conversation.length && (

@@ -288,6 +288,17 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', sans-serif;
     transition: background-color 600ms ease, color 600ms ease;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  img {
+    -webkit-user-drag: none;
+  }
+
+  input, textarea {
+    -webkit-user-select: auto;
+    user-select: auto;
   }
 
   @media (pointer: fine) {

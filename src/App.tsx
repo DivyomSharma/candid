@@ -11,6 +11,11 @@ import FloatingDoodles from "@/components/FloatingDoodles";
 
 const queryClient = new QueryClient();
 
+// Disable right-click menu globally
+if (typeof document !== 'undefined') {
+  document.addEventListener('contextmenu', (event) => event.preventDefault());
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
