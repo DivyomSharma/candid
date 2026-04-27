@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import { useMemo } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const confettiColors = [
   "hsl(var(--glow) / 0.8)",
@@ -47,17 +49,23 @@ function ConfettiParticle({ angle, distance, delay, color, size }: {
 }
 
 export default function UnlockSection() {
-  const confettiPieces = Array.from({ length: 60 }, (_, i) => ({
-    id: i,
-    angle: (360 / 60) * i + Math.random() * 10,
-    distance: 150 + Math.random() * 200,
-    delay: Math.random() * 0.3,
-    size: 4 + Math.random() * 4,
-    color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
-  }));
+  const isMobile = useIsMobile();
+  const confettiPieces = useMemo(() => {
+    const minDistance = isMobile ? 60 : 150;
+    const distanceRange = isMobile ? 60 : 200;
+
+    return Array.from({ length: 60 }, (_, i) => ({
+      id: i,
+      angle: (360 / 60) * i + Math.random() * 10,
+      distance: minDistance + Math.random() * distanceRange,
+      delay: Math.random() * 0.3,
+      size: 4 + Math.random() * 4,
+      color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+    }));
+  }, [isMobile]);
 
   return (
-    <section className="py-24 md:py-32 px-6 relative">
+    <section className="py-24 md:py-32 px-6 relative overflow-x-hidden md:overflow-x-visible">
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
