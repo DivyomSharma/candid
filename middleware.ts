@@ -3,7 +3,6 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 const isPublicRoute = createRouteMatcher([
   '/',
   '/candor',
-  '/candor/home',
   '/api/candor/db-health',
   '/sign-in(.*)',
   '/sign-up(.*)'
@@ -11,8 +10,7 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
-    // We don't enforce auth globally here to allow the frontend to handle it via <SignInButton>,
-    // but the middleware MUST be present to parse cookies for API routes.
+    await auth.protect();
   }
 });
 
