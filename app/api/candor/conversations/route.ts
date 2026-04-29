@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { sendCandorMessage } from "@/lib/candor-api";
-import { shapeCandorResponse } from "@/lib/candor-response";
+import { runCandorTurn } from "@/lib/candor/engine";
+import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
@@ -25,6 +25,9 @@ export async function POST(request: NextRequest) {
       update: {},
       create: { clerkId: userId },
     });
+    const traits = await prisma.traits.findUnique({
+      where: { userId: user.id },
+    });
 
     const conversation = await prisma.conversation.create({
       data: { userId: user.id },
@@ -39,19 +42,20 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      let aiContent: string;
+      let aiContent = "hmm... that already says something.\nlet it stay here for a second.";
+      let memory = normalizeMemory(traits?.json ?? createEmptyMemory());
 
       try {
-        aiContent = shapeCandorResponse(
-          await sendCandorMessage({
-            message: opening,
-            history: [],
-            user_id: userId,
-          }),
-        );
+        const turn = await runCandorTurn({
+          userId,
+          message: opening,
+          history: [],
+          memory,
+        });
+        aiContent = turn.reply;
+        memory = turn.memory;
       } catch (error) {
         console.error("Candor AI fallback used:", error);
-        aiContent = "hmm... that already says something.\nlet it stay here for a second.";
       }
 
       await prisma.message.create({
@@ -60,6 +64,12 @@ export async function POST(request: NextRequest) {
           role: "ai",
           content: aiContent,
         },
+      });
+
+      await prisma.traits.upsert({
+        where: { userId: user.id },
+        update: { json: memory },
+        create: { userId: user.id, json: memory },
       });
     }
 

@@ -9,10 +9,14 @@ type ChatPayload = {
   message: string;
   history: CandorHistoryMessage[];
   user_id: string;
+  system_prompt?: string;
+  temperature?: number;
+  max_tokens?: number;
 };
 
 type ChatResponse = {
   response?: string;
+  reply?: string;
   content?: string;
   message?: string;
 };
@@ -76,7 +80,7 @@ async function sendViaBackend(payload: ChatPayload, baseUrl: string) {
   }
 
   const data = (await response.json()) as ChatResponse;
-  return data.response ?? data.content ?? data.message ?? "hmm... stay with that a little.";
+  return data.response ?? data.reply ?? data.content ?? data.message ?? "hmm... stay with that a little.";
 }
 
 async function sendViaGroq(payload: ChatPayload) {
@@ -94,10 +98,10 @@ async function sendViaGroq(payload: ChatPayload) {
     },
     body: JSON.stringify({
       model: groqModel,
-      temperature: 0.78,
-      max_tokens: 90,
+      temperature: payload.temperature ?? 0.78,
+      max_tokens: payload.max_tokens ?? 90,
       messages: [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: payload.system_prompt ?? systemPrompt },
         ...payload.history.slice(-16).map((message) => ({
           role: toGroqRole(message.role),
           content: message.content,
@@ -134,11 +138,11 @@ export function streamCandorMessage(payload: ChatPayload) {
       },
       body: JSON.stringify({
         model: groqModel,
-        temperature: 0.78,
-        max_tokens: 90,
+        temperature: payload.temperature ?? 0.78,
+        max_tokens: payload.max_tokens ?? 90,
         stream: true,
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: payload.system_prompt ?? systemPrompt },
           ...payload.history.slice(-16).map((message) => ({
             role: toGroqRole(message.role),
             content: message.content,
@@ -154,4 +158,50 @@ export function streamCandorMessage(payload: ChatPayload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+}
+
+export async function sendCandorJson<T>({
+  systemPrompt,
+  message,
+  temperature,
+  maxTokens,
+}: {
+  systemPrompt: string;
+  message: string;
+  temperature: number;
+  maxTokens: number;
+}) {
+  const apiKey = process.env.GROQ_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("missing_groq_api_key");
+  }
+
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: groqModel,
+      temperature,
+      max_tokens: maxTokens,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: message },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("groq_json_failed");
+  }
+
+  const data = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+
+  return JSON.parse(data.choices?.[0]?.message?.content ?? "{}") as T;
 }

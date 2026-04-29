@@ -11,11 +11,11 @@ export default function EmotionalSection() {
         className="max-w-xl mx-auto text-center"
       >
         <h2 className="text-3xl md:text-5xl font-light leading-snug tracking-tight">
-          You don't need more matches.
+          You don't need another match.
           <br />
           <span className="text-foreground-secondary">
-            You need to feel{" "}
-            <span className="font-cursive text-accent text-4xl md:text-6xl">understood</span>.
+            You need real{" "}
+            <span className="font-cursive text-accent text-4xl md:text-6xl">alignment</span>.
           </span>
         </h2>
       </motion.div>

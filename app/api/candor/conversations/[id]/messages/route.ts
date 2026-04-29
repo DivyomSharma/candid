@@ -1,7 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { sendCandorMessage, type CandorHistoryMessage } from "@/lib/candor-api";
-import { shapeCandorResponse } from "@/lib/candor-response";
+import type { CandorHistoryMessage } from "@/lib/candor-api";
+import { runCandorTurn } from "@/lib/candor/engine";
+import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { prisma } from "@/lib/prisma";
 
 async function getUserConversation(clerkId: string, conversationId: string) {
@@ -13,7 +14,10 @@ async function getUserConversation(clerkId: string, conversationId: string) {
 
   return prisma.conversation.findFirst({
     where: { id: conversationId, userId: user.id },
-    include: { messages: { orderBy: { createdAt: "asc" } } },
+    include: {
+      user: { include: { traits: true } },
+      messages: { orderBy: { createdAt: "asc" } },
+    },
   });
 }
 
@@ -80,15 +84,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }));
 
   let aiContent: string;
+  let memory = normalizeMemory(conversation.user.traits?.json ?? createEmptyMemory());
 
   try {
-    aiContent = shapeCandorResponse(
-      await sendCandorMessage({
-        message: content,
-        history,
-        user_id: userId,
-      }),
-    );
+    const turn = await runCandorTurn({
+      userId,
+      message: content,
+      history,
+      memory,
+    });
+    aiContent = turn.reply;
+    memory = turn.memory;
   } catch {
     aiContent = "yeah... i lost the thread for a second.\ntry saying that again, simpler.";
   }
@@ -99,6 +105,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       role: "ai",
       content: aiContent,
     },
+  });
+
+  await prisma.traits.upsert({
+    where: { userId: conversation.userId },
+    update: { json: memory },
+    create: { userId: conversation.userId, json: memory },
   });
 
   return NextResponse.json({

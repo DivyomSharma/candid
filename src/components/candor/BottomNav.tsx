@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, UserRound } from "lucide-react";
+import { Home, Sparkles, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/candor/home", label: "home", icon: Home },
+  { href: "/candor/aligns", label: "aligns", icon: Sparkles },
   { href: "/candor/you", label: "you", icon: UserRound },
 ];
 

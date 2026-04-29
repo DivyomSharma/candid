@@ -1,18 +1,29 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { SignInButton, useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
+import type { CandorMemory } from "@/lib/candor/types";
 
-const insights = ["you reach for honesty, but not exposure", "you notice shifts before you can name them", "you open up better when nothing is demanded"];
-const patterns = ["returns to unfinished conversations", "softens when there is room", "prefers warmth with a little edge"];
-const snapshots = ["this feels familiar somehow", "you keep circling the almost-said thing", "the quiet parts are becoming clearer"];
+type TraitsResponse = {
+  memory: CandorMemory;
+};
 
 export function CandorProfile() {
   const { isLoaded, isSignedIn } = useUser();
+  const [memory, setMemory] = useState<CandorMemory | null>(null);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    fetch("/api/candor/me/traits")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: TraitsResponse | null) => setMemory(data?.memory ?? null));
+  }, [isSignedIn]);
 
   if (isLoaded && !isSignedIn) {
     return (
@@ -29,17 +40,34 @@ export function CandorProfile() {
     );
   }
 
+  const insights = memory
+    ? [
+        ...prefix(memory.values, "you seem to care about"),
+        ...prefix(memory.communicationNeeds, "you open better with"),
+        ...prefix(memory.appreciatesInPeople, "you notice"),
+      ].slice(0, 5)
+    : ["candor is still listening"];
+  const patterns = memory
+    ? [...memory.relationalPatterns, ...memory.lifeThemes].slice(0, 5)
+    : ["the shape is still forming"];
+  const snapshots = memory
+    ? [...memory.softSpots, ...memory.notes].slice(0, 5)
+    : ["this will get more specific as you talk"];
+
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-20">
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[600px] flex-col gap-10">
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">what candor notices about you</h1>
+          <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">
+            private, evolving, and never shown to other people raw.
+          </p>
         </motion.div>
 
-        <ProfileSection title="insights" items={insights} />
-        <ProfileSection title="patterns" items={patterns} />
-        <ProfileSection title="memory snapshots" items={snapshots} />
+        <ProfileSection title="insights" items={fallback(insights, ["you reach for honesty, but not exposure"])} />
+        <ProfileSection title="patterns" items={fallback(patterns, ["the pattern is still quiet"])} />
+        <ProfileSection title="memory snapshots" items={fallback(snapshots, ["this feels familiar somehow"])} />
       </section>
       <BottomNav />
     </main>
@@ -61,4 +89,12 @@ function ProfileSection({ title, items }: { title: string; items: string[] }) {
       </CardContent>
     </Card>
   );
+}
+
+function prefix(items: string[], text: string) {
+  return items.map((item) => `${text} ${item}`);
+}
+
+function fallback(items: string[], backup: string[]) {
+  return items.length ? items : backup;
 }
