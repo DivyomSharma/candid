@@ -46,10 +46,18 @@ export function CandorHome() {
       if (response.status === 401) {
         setError("sign in first, then this can stay with you.");
       } else {
-        setError("something did not open. check the backend and database env.");
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+        if (data.error === "missing_database_url") {
+          setError("database is not connected yet. add database_url in vercel.");
+        } else if (data.error === "conversation_create_failed") {
+          setError("database connection failed. check prisma and postgres env.");
+        } else {
+          setError("something did not open. check the deployment env.");
+        }
       }
     } catch {
-      setError("the connection did not answer. start the backend, then try again.");
+      setError("the connection did not answer. try again in a moment.");
     } finally {
       setIsStarting(false);
     }
