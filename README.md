@@ -16,6 +16,14 @@ GROQ_API_KEY="gsk_..."
 GROQ_MODEL="llama-3.3-70b-versatile"
 ```
 
+The Vercel build runs:
+
+```bash
+prisma migrate deploy && next build
+```
+
+So the Supabase database must allow migrations from Vercel using `DATABASE_URL`.
+
 Do not set `CANDOR_API_URL` on Vercel unless you are hosting the optional FastAPI backend separately.
 
 ## Optional FastAPI Backend
