@@ -21,12 +21,20 @@ async function getUserConversation(clerkId: string, conversationId: string) {
   });
 }
 
+function isLocalConversation(id: string) {
+  return id.startsWith("local-");
+}
+
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
   const { id } = await params;
 
   if (!userId) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  if (isLocalConversation(id)) {
+    return NextResponse.json({ messages: [], persisted: false });
   }
 
   const conversation = await getUserConversation(userId, id);
@@ -60,6 +68,32 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (!content) {
     return NextResponse.json({ error: "message_required" }, { status: 400 });
+  }
+
+  if (isLocalConversation(id)) {
+    const history = body.history ?? [];
+    let aiContent = "yeah... i'm here.\nkeep going.";
+
+    try {
+      const turn = await runCandorTurn({
+        userId,
+        message: content,
+        history,
+        memory: createEmptyMemory(),
+      });
+      aiContent = turn.reply;
+    } catch (error) {
+      console.error("Local Candor turn failed:", error);
+    }
+
+    return NextResponse.json({
+      persisted: false,
+      message: {
+        id: crypto.randomUUID(),
+        role: "ai",
+        content: aiContent,
+      },
+    });
   }
 
   const conversation = await getUserConversation(userId, id);

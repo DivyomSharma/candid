@@ -73,9 +73,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ id: conversation.id });
+    return NextResponse.json({ id: conversation.id, persisted: true });
   } catch (error) {
     console.error("Conversation creation failed:", error);
-    return NextResponse.json({ error: "conversation_create_failed" }, { status: 500 });
+    return NextResponse.json({
+      id: `local-${crypto.randomUUID()}`,
+      persisted: false,
+      warning: "database_unavailable",
+    });
   }
 }

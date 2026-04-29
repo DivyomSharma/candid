@@ -22,10 +22,21 @@ export function CandorSession({ id }: { id: string }) {
   useEffect(() => {
     if (!isSignedIn) return;
 
+    if (id.startsWith("local-")) {
+      const saved = window.sessionStorage.getItem(`candor:${id}:messages`);
+      setMessages(saved ? (JSON.parse(saved) as Message[]) : []);
+      return;
+    }
+
     fetch(`/api/candor/conversations/${id}/messages`)
       .then((response) => (response.ok ? response.json() : { messages: [] }))
       .then((data: { messages: Message[] }) => setMessages(data.messages ?? []));
   }, [id, isSignedIn]);
+
+  useEffect(() => {
+    if (!id.startsWith("local-")) return;
+    window.sessionStorage.setItem(`candor:${id}:messages`, JSON.stringify(messages));
+  }, [id, messages]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });

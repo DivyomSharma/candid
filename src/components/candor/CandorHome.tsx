@@ -38,7 +38,13 @@ export function CandorHome() {
       });
 
       if (response.ok) {
-        const data = (await response.json()) as { id: string };
+        const data = (await response.json()) as { id: string; persisted?: boolean; warning?: string };
+        if (data.persisted === false) {
+          window.sessionStorage.setItem(
+            `candor:${data.id}:messages`,
+            JSON.stringify([{ id: crypto.randomUUID(), role: "user", content: content.trim() }]),
+          );
+        }
         router.push(`/candor/session/${data.id}`);
         return;
       }
