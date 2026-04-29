@@ -126,8 +126,6 @@ export function CandorHome() {
                   >
                     {line}
                   </button>
-                    {line}
-                  </button>
                 ))}
               </div>
             </CardContent>
