@@ -10,7 +10,7 @@ async function getOrCreateUser(clerkId: string) {
     .from("candor_users")
     .select("id")
     .eq("clerk_id", clerkId)
-    .single();
+    .maybeSingle();
 
   if (existing) return existing;
 
@@ -46,7 +46,7 @@ async function getUserConversation(clerkId: string, conversationId: string) {
     .from("candor_traits")
     .select("data")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   return {
     ...conversation,

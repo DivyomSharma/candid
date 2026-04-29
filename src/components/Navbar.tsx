@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { motion } from "framer-motion";
 import ThemeSwitcher from "./ThemeSwitcher";
+
 export default function Navbar() {
   return (
     <motion.nav
@@ -11,12 +13,12 @@ export default function Navbar() {
       <span className="text-lg font-light tracking-wide">candor</span>
       <div className="flex items-center gap-4">
         <ThemeSwitcher />
-        <a
+        <Link
           href="/candor/home"
-          className="text-xs text-foreground-secondary hover:text-foreground transition-colors duration-300 tracking-wide flex items-center gap-1"
+          className="flex items-center gap-1 text-xs tracking-wide text-foreground-secondary transition-colors duration-300 hover:text-foreground"
         >
           enter candor
-        </a>
+        </Link>
       </div>
     </motion.nav>
   );

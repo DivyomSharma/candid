@@ -16,7 +16,7 @@ export async function GET() {
       .from("candor_users")
       .select("id")
       .eq("clerk_id", userId)
-      .single();
+      .maybeSingle();
 
     if (!user) {
       const memory = createEmptyMemory();
@@ -30,7 +30,7 @@ export async function GET() {
       .from("candor_traits")
       .select("data")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     const memory = normalizeMemory(traits?.data ?? createEmptyMemory());
 

@@ -10,7 +10,7 @@ async function getOrCreateUser(clerkId: string) {
     .from("candor_users")
     .select("id")
     .eq("clerk_id", clerkId)
-    .single();
+    .maybeSingle();
 
   if (existing) return existing;
 
@@ -37,12 +37,11 @@ export async function POST(request: NextRequest) {
 
     const user = await getOrCreateUser(userId);
 
-    // Get traits
     const { data: traitsRow } = await supabaseAdmin
       .from("candor_traits")
       .select("data")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     // Create conversation
     const { data: conversation, error: convError } = await supabaseAdmin
