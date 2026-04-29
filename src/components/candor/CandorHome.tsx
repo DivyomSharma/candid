@@ -126,6 +126,8 @@ export function CandorHome() {
                   >
                     {line}
                   </button>
+                    {line}
+                  </button>
                 ))}
               </div>
             </CardContent>
@@ -139,41 +141,40 @@ export function CandorHome() {
           transition={{ delay: 0.28, duration: 0.7 }}
           className="flex flex-col gap-3"
         >
-          <Textarea
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-            placeholder="say it in the messy version"
-            className="min-h-28 rounded-2xl border-border/50 bg-background/45 p-5 text-base font-light leading-7 shadow-none focus-visible:ring-accent/40"
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                event.currentTarget.form?.requestSubmit();
-              }
-            }}
-          />
+          <div className="relative flex w-full items-center">
+            <input
+              type="text"
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              placeholder="say it in the messy version"
+              className="h-14 w-full rounded-full border border-border/50 bg-background/45 pl-6 pr-32 text-base font-light text-foreground placeholder:text-muted-foreground outline-none transition-shadow focus:border-accent/40 focus:ring-1 focus:ring-accent/40"
+            />
 
-          {isLoaded && isSignedIn ? (
-            <Button
-              type="submit"
-              disabled={!message.trim() || isStarting}
-              className="self-end rounded-full bg-accent px-6 text-sm font-medium text-primary-foreground hover:bg-accent/90"
-            >
-              {isStarting ? "entering" : "begin"}
-              <ArrowRight data-icon="inline-end" />
-            </Button>
-          ) : (
-            <SignInButton mode="modal" forceRedirectUrl="/candor/home">
-              <Button
-                type="button"
-                disabled={!isLoaded}
-                className="self-end rounded-full bg-accent px-6 text-sm font-medium text-primary-foreground hover:bg-accent/90"
-              >
-                sign in to keep going
-                <ArrowRight data-icon="inline-end" />
-              </Button>
-            </SignInButton>
-          )}
-          {error && <p className="self-end text-right text-xs font-light leading-5 text-foreground-secondary">{error}</p>}
+            <div className="absolute right-1.5 flex items-center">
+              {isLoaded && isSignedIn ? (
+                <Button
+                  type="submit"
+                  disabled={!message.trim() || isStarting}
+                  className="h-11 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground hover:bg-accent/90"
+                >
+                  {isStarting ? "entering" : "begin"}
+                  <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
+                </Button>
+              ) : (
+                <SignInButton mode="modal" forceRedirectUrl="/candor/home">
+                  <Button
+                    type="button"
+                    disabled={!isLoaded}
+                    className="h-11 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground hover:bg-accent/90"
+                  >
+                    sign in
+                    <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </SignInButton>
+              )}
+            </div>
+          </div>
+          {error && <p className="text-right text-xs font-light leading-5 text-foreground-secondary">{error}</p>}
         </motion.form>
       </section>
       <BottomNav />
