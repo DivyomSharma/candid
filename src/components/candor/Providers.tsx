@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SmoothScrollProvider } from "@/components/candor/SmoothScrollProvider";
+import CustomCursor from "@/components/CustomCursor";
 
 const clerkPublishableKey =
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ??
@@ -16,6 +17,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ClerkProvider publishableKey={clerkPublishableKey}>
       <ThemeProvider>
         <TooltipProvider>
+          <CustomCursor />
           <SmoothScrollProvider>{children}</SmoothScrollProvider>
           <Toaster />
           <Sonner />
