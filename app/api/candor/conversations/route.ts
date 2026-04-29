@@ -3,7 +3,26 @@ import { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { runCandorTurn } from "@/lib/candor/engine";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+
+async function getOrCreateUser(clerkId: string) {
+  const { data: existing } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("clerk_id", clerkId)
+    .single();
+
+  if (existing) return existing;
+
+  const { data: created, error } = await supabaseAdmin
+    .from("users")
+    .insert({ clerk_id: clerkId })
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return created!;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,37 +32,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    if (!process.env.DATABASE_URL) {
-      return NextResponse.json({ error: "missing_database_url" }, { status: 503 });
-    }
-
     const body = (await request.json().catch(() => ({}))) as { message?: string };
     const opening = body.message?.trim();
 
-    const user = await prisma.user.upsert({
-      where: { clerkId: userId },
-      update: {},
-      create: { clerkId: userId },
-    });
-    const traits = await prisma.traits.findUnique({
-      where: { userId: user.id },
-    });
+    const user = await getOrCreateUser(userId);
 
-    const conversation = await prisma.conversation.create({
-      data: { userId: user.id },
-    });
+    // Get traits
+    const { data: traitsRow } = await supabaseAdmin
+      .from("traits")
+      .select("data")
+      .eq("user_id", user.id)
+      .single();
+
+    // Create conversation
+    const { data: conversation, error: convError } = await supabaseAdmin
+      .from("conversations")
+      .insert({ user_id: user.id })
+      .select("id")
+      .single();
+
+    if (convError) throw convError;
 
     if (opening) {
-      await prisma.message.create({
-        data: {
-          conversationId: conversation.id,
-          role: "user",
-          content: opening,
-        },
+      await supabaseAdmin.from("messages").insert({
+        conversation_id: conversation!.id,
+        role: "user",
+        content: opening,
       });
 
       let aiContent = "hmm... that already says something.\nlet it stay here for a second.";
-      let memory = normalizeMemory(traits?.json ?? createEmptyMemory());
+      let memory = normalizeMemory(traitsRow?.data ?? createEmptyMemory());
 
       try {
         const turn = await runCandorTurn({
@@ -58,22 +76,20 @@ export async function POST(request: NextRequest) {
         console.error("Candor AI fallback used:", error);
       }
 
-      await prisma.message.create({
-        data: {
-          conversationId: conversation.id,
-          role: "ai",
-          content: aiContent,
-        },
+      await supabaseAdmin.from("messages").insert({
+        conversation_id: conversation!.id,
+        role: "ai",
+        content: aiContent,
       });
 
-      await prisma.traits.upsert({
-        where: { userId: user.id },
-        update: { json: memory },
-        create: { userId: user.id, json: memory },
-      });
+      // Upsert traits
+      await supabaseAdmin.from("traits").upsert(
+        { user_id: user.id, data: memory },
+        { onConflict: "user_id" },
+      );
     }
 
-    return NextResponse.json({ id: conversation.id, persisted: true });
+    return NextResponse.json({ id: conversation!.id, persisted: true });
   } catch (error) {
     console.error("Conversation creation failed:", error);
     return NextResponse.json({

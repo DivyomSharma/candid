@@ -3,22 +3,56 @@ import { NextRequest, NextResponse } from "next/server";
 import type { CandorHistoryMessage } from "@/lib/candor-api";
 import { runCandorTurn } from "@/lib/candor/engine";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+
+async function getOrCreateUser(clerkId: string) {
+  const { data: existing } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("clerk_id", clerkId)
+    .single();
+
+  if (existing) return existing;
+
+  const { data: created, error } = await supabaseAdmin
+    .from("users")
+    .insert({ clerk_id: clerkId })
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return created!;
+}
 
 async function getUserConversation(clerkId: string, conversationId: string) {
-  const user = await prisma.user.upsert({
-    where: { clerkId },
-    update: {},
-    create: { clerkId },
-  });
+  const user = await getOrCreateUser(clerkId);
 
-  return prisma.conversation.findFirst({
-    where: { id: conversationId, userId: user.id },
-    include: {
-      user: { include: { traits: true } },
-      messages: { orderBy: { createdAt: "asc" } },
-    },
-  });
+  const { data: conversation } = await supabaseAdmin
+    .from("conversations")
+    .select("id, user_id")
+    .eq("id", conversationId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!conversation) return null;
+
+  const { data: messages } = await supabaseAdmin
+    .from("messages")
+    .select("id, role, content, created_at")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: true });
+
+  const { data: traits } = await supabaseAdmin
+    .from("traits")
+    .select("data")
+    .eq("user_id", user.id)
+    .single();
+
+  return {
+    ...conversation,
+    messages: messages ?? [],
+    traits: traits?.data ?? null,
+  };
 }
 
 function isLocalConversation(id: string) {
@@ -102,12 +136,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  await prisma.message.create({
-    data: {
-      conversationId: conversation.id,
-      role: "user",
-      content,
-    },
+  await supabaseAdmin.from("messages").insert({
+    conversation_id: conversation.id,
+    role: "user",
+    content,
   });
 
   const history =
@@ -118,7 +150,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }));
 
   let aiContent: string;
-  let memory = normalizeMemory(conversation.user.traits?.json ?? createEmptyMemory());
+  let memory = normalizeMemory(conversation.traits ?? createEmptyMemory());
 
   try {
     const turn = await runCandorTurn({
@@ -133,25 +165,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     aiContent = "yeah... i lost the thread for a second.\ntry saying that again, simpler.";
   }
 
-  const aiMessage = await prisma.message.create({
-    data: {
-      conversationId: conversation.id,
+  const { data: aiMessage } = await supabaseAdmin
+    .from("messages")
+    .insert({
+      conversation_id: conversation.id,
       role: "ai",
       content: aiContent,
-    },
-  });
+    })
+    .select("id, content")
+    .single();
 
-  await prisma.traits.upsert({
-    where: { userId: conversation.userId },
-    update: { json: memory },
-    create: { userId: conversation.userId, json: memory },
-  });
+  await supabaseAdmin.from("traits").upsert(
+    { user_id: conversation.user_id, data: memory },
+    { onConflict: "user_id" },
+  );
 
   return NextResponse.json({
     message: {
-      id: aiMessage.id,
+      id: aiMessage!.id,
       role: "ai",
-      content: aiMessage.content,
+      content: aiMessage!.content,
     },
   });
 }

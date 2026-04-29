@@ -54,10 +54,8 @@ export function CandorHome() {
       } else {
         const data = (await response.json().catch(() => ({}))) as { error?: string };
 
-        if (data.error === "missing_database_url") {
-          setError("database is not connected yet. add database_url in vercel.");
-        } else if (data.error === "conversation_create_failed") {
-          setError("database connection failed. check prisma and postgres env.");
+        if (data.error === "missing_supabase_env") {
+          setError("database is not connected yet. add supabase keys in vercel.");
         } else {
           setError("something did not open. check the deployment env.");
         }
