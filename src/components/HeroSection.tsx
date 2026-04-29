@@ -50,11 +50,11 @@ export default function HeroSection() {
           className="relative inline-block"
         >
           <a
-            href="#waitlist"
+            href="/candor/home"
             className="inline-block px-8 py-3.5 rounded-full bg-accent text-primary-foreground font-medium text-sm tracking-wide
                        hover:scale-105 transition-transform duration-300 soft-shadow"
           >
-            Join the waitlist
+            Enter Candor
           </a>
         </motion.div>
       </motion.div>

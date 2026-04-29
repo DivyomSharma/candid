@@ -12,10 +12,10 @@ export default function Navbar() {
       <div className="flex items-center gap-4">
         <ThemeSwitcher />
         <a
-          href="#waitlist"
+          href="/candor/home"
           className="text-xs text-foreground-secondary hover:text-foreground transition-colors duration-300 tracking-wide flex items-center gap-1"
         >
-          join waitlist
+          enter candor
         </a>
       </div>
     </motion.nav>

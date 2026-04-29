@@ -1,29 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
-import { joinWaitlist } from "@/lib/supabase";
 
 export default function WaitlistSection() {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const enterCandor = () => {
+    window.location.href = "/candor/home";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-
-    setIsLoading(true);
-    const result = await joinWaitlist(email);
-    setIsLoading(false);
-
-    if (result === "success") {
-      toast.success("You've been added to the waitlist!");
-      setSubmitted(true);
-    } else if (result === "duplicate") {
-      toast.error("This email is already on the waitlist!");
-    } else {
-      toast.error("Something went wrong. Please try again.");
-    }
+    enterCandor();
   };
 
   return (
@@ -42,41 +29,27 @@ export default function WaitlistSection() {
           No rush. We'll reach out when it's time.
         </p>
 
-        {!submitted ? (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 items-center">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your email"
-              className="flex-1 px-5 py-3.5 rounded-full surface border border-border/50 text-sm font-light
-                         placeholder:text-foreground-secondary/50 focus:outline-none focus:ring-1 focus:ring-accent/40
-                         transition-all duration-300"
-            />
-            <div className="relative flex items-center">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-7 py-3.5 rounded-full bg-accent text-primary-foreground text-sm font-medium
-                           hover:scale-105 transition-transform duration-300 soft-shadow whitespace-nowrap disabled:opacity-70 disabled:hover:scale-100"
-              >
-                {isLoading ? "Joining..." : "Join the waitlist"}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <p className="text-foreground-secondary text-sm font-light mb-1">
-              You're in. We'll be in touch.
-            </p>
-            <p className="font-cursive text-accent text-lg">take your time</p>
-          </motion.div>
-        )}
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 items-center">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Your email"
+            className="flex-1 px-5 py-3.5 rounded-full surface border border-border/50 text-sm font-light
+                       placeholder:text-foreground-secondary/50 focus:outline-none focus:ring-1 focus:ring-accent/40
+                       transition-all duration-300"
+          />
+          <div className="relative flex items-center">
+            <button
+              type="button"
+              onClick={enterCandor}
+              className="px-7 py-3.5 rounded-full bg-accent text-primary-foreground text-sm font-medium
+                         hover:scale-105 transition-transform duration-300 soft-shadow whitespace-nowrap disabled:opacity-70 disabled:hover:scale-100"
+            >
+              Enter Candor
+            </button>
+          </div>
+        </form>
       </motion.div>
     </section>
   );

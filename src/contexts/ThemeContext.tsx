@@ -29,23 +29,25 @@ export const accents: { name: ThemeAccent; label: string; lightColor: string; da
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(() => {
+    if (typeof window === "undefined") return "dark";
     const saved = localStorage.getItem("candor-mode");
     return (saved as ThemeMode) || "dark";
   });
 
   const [accent, setAccentState] = useState<ThemeAccent>(() => {
+    if (typeof window === "undefined") return "sand";
     const saved = localStorage.getItem("candor-accent");
     return (saved as ThemeAccent) || "sand";
   });
 
   const setMode = (m: ThemeMode) => {
     setModeState(m);
-    localStorage.setItem("candor-mode", m);
+    if (typeof window !== "undefined") localStorage.setItem("candor-mode", m);
   };
 
   const setAccent = (a: ThemeAccent) => {
     setAccentState(a);
-    localStorage.setItem("candor-accent", a);
+    if (typeof window !== "undefined") localStorage.setItem("candor-accent", a);
   };
 
   useEffect(() => {
