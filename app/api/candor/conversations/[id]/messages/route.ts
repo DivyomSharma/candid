@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 async function getOrCreateUser(clerkId: string) {
   const { data: existing } = await supabaseAdmin
-    .from("users")
+    .from("candor_users")
     .select("id")
     .eq("clerk_id", clerkId)
     .single();
@@ -15,7 +15,7 @@ async function getOrCreateUser(clerkId: string) {
   if (existing) return existing;
 
   const { data: created, error } = await supabaseAdmin
-    .from("users")
+    .from("candor_users")
     .insert({ clerk_id: clerkId })
     .select("id")
     .single();
@@ -28,7 +28,7 @@ async function getUserConversation(clerkId: string, conversationId: string) {
   const user = await getOrCreateUser(clerkId);
 
   const { data: conversation } = await supabaseAdmin
-    .from("conversations")
+    .from("candor_conversations")
     .select("id, user_id")
     .eq("id", conversationId)
     .eq("user_id", user.id)
@@ -37,13 +37,13 @@ async function getUserConversation(clerkId: string, conversationId: string) {
   if (!conversation) return null;
 
   const { data: messages } = await supabaseAdmin
-    .from("messages")
+    .from("candor_messages")
     .select("id, role, content, created_at")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
 
   const { data: traits } = await supabaseAdmin
-    .from("traits")
+    .from("candor_traits")
     .select("data")
     .eq("user_id", user.id)
     .single();
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  await supabaseAdmin.from("messages").insert({
+  await supabaseAdmin.from("candor_messages").insert({
     conversation_id: conversation.id,
     role: "user",
     content,
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const { data: aiMessage } = await supabaseAdmin
-    .from("messages")
+    .from("candor_messages")
     .insert({
       conversation_id: conversation.id,
       role: "ai",
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .select("id, content")
     .single();
 
-  await supabaseAdmin.from("traits").upsert(
+  await supabaseAdmin.from("candor_traits").upsert(
     { user_id: conversation.user_id, data: memory },
     { onConflict: "user_id" },
   );

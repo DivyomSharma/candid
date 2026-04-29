@@ -14,7 +14,7 @@ export async function GET() {
 
   try {
     const { count, error } = await supabaseAdmin
-      .from("users")
+      .from("candor_users")
       .select("id", { count: "exact", head: true });
 
     if (error) throw error;

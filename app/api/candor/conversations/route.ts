@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 async function getOrCreateUser(clerkId: string) {
   const { data: existing } = await supabaseAdmin
-    .from("users")
+    .from("candor_users")
     .select("id")
     .eq("clerk_id", clerkId)
     .single();
@@ -15,7 +15,7 @@ async function getOrCreateUser(clerkId: string) {
   if (existing) return existing;
 
   const { data: created, error } = await supabaseAdmin
-    .from("users")
+    .from("candor_users")
     .insert({ clerk_id: clerkId })
     .select("id")
     .single();
@@ -39,14 +39,14 @@ export async function POST(request: NextRequest) {
 
     // Get traits
     const { data: traitsRow } = await supabaseAdmin
-      .from("traits")
+      .from("candor_traits")
       .select("data")
       .eq("user_id", user.id)
       .single();
 
     // Create conversation
     const { data: conversation, error: convError } = await supabaseAdmin
-      .from("conversations")
+      .from("candor_conversations")
       .insert({ user_id: user.id })
       .select("id")
       .single();
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     if (convError) throw convError;
 
     if (opening) {
-      await supabaseAdmin.from("messages").insert({
+      await supabaseAdmin.from("candor_messages").insert({
         conversation_id: conversation!.id,
         role: "user",
         content: opening,
@@ -76,14 +76,14 @@ export async function POST(request: NextRequest) {
         console.error("Candor AI fallback used:", error);
       }
 
-      await supabaseAdmin.from("messages").insert({
+      await supabaseAdmin.from("candor_messages").insert({
         conversation_id: conversation!.id,
         role: "ai",
         content: aiContent,
       });
 
       // Upsert traits
-      await supabaseAdmin.from("traits").upsert(
+      await supabaseAdmin.from("candor_traits").upsert(
         { user_id: user.id, data: memory },
         { onConflict: "user_id" },
       );

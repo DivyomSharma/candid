@@ -13,7 +13,7 @@ export async function GET() {
 
   try {
     const { data: user } = await supabaseAdmin
-      .from("users")
+      .from("candor_users")
       .select("id")
       .eq("clerk_id", userId)
       .single();
@@ -27,7 +27,7 @@ export async function GET() {
     }
 
     const { data: traits } = await supabaseAdmin
-      .from("traits")
+      .from("candor_traits")
       .select("data")
       .eq("user_id", user.id)
       .single();
