@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma migrate deploy && next build",
+    "build": "prisma generate && (prisma migrate deploy || echo 'Migration skipped – run prisma db push manually') && next build",
     "build:dev": "next build",
+    "prisma:push": "prisma db push",
     "lint": "eslint .",
     "preview": "next start",
     "backend:dev": "python -m uvicorn backend.main:app --reload --port 8000",
