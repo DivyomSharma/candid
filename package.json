@@ -9,6 +9,7 @@
     "build:dev": "next build",
     "lint": "eslint .",
     "preview": "next start",
+    "backend:dev": "python -m uvicorn backend.main:app --reload --port 8000",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "test": "vitest run",

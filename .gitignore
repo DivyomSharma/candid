@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 .next
+.venv
+backend/.env
+backend/.venv
+__pycache__
 *.local
 
 # Editor directories and files

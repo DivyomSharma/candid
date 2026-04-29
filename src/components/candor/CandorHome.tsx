@@ -21,25 +21,43 @@ const scenario = {
 export function CandorHome() {
   const [message, setMessage] = useState("");
   const [isStarting, setIsStarting] = useState(false);
-  const { isSignedIn, user } = useUser();
+  const [error, setError] = useState("");
+  const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
 
   const start = async (content: string) => {
-    if (!content.trim() || !isSignedIn) return;
+    if (!content.trim() || !isSignedIn || isStarting) return;
+    setError("");
     setIsStarting(true);
 
-    const response = await fetch("/api/candor/conversations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: content.trim() }),
-    });
+    try {
+      const response = await fetch("/api/candor/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: content.trim() }),
+      });
 
-    if (response.ok) {
-      const data = (await response.json()) as { id: string };
-      router.push(`/candor/session/${data.id}`);
-    } else {
+      if (response.ok) {
+        const data = (await response.json()) as { id: string };
+        router.push(`/candor/session/${data.id}`);
+        return;
+      }
+
+      if (response.status === 401) {
+        setError("sign in first, then this can stay with you.");
+      } else {
+        setError("something did not open. check the backend and database env.");
+      }
+    } catch {
+      setError("the connection did not answer. start the backend, then try again.");
+    } finally {
       setIsStarting(false);
     }
+  };
+
+  const selectPrompt = (content: string) => {
+    setMessage(content);
+    setError("");
   };
 
   const submit = (event: FormEvent) => {
@@ -68,8 +86,9 @@ export function CandorHome() {
         >
           {chips.map((chip) => (
             <button
+              type="button"
               key={chip}
-              onClick={() => setMessage(chip)}
+              onClick={() => selectPrompt(chip)}
               className="rounded-full border border-border/50 px-4 py-2 text-sm font-light text-foreground-secondary transition-colors hover:border-accent/70 hover:text-foreground"
             >
               {chip}
@@ -88,8 +107,9 @@ export function CandorHome() {
                 <h2 className="text-lg font-light">{scenario.title}</h2>
                 {scenario.lines.map((line) => (
                   <button
+                    type="button"
                     key={line}
-                    onClick={() => setMessage(line)}
+                    onClick={() => selectPrompt(line)}
                     className="text-left text-sm font-light leading-6 text-foreground-secondary transition-colors hover:text-foreground"
                   >
                     {line}
@@ -112,9 +132,15 @@ export function CandorHome() {
             onChange={(event) => setMessage(event.target.value)}
             placeholder="say it in the messy version"
             className="min-h-28 rounded-2xl border-border/50 bg-background/45 p-5 text-base font-light leading-7 shadow-none focus-visible:ring-accent/40"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                event.currentTarget.form?.requestSubmit();
+              }
+            }}
           />
 
-          {isSignedIn ? (
+          {isLoaded && isSignedIn ? (
             <Button
               type="submit"
               disabled={!message.trim() || isStarting}
@@ -125,12 +151,17 @@ export function CandorHome() {
             </Button>
           ) : (
             <SignInButton mode="modal" forceRedirectUrl="/candor/home">
-              <Button type="button" className="self-end rounded-full bg-accent px-6 text-sm font-medium text-primary-foreground hover:bg-accent/90">
+              <Button
+                type="button"
+                disabled={!isLoaded}
+                className="self-end rounded-full bg-accent px-6 text-sm font-medium text-primary-foreground hover:bg-accent/90"
+              >
                 sign in to keep going
                 <ArrowRight data-icon="inline-end" />
               </Button>
             </SignInButton>
           )}
+          {error && <p className="self-end text-right text-xs font-light leading-5 text-foreground-secondary">{error}</p>}
         </motion.form>
       </section>
       <BottomNav />
