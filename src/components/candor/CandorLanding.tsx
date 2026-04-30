@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import AsciiBackground from "@/components/AsciiBackground";
+import dynamic from "next/dynamic";
 import Index from "@/landing/Index";
+
+const AsciiBackground = dynamic(() => import("@/components/AsciiBackground"), { ssr: false });
 
 export default function CandorLanding() {
   useEffect(() => {
