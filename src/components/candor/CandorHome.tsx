@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -9,20 +9,38 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
+import type { CandorPresets } from "@/lib/candor/presets";
 
-const chips = ["something i keep replaying", "a person i miss", "a small win", "i feel off", "no idea yet"];
-
-const scenario = {
-  title: "tonight feels like",
-  lines: ["a thought half-formed", "a little too much noise", "wanting to be known without performing"],
+const defaultPresets: CandorPresets = {
+  chips: ["something i keep replaying", "a person i miss", "a small win", "i feel off", "no idea yet"],
+  scenario: {
+    title: "tonight feels like",
+    lines: ["a thought half-formed", "a little too much noise", "wanting to be known without performing"],
+  },
 };
 
 export function CandorHome() {
   const [message, setMessage] = useState("");
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState("");
+  const [presets, setPresets] = useState<CandorPresets>(defaultPresets);
   const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/candor/me/presets", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload: { presets?: CandorPresets } | null) => {
+        if (!cancelled && payload?.presets) setPresets(payload.presets);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
 
   const start = async (content: string) => {
     if (!content.trim() || isStarting) return;
@@ -111,7 +129,7 @@ export function CandorHome() {
           transition={{ delay: 0.12, duration: 0.7 }}
           className="flex flex-wrap gap-2"
         >
-          {chips.map((chip) => (
+          {presets.chips.map((chip) => (
             <button
               type="button"
               key={chip}
@@ -131,8 +149,8 @@ export function CandorHome() {
                 a possible start
               </div>
               <div className="flex flex-col gap-3">
-                <h2 className="text-lg font-light">{scenario.title}</h2>
-                {scenario.lines.map((line) => (
+                <h2 className="text-lg font-light">{presets.scenario.title}</h2>
+                {presets.scenario.lines.map((line) => (
                   <button
                     type="button"
                     key={line}

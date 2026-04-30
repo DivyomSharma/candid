@@ -15,7 +15,7 @@ type TraitsResponse = {
 };
 
 export function CandorProfile() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, signOut } = useAuth();
   const router = useRouter();
   const [memory, setMemory] = useState<CandorMemory | null>(null);
 
@@ -68,6 +68,17 @@ export function CandorProfile() {
           <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">
             private, evolving, and never shown to other people raw.
           </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={async () => {
+              await signOut();
+              router.push("/candor");
+            }}
+            className="mt-6 rounded-full border-border/50 bg-background/45 px-5 font-light hover:bg-accent/10"
+          >
+            sign out
+          </Button>
         </motion.div>
 
         <ProfileSection title="insights" items={fallback(insights, ["you reach for honesty, but not exposure"])} />
