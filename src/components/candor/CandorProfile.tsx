@@ -38,13 +38,16 @@ export function CandorProfile() {
   const { isLoaded, isSignedIn, signOut, user } = useAuth();
   const router = useRouter();
   const [memory, setMemory] = useState<CandorMemory | null>(null);
+  const [hasLoadedMemory, setHasLoadedMemory] = useState(false);
 
   useEffect(() => {
     if (!isSignedIn) return;
+    setHasLoadedMemory(false);
 
     fetch("/api/candor/me/traits")
       .then((response) => (response.ok ? response.json() : null))
-      .then((data: TraitsResponse | null) => setMemory(data?.memory ?? null));
+      .then((data: TraitsResponse | null) => setMemory(data?.memory ?? null))
+      .finally(() => setHasLoadedMemory(true));
   }, [isSignedIn]);
 
   const profile = useMemo(() => buildProfile(memory, user?.email ?? null), [memory, user?.email]);
@@ -78,6 +81,10 @@ export function CandorProfile() {
           </p>
         </motion.div>
 
+        {!hasLoadedMemory ? (
+          <ProfileLoading />
+        ) : (
+          <>
         <Card className="surface overflow-hidden border-border/50 bg-card/45 backdrop-blur-sm">
           <div className="relative h-36" style={{ background: profile.bannerTone }}>
             <div className="absolute inset-0 bg-background/10" />
@@ -105,7 +112,7 @@ export function CandorProfile() {
             <div>
               <p className="text-xs font-light uppercase tracking-[0.24em] text-accent/70">{profile.handle}</p>
               <h2 className="mt-2 text-3xl font-light tracking-tight">{profile.username}</h2>
-              <p className="mt-3 text-base font-light leading-7 text-foreground-secondary">{profile.bio}</p>
+              <p className="mt-3 text-base font-light leading-7 text-foreground-secondary break-words">{profile.bio}</p>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
@@ -117,9 +124,26 @@ export function CandorProfile() {
         </Card>
 
         <DetailGrid profile={profile} memory={memory} />
+          </>
+        )}
       </section>
       <BottomNav />
     </main>
+  );
+}
+
+function ProfileLoading() {
+  return (
+    <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+      <CardContent className="flex flex-col gap-5 p-5">
+        <p className="text-lg font-light leading-8 text-foreground-secondary">reading what candor knows so far...</p>
+        <div className="grid gap-3">
+          <div className="h-24 rounded-2xl bg-foreground/10" />
+          <div className="h-3 w-3/4 rounded-full bg-foreground/10" />
+          <div className="h-3 w-1/2 rounded-full bg-foreground/10" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -152,14 +176,14 @@ function DetailGrid({ profile, memory }: { profile: ProfileDetail; memory: Cando
               <Film className="h-4 w-4" />
               closest story signal
             </div>
-            <h3 className="mt-4 text-2xl font-light leading-8">{profile.closestCharacter}</h3>
-            <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary">{profile.storyTaste}</p>
+            <h3 className="mt-4 text-2xl font-light leading-8 break-words">{profile.closestCharacter}</h3>
+            <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary break-words">{profile.storyTaste}</p>
           </div>
           <div className="rounded-2xl border border-border/50 bg-background/35 p-5">
             <p className="text-xs font-light uppercase tracking-[0.22em] text-foreground-secondary">situation read</p>
             <h4 className="mt-3 text-xl font-light">{profile.situation.title}</h4>
-            <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary">{profile.situation.setup}</p>
-            <p className="mt-4 text-base font-light leading-7">{profile.situation.response}</p>
+            <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary break-words">{profile.situation.setup}</p>
+            <p className="mt-4 text-base font-light leading-7 break-words">{profile.situation.response}</p>
           </div>
         </CardContent>
       </Card>
@@ -173,7 +197,7 @@ function DetailGrid({ profile, memory }: { profile: ProfileDetail; memory: Cando
         </CardHeader>
         <CardContent className="grid gap-3 p-5 pt-3">
           {profile.quietStrengths.map((strength) => (
-            <p key={strength} className="rounded-2xl border border-border/40 bg-background/25 px-4 py-3 text-sm font-light leading-6 text-foreground-secondary">
+            <p key={strength} className="rounded-2xl border border-border/40 bg-background/25 px-4 py-3 text-sm font-light leading-6 text-foreground-secondary break-words">
               {strength}
             </p>
           ))}
@@ -187,7 +211,7 @@ function SignalCard({ label, value, meter }: { label: string; value: string; met
   return (
     <div className="rounded-2xl border border-border/45 bg-background/30 p-4">
       <p className="text-[11px] font-light uppercase tracking-[0.2em] text-foreground-secondary">{label}</p>
-      <p className="mt-2 min-h-10 text-sm font-light leading-5">{value}</p>
+      <p className="mt-2 min-h-10 text-sm font-light leading-5 break-words">{value}</p>
       <div className="mt-4 h-1.5 rounded-full bg-border/50">
         <div className="h-full rounded-full bg-accent/70" style={{ width: `${meter}%` }} />
       </div>
@@ -204,7 +228,7 @@ function TextBlock({ title, items }: { title: string; items: string[] }) {
       </p>
       <div className="flex flex-col gap-2">
         {items.map((item) => (
-          <p key={item} className="text-sm font-light leading-6 text-foreground-secondary">
+          <p key={item} className="text-sm font-light leading-6 text-foreground-secondary break-words">
             {item}
           </p>
         ))}
@@ -222,16 +246,19 @@ function buildProfile(memory: CandorMemory | null, email: string | null): Profil
   const themes = fallback(memory?.lifeThemes, ["quiet pressure"]);
   const appreciates = fallback(memory?.appreciatesInPeople, ["follow-through"]);
   const turnCount = memory?.turnCount ?? 0;
+  const hasSignal = turnCount >= 3 || values.length + needs.length + softSpots.length > 4;
 
   return {
     username,
     handle: `@${baseName.toLowerCase()}`,
     initials: initialsFrom(username),
-    bio: `someone who seems to care about ${values[0]}, opens better with ${needs[0]}, and notices ${appreciates[0]} in people.`,
+    bio: hasSignal
+      ? `someone who seems to care about ${values[0]}, opens better with ${needs[0]}, and notices ${appreciates[0]} in people.`
+      : "a profile that will become more specific as candor hears more from you.",
     bannerTone: bannerFrom(values[0]),
-    closestCharacter: closestCharacter(memory),
-    storyTaste: storyTaste(memory),
-    situation: situationFrom(memory),
+    closestCharacter: hasSignal ? closestCharacter(memory) : "not enough signal for a character read yet",
+    storyTaste: hasSignal ? storyTaste(memory) : "candor needs more of your actual words before guessing at story taste.",
+    situation: hasSignal ? situationFrom(memory) : earlySituation(),
     quietStrengths: [
       `they may not say everything quickly, but they tend to notice what changes in the room.`,
       `they seem to respect ${values[0]} more than performance.`,
@@ -247,6 +274,14 @@ function buildProfile(memory: CandorMemory | null, email: string | null): Profil
       { label: "core", value: values[0], meter: values.length * 24 + 28 },
       { label: "pace", value: needs[0], meter: needs.length * 22 + 34 },
     ],
+  };
+}
+
+function earlySituation(): ProfileDetail["situation"] {
+  return {
+    title: "still forming",
+    setup: "there is not enough history here for candor to describe a specific situation honestly.",
+    response: "keep talking in the messy version. this part should earn its confidence slowly.",
   };
 }
 

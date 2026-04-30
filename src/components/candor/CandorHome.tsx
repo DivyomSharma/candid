@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -24,6 +24,7 @@ export function CandorHome() {
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState("");
   const [presets, setPresets] = useState<CandorPresets>(defaultPresets);
+  const animatedPresets = useAnimatedPresets(presets);
   const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
 
@@ -129,14 +130,14 @@ export function CandorHome() {
           transition={{ delay: 0.12, duration: 0.7 }}
           className="flex flex-wrap gap-2"
         >
-          {presets.chips.map((chip) => (
+          {animatedPresets.chips.map((chip, index) => (
             <button
               type="button"
-              key={chip}
+              key={index}
               onClick={() => selectPrompt(chip)}
-              className="rounded-full border border-border/50 px-4 py-2 text-sm font-light text-foreground-secondary transition-colors hover:border-accent/70 hover:text-foreground"
+              className="max-w-full rounded-full border border-border/50 px-4 py-2 text-left text-sm font-light text-foreground-secondary transition-colors hover:border-accent/70 hover:text-foreground"
             >
-              {chip}
+              <span className="block max-w-[16rem] break-words">{chip || "\u00a0"}</span>
             </button>
           ))}
         </motion.div>
@@ -149,15 +150,15 @@ export function CandorHome() {
                 a possible start
               </div>
               <div className="flex flex-col gap-3">
-                <h2 className="text-lg font-light">{presets.scenario.title}</h2>
-                {presets.scenario.lines.map((line) => (
+                <h2 className="text-lg font-light leading-7 break-words">{animatedPresets.scenario.title || "\u00a0"}</h2>
+                {animatedPresets.scenario.lines.map((line, index) => (
                   <button
                     type="button"
-                    key={line}
+                    key={index}
                     onClick={() => selectPrompt(line)}
                     className="text-left text-sm font-light leading-6 text-foreground-secondary transition-colors hover:text-foreground"
                   >
-                    {line}
+                    <span className="block break-words">{line || "\u00a0"}</span>
                   </button>
                 ))}
               </div>
@@ -210,4 +211,67 @@ export function CandorHome() {
       <BottomNav />
     </main>
   );
+}
+
+function useAnimatedPresets(target: CandorPresets) {
+  const [visible, setVisible] = useState(target);
+  const visibleRef = useRef(target);
+
+  useEffect(() => {
+    visibleRef.current = visible;
+  }, [visible]);
+
+  useEffect(() => {
+    const currentParts = flattenPresets(visibleRef.current);
+    const targetParts = flattenPresets(target);
+
+    if (currentParts.join("\n") === targetParts.join("\n")) return;
+
+    let frame = 0;
+    let cancelled = false;
+    const maxCurrentLength = Math.max(...currentParts.map((part) => part.length), 0);
+    const maxTargetLength = Math.max(...targetParts.map((part) => part.length), 0);
+    const backspaceFrames = Math.min(18, Math.max(8, Math.ceil(maxCurrentLength / 4)));
+    const typeFrames = Math.min(28, Math.max(12, Math.ceil(maxTargetLength / 3)));
+
+    const tick = () => {
+      if (cancelled) return;
+      frame += 1;
+
+      if (frame <= backspaceFrames) {
+        const progress = 1 - frame / backspaceFrames;
+        setVisible(unflattenPresets(currentParts.map((part) => part.slice(0, Math.ceil(part.length * progress)))));
+      } else if (frame <= backspaceFrames + typeFrames) {
+        const progress = (frame - backspaceFrames) / typeFrames;
+        setVisible(unflattenPresets(targetParts.map((part) => part.slice(0, Math.ceil(part.length * progress)))));
+      } else {
+        setVisible(target);
+        return;
+      }
+
+      window.setTimeout(tick, 28);
+    };
+
+    const timeout = window.setTimeout(tick, 120);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [target]);
+
+  return useMemo(() => visible, [visible]);
+}
+
+function flattenPresets(value: CandorPresets) {
+  return [...value.chips, value.scenario.title, ...value.scenario.lines];
+}
+
+function unflattenPresets(parts: string[]): CandorPresets {
+  return {
+    chips: parts.slice(0, 5),
+    scenario: {
+      title: parts[5] ?? "",
+      lines: parts.slice(6, 9),
+    },
+  };
 }

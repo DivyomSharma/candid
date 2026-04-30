@@ -121,5 +121,16 @@ function cleanList(value: unknown, max: number) {
 
 function cleanText(value: unknown) {
   if (typeof value !== "string") return "";
-  return value.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 80);
+  return dedupeWords(value.trim().toLowerCase().replace(/\s+/g, " "))
+    .split(" ")
+    .slice(0, 9)
+    .join(" ")
+    .slice(0, 80);
+}
+
+function dedupeWords(value: string) {
+  const words = value.split(" ").filter(Boolean);
+  return words
+    .filter((word, index) => index === 0 || word !== words[index - 1])
+    .join(" ");
 }

@@ -113,7 +113,7 @@ export async function GET() {
         id: alignment.id,
         score: item.score,
         language: alignmentLanguage(memory, item.memory),
-        profile: buildPublicProfile(item.memory),
+        profile: buildPublicProfile(item.memory, item.userId),
         myDmOn,
         theirDmOn,
         canText: myDmOn && theirDmOn,
