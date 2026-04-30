@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -13,6 +13,7 @@ export async function GET() {
   }
 
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { count, error } = await supabaseAdmin
       .from("candor_users")
       .select("id", { count: "exact", head: true });

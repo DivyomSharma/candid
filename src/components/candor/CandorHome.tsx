@@ -1,15 +1,14 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { SignInButton, useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
+import { useAuth } from "@/contexts/AuthContext";
 
 const chips = ["something i keep replaying", "a person i miss", "a small win", "i feel off", "no idea yet"];
 
@@ -22,11 +21,17 @@ export function CandorHome() {
   const [message, setMessage] = useState("");
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState("");
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
 
   const start = async (content: string) => {
-    if (!content.trim() || !isSignedIn || isStarting) return;
+    if (!content.trim() || isStarting) return;
+
+    if (!isSignedIn) {
+      router.push(`/candor/login?next=${encodeURIComponent("/candor/home")}`);
+      return;
+    }
+
     setError("");
     setIsStarting(true);
 
@@ -84,7 +89,7 @@ export function CandorHome() {
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-10rem)] max-w-[600px] flex-col justify-center gap-10">
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <p className="mb-4 text-sm font-light text-foreground-secondary">
-            {isSignedIn ? `hey ${user?.firstName?.toLowerCase() ?? "there"}` : "enter slowly"}
+            {isSignedIn ? `hey ${user?.email?.split("@")[0]?.toLowerCase() ?? "there"}` : "enter slowly"}
           </p>
           <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">
             what&apos;s been on your mind lately?
@@ -160,16 +165,15 @@ export function CandorHome() {
                   <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
                 </Button>
               ) : (
-                <SignInButton mode="modal" forceRedirectUrl="/candor/home">
-                  <Button
-                    type="button"
-                    disabled={!isLoaded}
-                    className="h-11 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground hover:bg-accent/90"
-                  >
-                    sign in
-                    <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
-                  </Button>
-                </SignInButton>
+                <Button
+                  type="button"
+                  disabled={!isLoaded}
+                  onClick={() => router.push(`/candor/login?next=${encodeURIComponent("/candor/home")}`)}
+                  className="h-11 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground hover:bg-accent/90"
+                >
+                  sign in
+                  <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
+                </Button>
               )}
             </div>
           </div>

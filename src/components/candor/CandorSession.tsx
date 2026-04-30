@@ -1,19 +1,21 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { SignInButton, useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
+import { useAuth } from "@/contexts/AuthContext";
 import type { CandorHistoryMessage } from "@/lib/candor-api";
 
 type Message = CandorHistoryMessage & { id: string; pending?: boolean };
 
 export function CandorSession({ id }: { id: string }) {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [isResponding, setIsResponding] = useState(false);
@@ -90,9 +92,12 @@ export function CandorSession({ id }: { id: string }) {
           <p className="text-sm font-light leading-6 text-foreground-secondary">
             conversations need a place to remember you.
           </p>
-          <SignInButton mode="modal">
-            <Button className="rounded-full bg-accent px-6 text-primary-foreground hover:bg-accent/90">sign in</Button>
-          </SignInButton>
+          <Button
+            onClick={() => router.push(`/candor/login?next=${encodeURIComponent(`/candor/session/${id}`)}`)}
+            className="rounded-full bg-accent px-6 text-primary-foreground hover:bg-accent/90"
+          >
+            sign in
+          </Button>
         </div>
       </main>
     );

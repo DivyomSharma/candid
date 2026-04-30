@@ -1,17 +1,18 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { getAlignmentPreview } from "@/lib/candor/alignment";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getCurrentUserId } from "@/lib/auth";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET() {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
 
   if (!userId) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { data: user } = await supabaseAdmin
       .from("candor_users")
       .select("id")

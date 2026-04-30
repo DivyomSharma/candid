@@ -1,30 +1,56 @@
 # Candor
 
-Candor is a Next.js App Router app with Prisma/Postgres, Clerk auth, and Groq-powered conversation endpoints.
+Candor is a Next.js App Router app using Supabase Auth, Supabase Postgres, and Groq-powered conversation endpoints.
 
 ## Vercel Deployment
 
-Railway is not required for the normal deployment path. The Next.js API routes can call Groq directly from Vercel serverless functions.
+Railway is not required for the normal deployment path. The Next.js API routes run on Vercel and call Groq directly.
 
 Set these environment variables in Vercel:
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE?sslmode=require"
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_..."
-CLERK_SECRET_KEY="sk_..."
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 GROQ_API_KEY="gsk_..."
 GROQ_MODEL="llama-3.3-70b-versatile"
 ```
 
-The Vercel build runs:
+`DATABASE_URL` is not used by the current runtime. The app uses Supabase JS, so the Supabase URL, anon key, and service-role key are the important values.
 
-```bash
-prisma migrate deploy && next build
+Run the SQL in `supabase/schema.sql` once in the Supabase SQL editor. Then visit:
+
+```text
+https://your-domain/api/candor/db-health
 ```
 
-So the Supabase database must allow migrations from Vercel using `DATABASE_URL`.
+Expected response:
 
-Do not set `CANDOR_API_URL` on Vercel unless you are hosting the optional FastAPI backend separately.
+```json
+{ "ok": true, "userCount": 0 }
+```
+
+## Supabase Auth
+
+Enable the providers you want in Supabase Auth:
+
+- google
+- facebook
+- apple
+- email magic link
+- email/password
+
+Add this redirect URL in Supabase Auth settings:
+
+```text
+https://your-domain/api/auth/callback
+```
+
+For local development, add:
+
+```text
+http://localhost:3000/api/auth/callback
+```
 
 ## Optional FastAPI Backend
 

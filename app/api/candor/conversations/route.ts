@@ -1,22 +1,23 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { runCandorTurn } from "@/lib/candor/engine";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getCurrentUserId } from "@/lib/auth";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-async function getOrCreateUser(clerkId: string) {
+async function getOrCreateUser(authId: string) {
+  const supabaseAdmin = getSupabaseAdmin();
   const { data: existing } = await supabaseAdmin
     .from("candor_users")
     .select("id")
-    .eq("clerk_id", clerkId)
+    .eq("clerk_id", authId)
     .maybeSingle();
 
   if (existing) return existing;
 
   const { data: created, error } = await supabaseAdmin
     .from("candor_users")
-    .insert({ clerk_id: clerkId })
+    .insert({ clerk_id: authId })
     .select("id")
     .single();
 
@@ -26,12 +27,13 @@ async function getOrCreateUser(clerkId: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
 
     if (!userId) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
+    const supabaseAdmin = getSupabaseAdmin();
     const body = (await request.json().catch(() => ({}))) as { message?: string };
     const opening = body.message?.trim();
 

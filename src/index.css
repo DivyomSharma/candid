@@ -282,6 +282,15 @@
 
   html {
     scroll-behavior: smooth;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    overflow-x: hidden;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
   }
 
   body {
@@ -290,6 +299,9 @@
     transition: background-color 600ms ease, color 600ms ease;
     -webkit-user-select: none;
     user-select: none;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   img {

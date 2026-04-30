@@ -1,22 +1,23 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import type { CandorHistoryMessage } from "@/lib/candor-api";
 import { runCandorTurn } from "@/lib/candor/engine";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getCurrentUserId } from "@/lib/auth";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-async function getOrCreateUser(clerkId: string) {
+async function getOrCreateUser(authId: string) {
+  const supabaseAdmin = getSupabaseAdmin();
   const { data: existing } = await supabaseAdmin
     .from("candor_users")
     .select("id")
-    .eq("clerk_id", clerkId)
+    .eq("clerk_id", authId)
     .maybeSingle();
 
   if (existing) return existing;
 
   const { data: created, error } = await supabaseAdmin
     .from("candor_users")
-    .insert({ clerk_id: clerkId })
+    .insert({ clerk_id: authId })
     .select("id")
     .single();
 
@@ -24,8 +25,9 @@ async function getOrCreateUser(clerkId: string) {
   return created!;
 }
 
-async function getUserConversation(clerkId: string, conversationId: string) {
-  const user = await getOrCreateUser(clerkId);
+async function getUserConversation(authId: string, conversationId: string) {
+  const supabaseAdmin = getSupabaseAdmin();
+  const user = await getOrCreateUser(authId);
 
   const { data: conversation } = await supabaseAdmin
     .from("candor_conversations")
@@ -60,7 +62,7 @@ function isLocalConversation(id: string) {
 }
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   const { id } = await params;
 
   if (!userId) {
@@ -87,7 +89,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   const { id } = await params;
 
   if (!userId) {
@@ -130,6 +132,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
   }
 
+  const supabaseAdmin = getSupabaseAdmin();
   const conversation = await getUserConversation(userId, id);
 
   if (!conversation) {

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SignInButton, useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
+import { useAuth } from "@/contexts/AuthContext";
 import type { CandorMemory } from "@/lib/candor/types";
 
 type TraitsResponse = {
@@ -18,7 +19,8 @@ type TraitsResponse = {
 };
 
 export function CandorAligns() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<TraitsResponse | null>(null);
 
   useEffect(() => {
@@ -36,9 +38,12 @@ export function CandorAligns() {
         <div className="relative z-10 flex max-w-[420px] flex-col items-center gap-6 text-center">
           <h1 className="text-3xl font-light">your aligns come later</h1>
           <p className="text-sm font-light leading-6 text-foreground-secondary">candor needs to know you first.</p>
-          <SignInButton mode="modal">
-            <Button className="rounded-full bg-accent px-6 text-primary-foreground hover:bg-accent/90">sign in</Button>
-          </SignInButton>
+          <Button
+            onClick={() => router.push(`/candor/login?next=${encodeURIComponent("/candor/aligns")}`)}
+            className="rounded-full bg-accent px-6 text-primary-foreground hover:bg-accent/90"
+          >
+            sign in
+          </Button>
         </div>
       </main>
     );
