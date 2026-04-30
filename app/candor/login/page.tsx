@@ -82,13 +82,8 @@ function LoginExperience() {
     router.push(next);
   };
 
-  const handleOAuth = async (provider: "google" | "facebook" | "apple") => {
-    await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: getCallbackUrl(),
-      },
-    });
+  const handleOAuthUnavailable = () => {
+    toast.message("that door is quiet for now. try again later.");
   };
 
   return (
@@ -113,21 +108,21 @@ function LoginExperience() {
           <Button
             variant="outline"
             className="w-full rounded-full h-11 border-border/50 bg-background/50 font-light hover:bg-accent/10 transition-colors"
-            onClick={() => handleOAuth("google")}
+            onClick={handleOAuthUnavailable}
           >
             continue with google
           </Button>
           <Button
             variant="outline"
             className="w-full rounded-full h-11 border-border/50 bg-background/50 font-light hover:bg-accent/10 transition-colors"
-            onClick={() => handleOAuth("facebook")}
+            onClick={handleOAuthUnavailable}
           >
             continue with facebook
           </Button>
           <Button
             variant="outline"
             className="w-full rounded-full h-11 border-border/50 bg-background/50 font-light hover:bg-accent/10 transition-colors"
-            onClick={() => handleOAuth("apple")}
+            onClick={handleOAuthUnavailable}
           >
             continue with apple
           </Button>

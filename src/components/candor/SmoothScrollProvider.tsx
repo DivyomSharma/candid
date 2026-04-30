@@ -24,8 +24,11 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       options={{
         anchors: true,
         autoRaf: true,
-        duration: 1.15,
-        easing: (time) => Math.min(1, 1.001 - Math.pow(2, -10 * time)),
+        duration: 1.75,
+        easing: (time) => 1 - Math.pow(1 - time, 3),
+        smoothWheel: true,
+        wheelMultiplier: 0.72,
+        touchMultiplier: 0.9,
       }}
     >
       {children}

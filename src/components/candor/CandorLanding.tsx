@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import dynamic from "next/dynamic";
+import AsciiBackground from "@/components/AsciiBackground";
 import Index from "@/landing/Index";
-
-const AsciiBackground = dynamic(() => import("@/components/AsciiBackground"), {
-  ssr: false,
-});
 
 export default function CandorLanding() {
   useEffect(() => {
@@ -16,9 +12,11 @@ export default function CandorLanding() {
   }, []);
 
   return (
-    <>
+    <main className="gradient-bg grain relative isolate min-h-screen overflow-hidden">
       <AsciiBackground />
-      <Index />
-    </>
+      <div className="relative z-10">
+        <Index />
+      </div>
+    </main>
   );
 }

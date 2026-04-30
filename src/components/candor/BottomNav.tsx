@@ -52,6 +52,14 @@ export function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-5 z-40 flex justify-center gap-3 px-6 pointer-events-none">
       <div className="pointer-events-auto surface soft-shadow flex items-center gap-1 rounded-full border border-border/50 px-2 py-2 backdrop-blur-md">
+        <Link
+          href="/candor"
+          className="flex h-10 items-center rounded-full px-4 text-sm font-light tracking-tight text-foreground transition-colors hover:text-foreground-secondary"
+          aria-label="Candor landing page"
+        >
+          Candor
+        </Link>
+        <div className="mx-1 h-5 w-px bg-border/50" aria-hidden="true" />
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

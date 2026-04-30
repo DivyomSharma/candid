@@ -10,6 +10,11 @@ const confettiColors = [
   "hsl(var(--glow) / 0.9)",
 ];
 
+function seededRandom(seed: number) {
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 function ConfettiParticle({ angle, distance, delay, color, size }: {
   angle: number;
   distance: number;
@@ -56,11 +61,11 @@ export default function UnlockSection() {
 
     return Array.from({ length: 60 }, (_, i) => ({
       id: i,
-      angle: (360 / 60) * i + Math.random() * 10,
-      distance: minDistance + Math.random() * distanceRange,
-      delay: Math.random() * 0.3,
-      size: 4 + Math.random() * 4,
-      color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+      angle: (360 / 60) * i + seededRandom(i + 1) * 10,
+      distance: minDistance + seededRandom(i + 101) * distanceRange,
+      delay: seededRandom(i + 201) * 0.3,
+      size: 4 + seededRandom(i + 301) * 4,
+      color: confettiColors[Math.floor(seededRandom(i + 401) * confettiColors.length)],
     }));
   }, [isMobile]);
 
