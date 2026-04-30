@@ -111,7 +111,7 @@ export function CandorSession({ id }: { id: string }) {
           <p className="text-sm font-light text-foreground-secondary">candor is listening</p>
         </div>
 
-        <div className="flex min-h-[55vh] flex-col gap-8">
+        <div className="flex min-h-[55vh] flex-col gap-8 pb-36">
           {messages.map((message, index) => (
             <motion.div
               key={message.id}
@@ -137,7 +137,7 @@ export function CandorSession({ id }: { id: string }) {
               hmm...
             </motion.p>
           )}
-          <div ref={scrollRef} />
+          <div ref={scrollRef} className="h-8" />
         </div>
 
         <form onSubmit={submit} className="fixed inset-x-0 bottom-24 z-30 mx-auto flex max-w-[600px] gap-3 px-6">

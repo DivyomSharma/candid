@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { Film, Heart, Sparkles, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,8 +16,26 @@ type TraitsResponse = {
   memory: CandorMemory;
 };
 
+type ProfileDetail = {
+  username: string;
+  handle: string;
+  initials: string;
+  bio: string;
+  bannerTone: string;
+  closestCharacter: string;
+  storyTaste: string;
+  situation: {
+    title: string;
+    setup: string;
+    response: string;
+  };
+  quietStrengths: string[];
+  needs: string[];
+  signals: Array<{ label: string; value: string; meter: number }>;
+};
+
 export function CandorProfile() {
-  const { isLoaded, isSignedIn, signOut } = useAuth();
+  const { isLoaded, isSignedIn, signOut, user } = useAuth();
   const router = useRouter();
   const [memory, setMemory] = useState<CandorMemory | null>(null);
 
@@ -26,6 +46,8 @@ export function CandorProfile() {
       .then((response) => (response.ok ? response.json() : null))
       .then((data: TraitsResponse | null) => setMemory(data?.memory ?? null));
   }, [isSignedIn]);
+
+  const profile = useMemo(() => buildProfile(memory, user?.email ?? null), [memory, user?.email]);
 
   if (isLoaded && !isSignedIn) {
     return (
@@ -45,72 +67,251 @@ export function CandorProfile() {
     );
   }
 
-  const insights = memory
-    ? [
-        ...prefix(memory.values, "you seem to care about"),
-        ...prefix(memory.communicationNeeds, "you open better with"),
-        ...prefix(memory.appreciatesInPeople, "you notice"),
-      ].slice(0, 5)
-    : ["candor is still listening"];
-  const patterns = memory
-    ? [...memory.relationalPatterns, ...memory.lifeThemes].slice(0, 5)
-    : ["the shape is still forming"];
-  const snapshots = memory
-    ? [...memory.softSpots, ...memory.notes].slice(0, 5)
-    : ["this will get more specific as you talk"];
-
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-20">
       <AmbientGlow />
-      <section className="relative z-10 mx-auto flex max-w-[600px] flex-col gap-10">
+      <section className="relative z-10 mx-auto flex max-w-[680px] flex-col gap-8">
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-          <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">what candor notices about you</h1>
+          <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">your candor profile</h1>
           <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">
-            private, evolving, and never shown to other people raw.
+            a softened version of what candor understands. not the raw thing.
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={async () => {
-              await signOut();
-              router.push("/candor");
-            }}
-            className="mt-6 rounded-full border-border/50 bg-background/45 px-5 font-light hover:bg-accent/10"
-          >
-            sign out
-          </Button>
         </motion.div>
 
-        <ProfileSection title="insights" items={fallback(insights, ["you reach for honesty, but not exposure"])} />
-        <ProfileSection title="patterns" items={fallback(patterns, ["the pattern is still quiet"])} />
-        <ProfileSection title="memory snapshots" items={fallback(snapshots, ["this feels familiar somehow"])} />
+        <Card className="surface overflow-hidden border-border/50 bg-card/45 backdrop-blur-sm">
+          <div className="relative h-36" style={{ background: profile.bannerTone }}>
+            <div className="absolute inset-0 bg-background/10" />
+            <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between gap-4">
+              <Avatar className="h-24 w-24 border border-border/60 bg-background/70 shadow-sm">
+                <AvatarFallback className="bg-background/70 text-2xl font-light text-foreground">
+                  {profile.initials}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={async () => {
+                  await signOut();
+                  router.push("/candor");
+                }}
+                className="mb-1 rounded-full border-border/50 bg-background/50 px-5 font-light backdrop-blur-md hover:bg-accent/10"
+              >
+                sign out
+              </Button>
+            </div>
+          </div>
+
+          <CardContent className="flex flex-col gap-6 p-5 pt-7">
+            <div>
+              <p className="text-xs font-light uppercase tracking-[0.24em] text-accent/70">{profile.handle}</p>
+              <h2 className="mt-2 text-3xl font-light tracking-tight">{profile.username}</h2>
+              <p className="mt-3 text-base font-light leading-7 text-foreground-secondary">{profile.bio}</p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {profile.signals.map((signal) => (
+                <SignalCard key={signal.label} {...signal} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <DetailGrid profile={profile} memory={memory} />
       </section>
       <BottomNav />
     </main>
   );
 }
 
-function ProfileSection({ title, items }: { title: string; items: string[] }) {
+function DetailGrid({ profile, memory }: { profile: ProfileDetail; memory: CandorMemory | null }) {
+  const values = fallback(memory?.values, ["honesty", "emotional safety"]);
+  const softSpots = fallback(memory?.softSpots, ["feeling unseen"]);
+  const patterns = fallback(memory ? [...memory.relationalPatterns, ...memory.lifeThemes] : [], ["the pattern is still forming"]);
+
   return (
-    <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
-      <CardHeader className="p-5 pb-2">
-        <CardTitle className="text-base font-light tracking-wide">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-5 p-5 pt-3">
-        {items.map((item) => (
-          <p key={item} className="text-lg font-light leading-8 text-foreground-secondary">
-            {item}
-          </p>
-        ))}
-      </CardContent>
-    </Card>
+    <>
+      <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+        <CardHeader className="p-5 pb-2">
+          <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
+            <UserRound className="h-4 w-4 text-accent" />
+            the shape of them
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-5 p-5 pt-3 md:grid-cols-2">
+          <TextBlock title="values" items={values.map((item) => `cares about ${item}`)} />
+          <TextBlock title="soft spots" items={softSpots.map((item) => `tender around ${item}`)} />
+          <TextBlock title="patterns" items={patterns.slice(0, 4)} />
+          <TextBlock title="what helps" items={profile.needs} />
+        </CardContent>
+      </Card>
+
+      <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+        <CardContent className="grid gap-6 p-5 md:grid-cols-[1fr_1.2fr]">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-light text-accent">
+              <Film className="h-4 w-4" />
+              closest story signal
+            </div>
+            <h3 className="mt-4 text-2xl font-light leading-8">{profile.closestCharacter}</h3>
+            <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary">{profile.storyTaste}</p>
+          </div>
+          <div className="rounded-2xl border border-border/50 bg-background/35 p-5">
+            <p className="text-xs font-light uppercase tracking-[0.22em] text-foreground-secondary">situation read</p>
+            <h4 className="mt-3 text-xl font-light">{profile.situation.title}</h4>
+            <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary">{profile.situation.setup}</p>
+            <p className="mt-4 text-base font-light leading-7">{profile.situation.response}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+        <CardHeader className="p-5 pb-2">
+          <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
+            <Sparkles className="h-4 w-4 text-accent" />
+            quiet strengths
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 p-5 pt-3">
+          {profile.quietStrengths.map((strength) => (
+            <p key={strength} className="rounded-2xl border border-border/40 bg-background/25 px-4 py-3 text-sm font-light leading-6 text-foreground-secondary">
+              {strength}
+            </p>
+          ))}
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
-function prefix(items: string[], text: string) {
-  return items.map((item) => `${text} ${item}`);
+function SignalCard({ label, value, meter }: { label: string; value: string; meter: number }) {
+  return (
+    <div className="rounded-2xl border border-border/45 bg-background/30 p-4">
+      <p className="text-[11px] font-light uppercase tracking-[0.2em] text-foreground-secondary">{label}</p>
+      <p className="mt-2 min-h-10 text-sm font-light leading-5">{value}</p>
+      <div className="mt-4 h-1.5 rounded-full bg-border/50">
+        <div className="h-full rounded-full bg-accent/70" style={{ width: `${meter}%` }} />
+      </div>
+    </div>
+  );
 }
 
-function fallback(items: string[], backup: string[]) {
-  return items.length ? items : backup;
+function TextBlock({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div>
+      <p className="mb-3 flex items-center gap-2 text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary">
+        <Heart className="h-3.5 w-3.5 text-accent" />
+        {title}
+      </p>
+      <div className="flex flex-col gap-2">
+        {items.map((item) => (
+          <p key={item} className="text-sm font-light leading-6 text-foreground-secondary">
+            {item}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function buildProfile(memory: CandorMemory | null, email: string | null): ProfileDetail {
+  const baseName = email?.split("@")[0]?.replace(/[^\w.]+/g, ".").replace(/\.+/g, ".") || "someone";
+  const username = titleCase(baseName.replace(/[._-]+/g, " "));
+  const values = fallback(memory?.values, ["honesty"]);
+  const needs = fallback(memory?.communicationNeeds, ["gentle directness"]);
+  const softSpots = fallback(memory?.softSpots, ["feeling unseen"]);
+  const themes = fallback(memory?.lifeThemes, ["quiet pressure"]);
+  const appreciates = fallback(memory?.appreciatesInPeople, ["follow-through"]);
+  const turnCount = memory?.turnCount ?? 0;
+
+  return {
+    username,
+    handle: `@${baseName.toLowerCase()}`,
+    initials: initialsFrom(username),
+    bio: `someone who seems to care about ${values[0]}, opens better with ${needs[0]}, and notices ${appreciates[0]} in people.`,
+    bannerTone: bannerFrom(values[0]),
+    closestCharacter: closestCharacter(memory),
+    storyTaste: storyTaste(memory),
+    situation: situationFrom(memory),
+    quietStrengths: [
+      `they may not say everything quickly, but they tend to notice what changes in the room.`,
+      `they seem to respect ${values[0]} more than performance.`,
+      `they are likely drawn to people who show ${appreciates[0]} without making it loud.`,
+    ],
+    needs: [
+      `opens better with ${needs[0]}`,
+      `may get quiet around ${softSpots[0]}`,
+      `needs room to be precise before being seen`,
+    ],
+    signals: [
+      { label: "known", value: turnCount > 7 ? "candor has a real outline" : "still becoming clear", meter: clamp(turnCount * 9, 18, 92) },
+      { label: "core", value: values[0], meter: values.length * 24 + 28 },
+      { label: "pace", value: needs[0], meter: needs.length * 22 + 34 },
+    ],
+  };
+}
+
+function closestCharacter(memory: CandorMemory | null) {
+  const values = memory?.values ?? [];
+  const themes = memory?.lifeThemes ?? [];
+  const softSpots = memory?.softSpots ?? [];
+
+  if (themes.includes("career pressure")) return "amy from little women, if ambition had a quieter private room";
+  if (softSpots.includes("feeling unseen")) return "joel from eternal sunshine, the part that remembers before it speaks";
+  if (values.includes("honesty")) return "nora from normal people, careful with truth and closeness";
+  if (values.includes("emotional safety")) return "chihiro from spirited away, soft but braver than expected";
+  return "the person in the indie film who notices the thing everyone else missed";
+}
+
+function storyTaste(memory: CandorMemory | null) {
+  const themes = memory?.lifeThemes ?? [];
+  if (themes.includes("family")) return "probably drawn to stories where love is complicated by home, silence, and old roles.";
+  if (themes.includes("career pressure")) return "probably drawn to characters trying to become someone without losing themselves.";
+  if (themes.includes("friendships")) return "probably drawn to slow shifts, almost-losses, and the ache inside changing friendships.";
+  return "probably drawn to quiet stories where memory, longing, and small choices matter more than spectacle.";
+}
+
+function situationFrom(memory: CandorMemory | null): ProfileDetail["situation"] {
+  const need = memory?.communicationNeeds[0] ?? "gentle directness";
+  const softSpot = memory?.softSpots[0] ?? "being misunderstood";
+
+  return {
+    title: "when something feels off",
+    setup: `someone they care about changes tone, but nothing has technically happened.`,
+    response: `they may first study the silence, then look for ${need}. if it touches ${softSpot}, they might need time before saying the exact thing.`,
+  };
+}
+
+function bannerFrom(seed: string) {
+  if (seed.includes("honest")) {
+    return "linear-gradient(135deg, hsl(var(--accent) / 0.38), hsl(var(--background) / 0.2)), radial-gradient(circle at 20% 30%, hsl(var(--foreground) / 0.16), transparent 34%)";
+  }
+  if (seed.includes("safe")) {
+    return "linear-gradient(135deg, hsl(var(--glow) / 0.28), hsl(var(--surface-secondary))), radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.28), transparent 32%)";
+  }
+  return "linear-gradient(135deg, hsl(var(--surface-secondary)), hsl(var(--accent) / 0.28)), radial-gradient(circle at 70% 30%, hsl(var(--foreground) / 0.12), transparent 36%)";
+}
+
+function initialsFrom(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "C";
+}
+
+function titleCase(value: string) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ") || "Someone";
+}
+
+function fallback(items: string[] | undefined, backup: string[]) {
+  return items?.length ? items : backup;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
