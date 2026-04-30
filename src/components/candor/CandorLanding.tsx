@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import FloatingDoodles from "@/components/FloatingDoodles";
+import AsciiBackground from "@/components/AsciiBackground";
 import Index from "@/landing/Index";
 
 export default function CandorLanding() {
@@ -13,7 +13,7 @@ export default function CandorLanding() {
 
   return (
     <>
-      <FloatingDoodles />
+      <AsciiBackground />
       <Index />
     </>
   );

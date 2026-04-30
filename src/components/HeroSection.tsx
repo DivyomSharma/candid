@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function HeroSection() {
   return (
@@ -49,13 +50,13 @@ export default function HeroSection() {
           transition={{ delay: 0.8, duration: 0.6 }}
           className="relative inline-block"
         >
-          <a
+          <Link
             href="/candor/home"
             className="inline-block px-8 py-3.5 rounded-full bg-accent text-primary-foreground font-medium text-sm tracking-wide
                        hover:scale-105 transition-transform duration-300 soft-shadow"
           >
             Enter Candor
-          </a>
+          </Link>
         </motion.div>
       </motion.div>
 

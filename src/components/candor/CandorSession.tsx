@@ -39,7 +39,10 @@ export function CandorSession({ id }: { id: string }) {
   }, [id, messages]);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const timeout = setTimeout(() => {
+      scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 100);
+    return () => clearTimeout(timeout);
   }, [messages, isResponding]);
 
   const history = useMemo(
@@ -103,7 +106,7 @@ export function CandorSession({ id }: { id: string }) {
           <p className="text-sm font-light text-foreground-secondary">candor is listening</p>
         </div>
 
-        <div className="flex min-h-[55vh] flex-col gap-12">
+        <div className="flex min-h-[55vh] flex-col gap-8">
           {messages.map((message, index) => (
             <motion.div
               key={message.id}
@@ -121,7 +124,6 @@ export function CandorSession({ id }: { id: string }) {
               >
                 {message.content}
               </p>
-              {index < messages.length - 1 && <div className="mt-8 h-px w-10 bg-border/50" />}
             </motion.div>
           ))}
 
