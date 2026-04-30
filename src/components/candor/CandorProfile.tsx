@@ -77,7 +77,7 @@ export function CandorProfile() {
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">your candor profile</h1>
           <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">
-            a softened version of what candor understands. not the raw thing.
+            simple notes from what candor has learned about you.
           </p>
         </motion.div>
 
@@ -165,8 +165,8 @@ function DetailGrid({ profile, memory }: { profile: ProfileDetail; memory: Cando
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-6 p-5 pt-3 sm:grid-cols-2">
-          <TextBlock title="values" items={values.map((item) => `cares about ${item}`)} />
-          <TextBlock title="soft spots" items={softSpots.map((item) => `tender around ${item}`)} />
+          <TextBlock title="cares about" items={values} />
+          <TextBlock title="can feel hurt by" items={softSpots} />
           <TextBlock title="patterns" items={patterns.slice(0, 4)} />
           <TextBlock title="what helps" items={profile.needs} />
         </CardContent>
@@ -177,13 +177,13 @@ function DetailGrid({ profile, memory }: { profile: ProfileDetail; memory: Cando
           <div>
             <div className="flex items-center gap-2 text-sm font-light text-accent">
               <Film className="h-4 w-4" />
-              closest story signal
+              story type
             </div>
             <h3 className="mt-4 text-2xl font-light leading-8 break-words">{profile.closestCharacter}</h3>
             <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary break-words">{profile.storyTaste}</p>
           </div>
           <div className="rounded-2xl border border-border/50 bg-background/35 p-5">
-            <p className="text-xs font-light uppercase tracking-[0.22em] text-foreground-secondary">situation read</p>
+            <p className="text-xs font-light uppercase tracking-[0.22em] text-foreground-secondary">in a moment</p>
             <h4 className="mt-3 text-xl font-light">{profile.situation.title}</h4>
             <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary break-words">{profile.situation.setup}</p>
             <p className="mt-4 text-base font-light leading-7 break-words">{profile.situation.response}</p>
@@ -195,7 +195,7 @@ function DetailGrid({ profile, memory }: { profile: ProfileDetail; memory: Cando
         <CardHeader className="p-5 pb-2">
           <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
             <Sparkles className="h-4 w-4 text-accent" />
-            quiet strengths
+            strengths
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 p-5 pt-3">
@@ -258,24 +258,24 @@ function buildProfile(memory: CandorMemory | null, email: string | null): Profil
     handle: `@${baseName.toLowerCase()}`,
     initials: initialsFrom(username),
     bio: hasSignal
-      ? `someone who seems to care about ${values[0]}, opens better with ${needs[0]}, and notices ${appreciates[0]} in people.`
-      : "a profile that will become more specific as candor hears more from you.",
+      ? `you seem to care about ${values[0]}. you open up more with ${needs[0]}. you notice ${appreciates[0]} in people.`
+      : "this profile will get clearer as you talk more.",
     bannerTone: bannerFrom(values[0]),
-    closestCharacter: hasSignal ? closestCharacter(memory) : "not enough signal for a character read yet",
-    storyTaste: hasSignal ? storyTaste(memory) : "candor needs more of your actual words before guessing at story taste.",
+    closestCharacter: hasSignal ? closestCharacter(memory) : "not enough yet",
+    storyTaste: hasSignal ? storyTaste(memory) : "talk more and this will get clearer.",
     situation: hasSignal ? situationFrom(memory) : earlySituation(),
     quietStrengths: [
-      `they may not say everything quickly, but they tend to notice what changes in the room.`,
-      `they seem to respect ${values[0]} more than performance.`,
-      `they are likely drawn to people who show ${appreciates[0]} without making it loud.`,
+      `you notice small changes in people.`,
+      `you seem to value ${values[0]} more than showing off.`,
+      `you like people who show ${appreciates[0]} in simple ways.`,
     ],
     needs: [
-      `opens better with ${needs[0]}`,
-      `may get quiet around ${softSpots[0]}`,
-      `needs room to be precise before being seen`,
+      `use ${needs[0]}`,
+      `be careful around ${softSpots[0]}`,
+      `give time to explain clearly`,
     ],
     signals: [
-      { label: "known", value: turnCount > 7 ? "candor has a real outline" : "still becoming clear", meter: clamp(turnCount * 9, 18, 92) },
+      { label: "known", value: turnCount > 7 ? "clear enough" : "still learning", meter: clamp(turnCount * 9, 18, 92) },
       { label: "core", value: values[0], meter: clamp(values.length * 18 + 28, 24, 96) },
       { label: "pace", value: needs[0], meter: clamp(needs.length * 18 + 34, 24, 96) },
     ],
@@ -285,8 +285,8 @@ function buildProfile(memory: CandorMemory | null, email: string | null): Profil
 function earlySituation(): ProfileDetail["situation"] {
   return {
     title: "still forming",
-    setup: "there is not enough history here for candor to describe a specific situation honestly.",
-    response: "keep talking in the messy version. this part should earn its confidence slowly.",
+    setup: "candor does not know enough yet.",
+    response: "keep talking normally. this will become clearer.",
   };
 }
 
@@ -295,19 +295,19 @@ function closestCharacter(memory: CandorMemory | null) {
   const themes = memory?.lifeThemes ?? [];
   const softSpots = memory?.softSpots ?? [];
 
-  if (themes.includes("career pressure")) return "amy from little women, if ambition had a quieter private room";
-  if (softSpots.includes("feeling unseen")) return "joel from eternal sunshine, the part that remembers before it speaks";
-  if (values.includes("honesty")) return "nora from normal people, careful with truth and closeness";
-  if (values.includes("emotional safety")) return "chihiro from spirited away, soft but braver than expected";
-  return "the person in the indie film who notices the thing everyone else missed";
+  if (themes.includes("career pressure")) return "a driven person who wants to do well without losing themselves";
+  if (softSpots.includes("feeling unseen")) return "a quiet person who wants to be understood";
+  if (values.includes("honesty")) return "a truthful person who needs trust";
+  if (values.includes("emotional safety")) return "a gentle person who is braver than they look";
+  return "a quiet person who notices small things";
 }
 
 function storyTaste(memory: CandorMemory | null) {
   const themes = memory?.lifeThemes ?? [];
-  if (themes.includes("family")) return "probably drawn to stories where love is complicated by home, silence, and old roles.";
-  if (themes.includes("career pressure")) return "probably drawn to characters trying to become someone without losing themselves.";
-  if (themes.includes("friendships")) return "probably drawn to slow shifts, almost-losses, and the ache inside changing friendships.";
-  return "probably drawn to quiet stories where memory, longing, and small choices matter more than spectacle.";
+  if (themes.includes("family")) return "you may like stories about family, love, and old patterns.";
+  if (themes.includes("career pressure")) return "you may like stories about ambition and identity.";
+  if (themes.includes("friendships")) return "you may like stories about changing friendships.";
+  return "you may like quiet stories about memory, love, and small choices.";
 }
 
 function situationFrom(memory: CandorMemory | null): ProfileDetail["situation"] {
@@ -316,8 +316,8 @@ function situationFrom(memory: CandorMemory | null): ProfileDetail["situation"] 
 
   return {
     title: "when something feels off",
-    setup: `someone they care about changes tone, but nothing has technically happened.`,
-    response: `they may first study the silence, then look for ${need}. if it touches ${softSpot}, they might need time before saying the exact thing.`,
+    setup: `someone you care about changes their tone.`,
+    response: `you may pause first. ${need} helps. if it touches ${softSpot}, you may need time.`,
   };
 }
 

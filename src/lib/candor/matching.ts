@@ -64,42 +64,42 @@ export function alignmentScore(a: CandorMemory, b: CandorMemory) {
 export function alignmentLanguage(memory: CandorMemory, other: CandorMemory) {
   const value = shared(aList(memory.values), aList(other.values)) ?? memory.values[0] ?? "something real";
   const need = memory.communicationNeeds[0] ?? other.appreciatesInPeople[0] ?? "gentle honesty";
-  return `candor sees a possible align around ${value}, with room for ${need}.`;
+  return `you may connect around ${value}. ${need} may help the conversation.`;
 }
 
 function titleFrom(memory: CandorMemory) {
   const value = memory.values[0];
   const theme = memory.lifeThemes[0];
-  if (value && theme) return `someone who carries ${value} through ${theme}`;
-  if (value) return `someone who cares about ${value}`;
-  if (theme) return `someone shaped by ${theme}`;
-  return "someone still being understood";
+  if (value && theme) return `cares about ${value} and has dealt with ${theme}`;
+  if (value) return `cares about ${value}`;
+  if (theme) return `has dealt with ${theme}`;
+  return "still being understood";
 }
 
 function aboutFrom(memory: CandorMemory) {
   const need = memory.communicationNeeds[0];
   const softSpot = memory.softSpots[0];
-  if (need && softSpot) return `they may open slowly, especially around ${softSpot}, but ${need} helps.`;
-  if (need) return `they seem to open best with ${need}.`;
-  if (softSpot) return `there is tenderness around ${softSpot}.`;
-  return "candor is still learning the shape of them.";
+  if (need && softSpot) return `they may take time to open up, especially around ${softSpot}. ${need} helps.`;
+  if (need) return `they open up more with ${need}.`;
+  if (softSpot) return `they may feel hurt around ${softSpot}.`;
+  return "candor is still learning about them.";
 }
 
 function oneLineFrom(memory: CandorMemory) {
   const value = memory.values[0];
   const need = memory.communicationNeeds[0];
-  if (value && need) return `moves toward ${value}, opens with ${need}.`;
-  if (value) return `seems to care about ${value}.`;
-  if (need) return `opens best with ${need}.`;
-  return "someone candor is still understanding.";
+  if (value && need) return `cares about ${value}. opens up with ${need}.`;
+  if (value) return `cares about ${value}.`;
+  if (need) return `opens up with ${need}.`;
+  return "candor is still learning about them.";
 }
 
 function storySignalFrom(memory: CandorMemory) {
   const theme = memory.lifeThemes[0];
   const value = memory.values[0];
-  if (theme && value) return `probably drawn to stories where ${value} has to survive ${theme}.`;
-  if (theme) return `probably drawn to stories shaped by ${theme}.`;
-  return "probably drawn to quiet stories where small choices reveal people.";
+  if (theme && value) return `may like stories about ${value} and ${theme}.`;
+  if (theme) return `may like stories about ${theme}.`;
+  return "may like quiet stories about small choices.";
 }
 
 function situationFrom(memory: CandorMemory): PublicCandorProfile["situation"] {
@@ -107,9 +107,9 @@ function situationFrom(memory: CandorMemory): PublicCandorProfile["situation"] {
   const softSpot = memory.softSpots[0] ?? "being misunderstood";
 
   return {
-    title: "when the tone shifts",
-    setup: "something feels different, but no one has said the real thing yet.",
-    response: `they may wait, read the room, then open better with ${need}. if it touches ${softSpot}, they might need a little time.`,
+    title: "when the mood changes",
+    setup: "something feels different, but no one has said why.",
+    response: `they may pause first. ${need} helps. if it touches ${softSpot}, they may need time.`,
   };
 }
 

@@ -163,11 +163,11 @@ export function CandorAlignProfile({ id }: { id: string }) {
             <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
               <CardContent className="grid gap-6 p-5 md:grid-cols-[1fr_1.15fr]">
                 <div>
-                  <p className="text-sm font-light text-accent">story signal</p>
+                  <p className="text-sm font-light text-accent">story type</p>
                   <p className="mt-3 text-xl font-light leading-8 break-words">{align.profile.storySignal}</p>
                 </div>
                 <div className="rounded-2xl border border-border/50 bg-background/35 p-5">
-                  <p className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary">situation</p>
+                  <p className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary">in a moment</p>
                   <h3 className="mt-3 text-xl font-light">{align.profile.situation.title}</h3>
                   <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary break-words">{align.profile.situation.setup}</p>
                   <p className="mt-4 text-base font-light leading-7 break-words">{align.profile.situation.response}</p>
