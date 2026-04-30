@@ -43,11 +43,20 @@ export function CandorHome() {
       });
 
       if (response.ok) {
-        const data = (await response.json()) as { id: string; persisted?: boolean; warning?: string };
+        const data = (await response.json()) as {
+          id: string;
+          persisted?: boolean;
+          warning?: string;
+          message?: { id: string; role: "ai"; content: string } | null;
+        };
         if (data.persisted === false) {
+          const initialMessages = [
+            { id: crypto.randomUUID(), role: "user", content: content.trim() },
+            ...(data.message ? [data.message] : []),
+          ];
           window.sessionStorage.setItem(
             `candor:${data.id}:messages`,
-            JSON.stringify([{ id: crypto.randomUUID(), role: "user", content: content.trim() }]),
+            JSON.stringify(initialMessages),
           );
         }
         router.push(`/candor/session/${data.id}`);

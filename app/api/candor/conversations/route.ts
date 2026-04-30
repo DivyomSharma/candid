@@ -45,23 +45,10 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    // Create conversation
-    const { data: conversation, error: convError } = await supabaseAdmin
-      .from("candor_conversations")
-      .insert({ user_id: user.id })
-      .select("id")
-      .single();
-
-    if (convError) throw convError;
+    const id = `local-${crypto.randomUUID()}`;
+    let aiContent: string | null = null;
 
     if (opening) {
-      await supabaseAdmin.from("candor_messages").insert({
-        conversation_id: conversation!.id,
-        role: "user",
-        content: opening,
-      });
-
-      let aiContent = "hmm... that already says something.\nlet it stay here for a second.";
       let memory = normalizeMemory(traitsRow?.data ?? createEmptyMemory());
 
       try {
@@ -78,12 +65,6 @@ export async function POST(request: NextRequest) {
         aiContent = `[DEBUG]: ${error instanceof Error ? error.message : String(error)} \n\nhmm... that already says something.\nlet it stay here for a second.`;
       }
 
-      await supabaseAdmin.from("candor_messages").insert({
-        conversation_id: conversation!.id,
-        role: "ai",
-        content: aiContent,
-      });
-
       // Upsert traits
       await supabaseAdmin.from("candor_traits").upsert(
         { user_id: user.id, data: memory },
@@ -91,7 +72,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ id: conversation!.id, persisted: true });
+    return NextResponse.json({
+      id,
+      persisted: false,
+      message: aiContent
+        ? {
+            id: crypto.randomUUID(),
+            role: "ai",
+            content: aiContent,
+          }
+        : null,
+    });
   } catch (error) {
     console.error("Conversation creation failed:", error);
     return NextResponse.json({

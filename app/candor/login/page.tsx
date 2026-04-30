@@ -61,20 +61,27 @@ function LoginExperience() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      const signUp = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: getCallbackUrl() },
+      const signUp = await fetch("/api/auth/password-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
-      setIsLoading(false);
-
-      if (signUp.error) {
+      if (!signUp.ok) {
+        setIsLoading(false);
         toast.error("that login did not open. check the details.");
         return;
       }
 
-      toast.success("check your email to finish entering.");
+      const retry = await supabase.auth.signInWithPassword({ email, password });
+      setIsLoading(false);
+
+      if (retry.error) {
+        toast.error("that login did not open. try again in a moment.");
+        return;
+      }
+
+      router.push(next);
       return;
     }
 
