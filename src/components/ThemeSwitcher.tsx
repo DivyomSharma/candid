@@ -6,22 +6,24 @@ export default function ThemeSwitcher() {
   const { mode, setMode, accent, setAccent } = useTheme();
 
   return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full surface soft-shadow backdrop-blur-sm border border-border/50">
+    <div className="surface soft-shadow flex items-center gap-1 rounded-full border border-border/50 px-2 py-1.5 backdrop-blur-sm sm:gap-1.5 sm:px-3">
       <button
+        type="button"
         onClick={() => setMode(mode === "light" ? "dark" : "light")}
-        className="w-5 h-5 flex items-center justify-center text-foreground-secondary hover:text-foreground transition-colors mr-1"
+        className="mr-0.5 flex h-5 w-5 items-center justify-center text-foreground-secondary transition-colors hover:text-foreground sm:mr-1"
         title="Toggle dark mode"
       >
         {mode === "light" ? <Moon size={14} /> : <Sun size={14} />}
       </button>
 
-      <div className="w-[1px] h-4 bg-border/50 mx-1"></div>
+      <div className="mx-0.5 h-4 w-px bg-border/50 sm:mx-1"></div>
 
       {accents.map((t) => (
         <button
           key={t.name}
+          type="button"
           onClick={() => setAccent(t.name)}
-          className="relative w-5 h-5 rounded-full transition-transform duration-300 hover:scale-110"
+          className="relative h-4 w-4 rounded-full transition-transform duration-300 hover:scale-110 sm:h-5 sm:w-5"
           style={{ backgroundColor: mode === "light" ? t.lightColor : t.darkColor }}
           title={t.label}
         >
