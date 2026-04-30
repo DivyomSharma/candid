@@ -71,9 +71,9 @@ export function CandorProfile() {
   }
 
   return (
-    <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-20">
+    <main className="gradient-bg grain relative min-h-screen overflow-hidden px-4 pb-32 pt-16 sm:px-6 sm:pt-20">
       <AmbientGlow />
-      <section className="relative z-10 mx-auto flex max-w-[680px] flex-col gap-8">
+      <section className="relative z-10 mx-auto flex max-w-[680px] flex-col gap-6 sm:gap-8">
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">your candor profile</h1>
           <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">
@@ -84,7 +84,7 @@ export function CandorProfile() {
         {!hasLoadedMemory ? (
           <ProfileLoading />
         ) : (
-          <>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="contents">
         <Card className="surface overflow-hidden border-border/50 bg-card/45 backdrop-blur-sm">
           <div className="relative h-36" style={{ background: profile.bannerTone }}>
             <div className="absolute inset-0 bg-background/10" />
@@ -124,7 +124,7 @@ export function CandorProfile() {
         </Card>
 
         <DetailGrid profile={profile} memory={memory} />
-          </>
+          </motion.div>
         )}
       </section>
       <BottomNav />
@@ -148,9 +148,12 @@ function ProfileLoading() {
 }
 
 function DetailGrid({ profile, memory }: { profile: ProfileDetail; memory: CandorMemory | null }) {
-  const values = fallback(memory?.values, ["honesty", "emotional safety"]);
-  const softSpots = fallback(memory?.softSpots, ["feeling unseen"]);
-  const patterns = fallback(memory ? [...memory.relationalPatterns, ...memory.lifeThemes] : [], ["the pattern is still forming"]);
+  const values = cleanProfileList(fallback(memory?.values, ["honesty", "emotional safety"]), 4);
+  const softSpots = cleanProfileList(fallback(memory?.softSpots, ["feeling unseen"]), 4);
+  const patterns = cleanProfileList(
+    fallback(memory ? [...memory.relationalPatterns, ...memory.lifeThemes] : [], ["the pattern is still forming"]),
+    4,
+  );
 
   return (
     <>
@@ -158,10 +161,10 @@ function DetailGrid({ profile, memory }: { profile: ProfileDetail; memory: Cando
         <CardHeader className="p-5 pb-2">
           <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
             <UserRound className="h-4 w-4 text-accent" />
-            the shape of them
+            the shape of you
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-5 p-5 pt-3 md:grid-cols-2">
+        <CardContent className="grid gap-6 p-5 pt-3 sm:grid-cols-2">
           <TextBlock title="values" items={values.map((item) => `cares about ${item}`)} />
           <TextBlock title="soft spots" items={softSpots.map((item) => `tender around ${item}`)} />
           <TextBlock title="patterns" items={patterns.slice(0, 4)} />
@@ -208,12 +211,14 @@ function DetailGrid({ profile, memory }: { profile: ProfileDetail; memory: Cando
 }
 
 function SignalCard({ label, value, meter }: { label: string; value: string; meter: number }) {
+  const width = clamp(meter, 8, 100);
+
   return (
-    <div className="rounded-2xl border border-border/45 bg-background/30 p-4">
+    <div className="min-w-0 rounded-2xl border border-border/45 bg-background/30 p-4">
       <p className="text-[11px] font-light uppercase tracking-[0.2em] text-foreground-secondary">{label}</p>
       <p className="mt-2 min-h-10 text-sm font-light leading-5 break-words">{value}</p>
-      <div className="mt-4 h-1.5 rounded-full bg-border/50">
-        <div className="h-full rounded-full bg-accent/70" style={{ width: `${meter}%` }} />
+      <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-border/50">
+        <div className="h-full rounded-full bg-accent/70" style={{ width: `${width}%` }} />
       </div>
     </div>
   );
@@ -240,9 +245,9 @@ function TextBlock({ title, items }: { title: string; items: string[] }) {
 function buildProfile(memory: CandorMemory | null, email: string | null): ProfileDetail {
   const baseName = email?.split("@")[0]?.replace(/[^\w.]+/g, ".").replace(/\.+/g, ".") || "someone";
   const username = titleCase(baseName.replace(/[._-]+/g, " "));
-  const values = fallback(memory?.values, ["honesty"]);
-  const needs = fallback(memory?.communicationNeeds, ["gentle directness"]);
-  const softSpots = fallback(memory?.softSpots, ["feeling unseen"]);
+  const values = cleanProfileList(fallback(memory?.values, ["honesty"]), 5);
+  const needs = cleanProfileList(fallback(memory?.communicationNeeds, ["gentle directness"]), 4);
+  const softSpots = cleanProfileList(fallback(memory?.softSpots, ["feeling unseen"]), 4);
   const themes = fallback(memory?.lifeThemes, ["quiet pressure"]);
   const appreciates = fallback(memory?.appreciatesInPeople, ["follow-through"]);
   const turnCount = memory?.turnCount ?? 0;
@@ -271,8 +276,8 @@ function buildProfile(memory: CandorMemory | null, email: string | null): Profil
     ],
     signals: [
       { label: "known", value: turnCount > 7 ? "candor has a real outline" : "still becoming clear", meter: clamp(turnCount * 9, 18, 92) },
-      { label: "core", value: values[0], meter: values.length * 24 + 28 },
-      { label: "pace", value: needs[0], meter: needs.length * 22 + 34 },
+      { label: "core", value: values[0], meter: clamp(values.length * 18 + 28, 24, 96) },
+      { label: "pace", value: needs[0], meter: clamp(needs.length * 18 + 34, 24, 96) },
     ],
   };
 }
@@ -345,6 +350,24 @@ function titleCase(value: string) {
 
 function fallback(items: string[] | undefined, backup: string[]) {
   return items?.length ? items : backup;
+}
+
+function cleanProfileList(items: string[], limit: number) {
+  const seen = new Set<string>();
+  const normalized = items
+    .map((item) => item.trim().toLowerCase().replace(/\s+/g, " "))
+    .filter(Boolean)
+    .filter((item) => {
+      const key = item
+        .replace(/\b(feeling|being|need for|a need for)\b/g, "")
+        .replace(/\bmisunderstood\b/g, "unseen")
+        .trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+  return normalized.slice(0, limit);
 }
 
 function clamp(value: number, min: number, max: number) {
