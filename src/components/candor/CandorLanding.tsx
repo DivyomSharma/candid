@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import AsciiBackground from "@/components/AsciiBackground";
 import Index from "@/landing/Index";
 
 export default function CandorLanding() {
@@ -13,7 +12,6 @@ export default function CandorLanding() {
 
   return (
     <main className="gradient-bg grain relative isolate min-h-screen overflow-hidden">
-      <AsciiBackground />
       <div className="relative z-10">
         <Index />
       </div>
