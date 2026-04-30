@@ -161,8 +161,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
     aiContent = turn.reply;
     memory = turn.memory;
-  } catch {
-    aiContent = "yeah... i lost the thread for a second.\ntry saying that again, simpler.";
+  } catch (error) {
+    aiContent = `[DEBUG]: ${error instanceof Error ? error.message : String(error)} \n\nyeah... i lost the thread for a second.\ntry saying that again, simpler.`;
   }
 
   const { data: aiMessage } = await supabaseAdmin

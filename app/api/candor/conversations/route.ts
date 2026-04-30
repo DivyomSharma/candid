@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
         memory = turn.memory;
       } catch (error) {
         console.error("Candor AI fallback used:", error);
+        aiContent = `[DEBUG]: ${error instanceof Error ? error.message : String(error)} \n\nhmm... that already says something.\nlet it stay here for a second.`;
       }
 
       await supabaseAdmin.from("candor_messages").insert({
