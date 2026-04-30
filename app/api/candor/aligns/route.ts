@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { getAlignmentPreview } from "@/lib/candor/alignment";
 import { alignmentLanguage, alignmentScore, buildPublicProfile } from "@/lib/candor/matching";
+import { getPublicIdentitiesForCandorUserIds } from "@/lib/candor/identity";
 
 type AlignmentRow = {
   id: string;
@@ -103,6 +104,7 @@ export async function GET() {
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 6);
+  const identities = await getPublicIdentitiesForCandorUserIds(scored.map((item) => item.userId));
 
   const aligns = await Promise.all(
     scored.map(async (item) => {
@@ -113,7 +115,7 @@ export async function GET() {
         id: alignment.id,
         score: item.score,
         language: alignmentLanguage(memory, item.memory),
-        profile: buildPublicProfile(item.memory, item.userId),
+        profile: buildPublicProfile(item.memory, item.userId, identities.get(item.userId)),
         myDmOn,
         theirDmOn,
         canText: myDmOn && theirDmOn,

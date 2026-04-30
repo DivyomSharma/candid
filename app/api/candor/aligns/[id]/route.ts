@@ -3,6 +3,7 @@ import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { normalizeMemory } from "@/lib/candor/memory";
 import { buildPublicProfile } from "@/lib/candor/matching";
+import { getPublicIdentityForCandorUserId } from "@/lib/candor/identity";
 
 type AlignmentRow = {
   id: string;
@@ -58,11 +59,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const myDmOn = dmEnabledFor(alignment, user.id);
   const theirDmOn = otherDmEnabledFor(alignment, user.id);
+  const identity = await getPublicIdentityForCandorUserId(otherUserId);
 
   return NextResponse.json({
     id: alignment.id,
     score: alignment.score,
-    profile: buildPublicProfile(normalizeMemory(traits.data), otherUserId),
+    profile: buildPublicProfile(normalizeMemory(traits.data), otherUserId, identity),
     myDmOn,
     theirDmOn,
     canText: myDmOn && theirDmOn,

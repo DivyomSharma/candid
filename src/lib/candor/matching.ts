@@ -18,18 +18,22 @@ export type PublicCandorProfile = {
   };
 };
 
-export function buildPublicProfile(memory: CandorMemory, userId = "candor"): PublicCandorProfile {
+export function buildPublicProfile(
+  memory: CandorMemory,
+  userId = "candor",
+  identity?: { username?: string | null; handle?: string | null },
+): PublicCandorProfile {
   const values = memory.values.slice(0, 3);
   const needs = memory.communicationNeeds.slice(0, 2);
   const appreciates = memory.appreciatesInPeople.slice(0, 2);
   const themes = memory.lifeThemes.slice(0, 2);
-  const username = usernameFrom(userId, memory);
+  const username = identity?.username?.trim() || usernameFrom(userId, memory);
   const title = titleFrom(memory);
   const about = aboutFrom(memory);
 
   return {
     username,
-    handle: `@${username.toLowerCase().replace(/\s+/g, ".")}`,
+    handle: identity?.handle?.trim() || `@${username.toLowerCase().replace(/\s+/g, ".")}`,
     avatarInitials: initialsFrom(username),
     avatarTone: avatarToneFrom(userId),
     line: oneLineFrom(memory),
