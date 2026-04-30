@@ -70,6 +70,7 @@ export function CandorHome() {
   const selectPrompt = (content: string) => {
     setMessage(content);
     setError("");
+    void start(content);
   };
 
   const submit = (event: FormEvent) => {
