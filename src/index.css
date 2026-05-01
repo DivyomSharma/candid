@@ -296,7 +296,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', sans-serif;
-    transition: background-color 600ms ease, color 600ms ease;
+    transition: background-color 300ms ease, color 300ms ease;
     -webkit-user-select: none;
     user-select: none;
     overflow-x: hidden;
@@ -313,8 +313,11 @@
     user-select: auto;
   }
 
-  [data-theme] * {
-    transition: background-color 600ms ease, color 600ms ease, border-color 600ms ease, box-shadow 600ms ease;
+  button,
+  a,
+  .surface,
+  .surface-secondary {
+    transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
   }
 }
 

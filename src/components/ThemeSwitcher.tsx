@@ -6,24 +6,26 @@ export default function ThemeSwitcher() {
   const { mode, setMode, accent, setAccent } = useTheme();
 
   return (
-    <div className="surface soft-shadow flex items-center gap-1 rounded-full border border-border/50 px-2 py-1.5 backdrop-blur-sm sm:gap-1.5 sm:px-3">
+    <div className="surface soft-shadow flex items-center gap-1.5 rounded-full border border-border/50 px-2.5 py-2 backdrop-blur-sm sm:gap-1.5 sm:px-3 sm:py-1.5">
       <button
         type="button"
         onClick={() => setMode(mode === "light" ? "dark" : "light")}
-        className="mr-0.5 flex h-5 w-5 items-center justify-center text-foreground-secondary transition-colors hover:text-foreground sm:mr-1"
+        aria-label={mode === "light" ? "Switch to dark mode" : "Switch to light mode"}
+        className="flex h-8 w-8 items-center justify-center rounded-full text-foreground-secondary transition-colors hover:text-foreground sm:h-7 sm:w-7"
         title="Toggle dark mode"
       >
         {mode === "light" ? <Moon size={14} /> : <Sun size={14} />}
       </button>
 
-      <div className="mx-0.5 h-4 w-px bg-border/50 sm:mx-1"></div>
+      <div className="h-5 w-px bg-border/50 sm:h-4"></div>
 
       {accents.map((t) => (
         <button
           key={t.name}
           type="button"
           onClick={() => setAccent(t.name)}
-          className="relative h-4 w-4 rounded-full transition-transform duration-300 hover:scale-110 sm:h-5 sm:w-5"
+          aria-label={`Switch accent to ${t.label}`}
+          className="relative flex h-7 w-7 items-center justify-center rounded-full transition-transform duration-300 hover:scale-110 sm:h-6 sm:w-6"
           style={{ backgroundColor: mode === "light" ? t.lightColor : t.darkColor }}
           title={t.label}
         >

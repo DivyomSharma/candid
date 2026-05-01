@@ -10,12 +10,23 @@ export const metadata: Metadata = {
     default: "Candor",
     template: "%s | Candor",
   },
-  description: "No swipes. Just honest conversations. A quieter way to connect.",
+  description: "Candor is a social app for honest conversations, alignment, and quieter connection without swipes.",
   applicationName: "Candor",
-  keywords: ["Candor", "social app", "honest conversations", "alignment", "relationships"],
+  keywords: ["Candor", "candorai", "social app", "honest conversations", "dating app", "alignment", "relationships"],
   authors: [{ name: "Candor" }],
   creator: "Candor",
   publisher: "Candor",
+  alternates: {
+    canonical: "https://www.candorai.xyz/candor",
+  },
+  category: "social networking",
+  classification: "social networking",
+  referrer: "origin-when-cross-origin",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -47,6 +58,13 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
