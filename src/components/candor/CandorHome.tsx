@@ -103,6 +103,11 @@ export function CandorHome() {
   }, [isSignedIn]);
 
   useEffect(() => {
+    if (!isSignedIn) {
+      setIsLoadingEntry(false);
+      return;
+    }
+
     let cancelled = false;
     setIsLoadingEntry(true);
 
@@ -271,13 +276,17 @@ export function CandorHome() {
 
   const currentChoice = entry.choices[choiceIndex];
   const currentInsight = entry.insights[insightIndex];
-  const showEntryLayer = entryPhase !== "done";
+  const showEntryLayer = isSignedIn && entryPhase !== "done";
 
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-20">
       <AmbientGlow />
+      <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div className="absolute left-[12%] top-24 h-48 w-48 rounded-full bg-[hsl(var(--glow)/0.08)] blur-3xl" />
+        <div className="absolute bottom-28 right-[10%] h-56 w-56 rounded-full bg-[hsl(var(--accent)/0.07)] blur-3xl" />
+      </div>
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-10rem)] max-w-[600px] flex-col justify-center gap-10">
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="relative">
           <p className="mb-4 text-sm font-light text-foreground-secondary">
             {isSignedIn
               ? `hey ${user?.email?.split("@")[0]?.toLowerCase() ?? "there"}`
@@ -302,27 +311,46 @@ export function CandorHome() {
                 <PresetCardLoading />
               ) : null}
 
-              {!isLoadingEntry && entryPhase === "choices" && currentChoice ? (
-                <ChoiceTapCard
-                  prompt={currentChoice.prompt}
-                  optionA={currentChoice.optionA}
-                  optionB={currentChoice.optionB}
-                  onChoose={handleChoice}
-                />
+              {!isLoadingEntry && entryPhase === "choices" ? (
+                <AnimatePresence mode="wait" initial={false}>
+                  {currentChoice ? (
+                    <ChoiceTapCard
+                      key={currentChoice.id}
+                      prompt={currentChoice.prompt}
+                      optionA={currentChoice.optionA}
+                      optionB={currentChoice.optionB}
+                      onChoose={handleChoice}
+                    />
+                  ) : null}
+                </AnimatePresence>
               ) : null}
 
               {!isLoadingEntry && entryPhase === "pause" ? (
-                <p className="text-sm font-light text-foreground-secondary">...</p>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.7 }}
+                  className="text-sm font-light text-foreground-secondary"
+                >
+                  just a second...
+                </motion.p>
               ) : null}
 
-              {!isLoadingEntry && entryPhase === "insights" && currentInsight ? (
-                <InsightSwipeCard line={currentInsight.line} onDecide={handleInsight} />
+              {!isLoadingEntry && entryPhase === "insights" ? (
+                <AnimatePresence mode="wait" initial={false}>
+                  {currentInsight ? (
+                    <InsightSwipeCard
+                      key={currentInsight.id}
+                      line={currentInsight.line}
+                      onDecide={handleInsight}
+                    />
+                  ) : null}
+                </AnimatePresence>
               ) : null}
 
               {!isLoadingEntry && entryPhase === "clearer" ? (
                 <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.8 }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 0.8, y: 0 }}
                   className="text-sm font-light text-foreground-secondary"
                 >
                   this is getting clearer...
@@ -334,7 +362,7 @@ export function CandorHome() {
 
         <motion.div
           initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: showEntryLayer ? 0.45 : 1, y: 0 }}
+          animate={{ opacity: showEntryLayer ? 0.34 : 1, y: 0, scale: showEntryLayer ? 0.992 : 1 }}
           transition={{ delay: 0.12, duration: 0.7 }}
           className="flex flex-wrap gap-2"
         >
@@ -359,10 +387,10 @@ export function CandorHome() {
 
         <motion.div
           initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: showEntryLayer ? 0.45 : 1, y: 0 }}
+          animate={{ opacity: showEntryLayer ? 0.34 : 1, y: 0, scale: showEntryLayer ? 0.994 : 1 }}
           transition={{ delay: 0.2, duration: 0.7 }}
         >
-          <Card className="surface border-border/50 bg-card/50 backdrop-blur-sm">
+          <Card className="surface soft-shadow border-border/50 bg-card/60 backdrop-blur-md shadow-[inset_0_1px_0_hsl(var(--foreground)/0.03),0_22px_70px_-34px_hsl(var(--glow)/0.2)]">
             <CardContent className="flex flex-col gap-4 p-5">
               <div className="flex items-center gap-2 text-xs font-light text-foreground-secondary">
                 <Sparkles data-icon="inline-start" />
@@ -398,11 +426,12 @@ export function CandorHome() {
         <motion.form
           onSubmit={submit}
           initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: showEntryLayer ? 0.55 : 1, y: 0 }}
+          animate={{ opacity: showEntryLayer ? 0.42 : 1, y: 0 }}
           transition={{ delay: 0.28, duration: 0.7 }}
           className="flex flex-col gap-3"
         >
           <div className="relative flex w-full items-center">
+            <div className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,hsl(var(--foreground)/0.03),transparent)]" />
             <input
               type="text"
               value={message}

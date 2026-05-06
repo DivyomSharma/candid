@@ -14,13 +14,26 @@ const SWIPE_THRESHOLD = 72;
 
 export function InsightSwipeCard({ line, onDecide }: InsightSwipeCardProps) {
   const [isLeaving, setIsLeaving] = useState(false);
+  const [direction, setDirection] = useState<"left" | "right" | null>(null);
+
+  const leave = (accepted: boolean) => {
+    if (isLeaving) return;
+    setIsLeaving(true);
+    setDirection(accepted ? "right" : "left");
+    window.setTimeout(() => onDecide(accepted), 240);
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12, scale: 0.985 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.98 }}
-      transition={{ duration: 0.24 }}
+      animate={
+        direction === "right"
+          ? { opacity: 0, x: 120, y: -6, rotate: 6, scale: 0.98 }
+          : direction === "left"
+            ? { opacity: 0, x: -120, y: -6, rotate: -6, scale: 0.98 }
+            : { opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }
+      }
+      transition={{ duration: 0.24, ease: "easeOut" }}
     >
       <div className="flex flex-col gap-3">
         <motion.div
@@ -28,18 +41,15 @@ export function InsightSwipeCard({ line, onDecide }: InsightSwipeCardProps) {
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.18}
           onDragEnd={(_event, info) => {
-            if (isLeaving) return;
             if (info.offset.x >= SWIPE_THRESHOLD) {
-              setIsLeaving(true);
-              onDecide(true);
+              leave(true);
             } else if (info.offset.x <= -SWIPE_THRESHOLD) {
-              setIsLeaving(true);
-              onDecide(false);
+              leave(false);
             }
           }}
           whileDrag={{ rotate: 2, scale: 1.01 }}
         >
-          <Card className="surface border-border/50 bg-card/50 backdrop-blur-sm">
+          <Card className="surface soft-shadow border-border/50 bg-card/60 backdrop-blur-md shadow-[inset_0_1px_0_hsl(var(--foreground)/0.03),0_22px_70px_-34px_hsl(var(--glow)/0.24)]">
             <CardContent className="p-6">
               <p className="text-xl font-light leading-9 text-foreground-secondary">{line}</p>
             </CardContent>
