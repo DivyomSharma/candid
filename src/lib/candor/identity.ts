@@ -1,4 +1,3 @@
-import { clerkClient } from "@clerk/nextjs/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export type PublicCandorIdentity = {
@@ -37,9 +36,7 @@ export async function getPublicIdentitiesForCandorUserIds(userIds: string[]) {
 }
 
 async function getPublicIdentityFromAuthId(authId: string): Promise<PublicCandorIdentity> {
-  if (isUuid(authId)) return getSupabaseIdentity(authId);
-  if (authId.startsWith("user_")) return getClerkIdentity(authId);
-  return { username: null, handle: null };
+  return isUuid(authId) ? getSupabaseIdentity(authId) : { username: null, handle: null };
 }
 
 async function getSupabaseIdentity(authId: string): Promise<PublicCandorIdentity> {
@@ -56,23 +53,6 @@ async function getSupabaseIdentity(authId: string): Promise<PublicCandorIdentity
     handle: handleFrom(explicitUsername ?? emailName(data.user.email) ?? displayName),
   };
 }
-
-async function getClerkIdentity(authId: string): Promise<PublicCandorIdentity> {
-  try {
-    const client = await clerkClient();
-    const user = await client.users.getUser(authId);
-    const email = user.primaryEmailAddress?.emailAddress;
-    const displayName = firstString(user.username, user.fullName, [user.firstName, user.lastName].filter(Boolean).join(" "), emailName(email));
-
-    return {
-      username: cleanDisplayName(displayName),
-      handle: handleFrom(user.username ?? emailName(email) ?? displayName),
-    };
-  } catch {
-    return { username: null, handle: null };
-  }
-}
-
 function firstString(...values: unknown[]) {
   return values.find((value): value is string => typeof value === "string" && value.trim().length > 0)?.trim() ?? null;
 }
@@ -98,7 +78,6 @@ function handleFrom(value: string | null) {
 
   return handle ? `@${handle}` : null;
 }
-
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }

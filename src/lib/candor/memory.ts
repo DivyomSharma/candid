@@ -1,6 +1,14 @@
-import type { CandorMemory } from "@/lib/candor/types";
+import type {
+  CandorInteractionProfile,
+  CandorMemory,
+  CandorMode,
+  CandorStructure,
+  PresenceState,
+} from "@/lib/candor/types";
 
 const MAX_ITEMS = 12;
+const MAX_RESPONSES = 6;
+const MAX_SUPPRESSED = 8;
 
 export function createEmptyMemory(): CandorMemory {
   return {
@@ -15,6 +23,11 @@ export function createEmptyMemory(): CandorMemory {
     seenScenarios: [],
     alignmentReady: false,
     notes: [],
+    presenceState: createDefaultPresenceState(),
+    responseHistory: [],
+    recentStructures: [],
+    suppressedPhrases: [],
+    interactionProfile: createEmptyInteractionProfile(),
   };
 }
 
@@ -33,9 +46,14 @@ export function normalizeMemory(value: unknown): CandorMemory {
     relationalPatterns: cleanList(input.relationalPatterns),
     communicationNeeds: cleanList(input.communicationNeeds),
     appreciatesInPeople: cleanList(input.appreciatesInPeople),
-    seenScenarios: cleanList(input.seenScenarios),
+    seenScenarios: cleanList(input.seenScenarios, 40),
     alignmentReady: Boolean(input.alignmentReady),
-    notes: cleanList(input.notes),
+    notes: cleanList(input.notes, 20),
+    presenceState: normalizePresenceState(input.presenceState),
+    responseHistory: cleanResponses(input.responseHistory),
+    recentStructures: cleanStructures(input.recentStructures),
+    suppressedPhrases: cleanList(input.suppressedPhrases, MAX_SUPPRESSED),
+    interactionProfile: normalizeInteractionProfile(input.interactionProfile),
   };
 }
 
@@ -50,6 +68,11 @@ export function mergeMemory(existing: CandorMemory, incoming: Partial<CandorMemo
     appreciatesInPeople: mergeList(existing.appreciatesInPeople, incoming.appreciatesInPeople),
     seenScenarios: mergeList(existing.seenScenarios, incoming.seenScenarios, 40),
     notes: mergeList(existing.notes, incoming.notes, 20),
+    presenceState: normalizePresenceState(incoming.presenceState ?? existing.presenceState),
+    responseHistory: cleanResponses(incoming.responseHistory ?? existing.responseHistory),
+    recentStructures: cleanStructures(incoming.recentStructures ?? existing.recentStructures),
+    suppressedPhrases: mergeList(existing.suppressedPhrases, incoming.suppressedPhrases, MAX_SUPPRESSED),
+    interactionProfile: mergeInteractionProfiles(existing.interactionProfile, incoming.interactionProfile),
   };
 
   const knownSignals =
@@ -65,11 +88,54 @@ export function mergeMemory(existing: CandorMemory, incoming: Partial<CandorMemo
   return merged;
 }
 
-export function updateTurnMemory(memory: CandorMemory, mode: CandorMemory["lastModes"][number]) {
+export function updateTurnMemory(
+  memory: CandorMemory,
+  input: {
+    mode: CandorMode;
+    structure: CandorStructure;
+    reply: string;
+    presenceState: PresenceState;
+  },
+) {
   return {
     ...memory,
     turnCount: memory.turnCount + 1,
-    lastModes: [...memory.lastModes, mode].slice(-6),
+    lastModes: [...memory.lastModes, input.mode].slice(-6),
+    recentStructures: [...memory.recentStructures, input.structure].slice(-6),
+    responseHistory: [...memory.responseHistory, normalizeReply(input.reply)].slice(-MAX_RESPONSES),
+    suppressedPhrases: buildSuppressedPhrases([...memory.responseHistory, input.reply]),
+    presenceState: input.presenceState,
+  };
+}
+
+export function recordInteractionSignals(
+  memory: CandorMemory,
+  input: {
+    choicePattern?: string | null;
+    insightType?: string | null;
+    accepted?: boolean | null;
+    engagementSignal?: string | null;
+  },
+) {
+  const profile = memory.interactionProfile;
+
+  return {
+    ...memory,
+    interactionProfile: {
+      choicePatterns: mergeList(profile.choicePatterns, input.choicePattern ? [input.choicePattern] : []),
+      acceptedInsightTypes:
+        input.accepted && input.insightType
+          ? mergeList(profile.acceptedInsightTypes, [input.insightType])
+          : profile.acceptedInsightTypes,
+      rejectedInsightTypes:
+        input.accepted === false && input.insightType
+          ? mergeList(profile.rejectedInsightTypes, [input.insightType])
+          : profile.rejectedInsightTypes,
+      engagementSignals: mergeList(
+        profile.engagementSignals,
+        input.engagementSignal ? [input.engagementSignal] : [],
+      ),
+    },
   };
 }
 
@@ -117,6 +183,92 @@ export function extractLightMemory(message: string): Partial<CandorMemory> {
   return memory;
 }
 
+export function buildTraitCluster(memory: CandorMemory) {
+  const parts = [
+    memory.values[0],
+    memory.lifeThemes[0],
+    memory.communicationNeeds[0],
+    memory.softSpots[0],
+  ]
+    .filter(Boolean)
+    .slice(0, 3);
+
+  return parts.length ? parts.join(" | ") : "emerging";
+}
+
+function createDefaultPresenceState(): PresenceState {
+  return {
+    clarity: "low",
+    curiosity: "medium",
+    resonance: "low",
+  };
+}
+
+function createEmptyInteractionProfile(): CandorInteractionProfile {
+  return {
+    choicePatterns: [],
+    acceptedInsightTypes: [],
+    rejectedInsightTypes: [],
+    engagementSignals: [],
+  };
+}
+
+function normalizePresenceState(value: unknown): PresenceState {
+  const input = value as Partial<PresenceState> | undefined;
+
+  return {
+    clarity: level(input?.clarity),
+    curiosity: level(input?.curiosity, "medium"),
+    resonance: level(input?.resonance),
+  };
+}
+
+function normalizeInteractionProfile(value: unknown): CandorInteractionProfile {
+  const input = value as Partial<CandorInteractionProfile> | undefined;
+  const empty = createEmptyInteractionProfile();
+
+  return {
+    choicePatterns: cleanList(input?.choicePatterns, 20) || empty.choicePatterns,
+    acceptedInsightTypes: cleanList(input?.acceptedInsightTypes, 20) || empty.acceptedInsightTypes,
+    rejectedInsightTypes: cleanList(input?.rejectedInsightTypes, 20) || empty.rejectedInsightTypes,
+    engagementSignals: cleanList(input?.engagementSignals, 20) || empty.engagementSignals,
+  };
+}
+
+function mergeInteractionProfiles(existing: CandorInteractionProfile, incoming?: Partial<CandorInteractionProfile>) {
+  return {
+    choicePatterns: mergeList(existing.choicePatterns, incoming?.choicePatterns, 20),
+    acceptedInsightTypes: mergeList(existing.acceptedInsightTypes, incoming?.acceptedInsightTypes, 20),
+    rejectedInsightTypes: mergeList(existing.rejectedInsightTypes, incoming?.rejectedInsightTypes, 20),
+    engagementSignals: mergeList(existing.engagementSignals, incoming?.engagementSignals, 20),
+  };
+}
+
+function cleanResponses(value: unknown) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map(normalizeReply)
+    .filter(Boolean)
+    .slice(-MAX_RESPONSES);
+}
+
+function cleanStructures(value: unknown) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter(
+      (item): item is CandorStructure =>
+        item === "fragment" ||
+        item === "observation" ||
+        item === "contrast" ||
+        item === "question" ||
+        item === "silence",
+    )
+    .slice(-6);
+}
+
 function cleanList(value: unknown, max = MAX_ITEMS) {
   if (!Array.isArray(value)) return [];
 
@@ -132,4 +284,29 @@ function cleanList(value: unknown, max = MAX_ITEMS) {
 
 function mergeList(current: string[], incoming: unknown, max = MAX_ITEMS) {
   return cleanList([...current, ...cleanList(incoming, max)], max);
+}
+
+function buildSuppressedPhrases(responses: string[]) {
+  return Array.from(
+    new Set(
+      responses
+        .slice(-4)
+        .flatMap((reply) => {
+          const line = normalizeReply(reply);
+          const words = line.split(/\s+/).filter(Boolean);
+          const openings = [words.slice(0, 2).join(" "), words.slice(0, 3).join(" ")].filter(Boolean);
+          const pauses = ["hmm...", "yeah...", "maybe..."].filter((pause) => line.includes(pause));
+          return [...openings, ...pauses];
+        })
+        .filter(Boolean),
+    ),
+  ).slice(-MAX_SUPPRESSED);
+}
+
+function normalizeReply(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 180);
+}
+
+function level(value: unknown, fallback: PresenceState["clarity"] = "low"): PresenceState["clarity"] {
+  return value === "low" || value === "medium" || value === "high" ? value : fallback;
 }

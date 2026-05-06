@@ -8,14 +8,13 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { useClerk, useUser as useClerkUser } from "@clerk/nextjs";
 import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { createSupabaseBrowser } from "@/lib/supabase-browser";
 
 export type CandorAuthUser = {
   id: string;
   email: string | null;
-  provider: "supabase" | "clerk";
+  provider: "supabase";
 };
 
 interface AuthContextType {
@@ -39,27 +38,23 @@ export const useAuth = () => useContext(AuthContext);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isSupabaseLoaded, setIsSupabaseLoaded] = useState(false);
-  const { user: clerkUser, isLoaded: isClerkLoaded } = useClerkUser();
-  const { signOut: clerkSignOut } = useClerk();
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowser();
 
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setSupabaseUser(s?.user ?? null);
-      setIsSupabaseLoaded(true);
+      setIsLoaded(true);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setSupabaseUser(s?.user ?? null);
-      setIsSupabaseLoaded(true);
+      setIsLoaded(true);
     });
 
     return () => subscription.unsubscribe();
@@ -67,8 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     const supabase = createSupabaseBrowser();
-    await Promise.allSettled([supabase.auth.signOut(), clerkSignOut()]);
-  }, [clerkSignOut]);
+    await supabase.auth.signOut();
+  }, []);
 
   const user: CandorAuthUser | null = supabaseUser
     ? {
@@ -76,15 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: supabaseUser.email ?? null,
         provider: "supabase",
       }
-    : clerkUser
-      ? {
-          id: clerkUser.id,
-          email: clerkUser.primaryEmailAddress?.emailAddress ?? null,
-          provider: "clerk",
-        }
-      : null;
-
-  const isLoaded = isSupabaseLoaded && isClerkLoaded;
+    : null;
 
   return (
     <AuthContext.Provider

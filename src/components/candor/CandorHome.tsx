@@ -1,15 +1,18 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
+import { ChoiceTapCard } from "@/components/candor/ChoiceTapCard";
+import { InsightSwipeCard } from "@/components/candor/InsightSwipeCard";
 import { useAuth } from "@/contexts/AuthContext";
 import type { CandorPresets } from "@/lib/candor/presets";
+import type { CandorEntryPayload } from "@/lib/candor/types";
 
 const defaultPresets: CandorPresets = {
   chips: ["something i keep replaying", "a person i miss", "a small win", "i feel off", "no idea yet"],
@@ -19,12 +22,64 @@ const defaultPresets: CandorPresets = {
   },
 };
 
+const defaultEntry: CandorEntryPayload = {
+  choices: [
+    {
+      id: "quiet-weight",
+      prompt: "imagine this...\nsomething sits wrong with you for hours, and no one can tell.",
+      optionA: "you stay with it quietly",
+      optionB: "you look for one person to tell",
+      patternA: "internal processing",
+      patternB: "selective reaching",
+    },
+    {
+      id: "room-shift",
+      prompt: "imagine this...\na room changes slightly, and you notice before anyone says anything.",
+      optionA: "you trust the feeling first",
+      optionB: "you wait for proof",
+      patternA: "signal-trusting",
+      patternB: "evidence-checking",
+    },
+    {
+      id: "care-shape",
+      prompt: "imagine this...\nsomeone cares, but the way they show it is uneven.",
+      optionA: "you feel the gap quickly",
+      optionB: "you give it more time",
+      patternA: "consistency-seeking",
+      patternB: "patience-first",
+    },
+  ],
+  insights: [
+    { id: "offness", line: "you notice when something feels slightly off", insightType: "observation" },
+    {
+      id: "expectation",
+      line: "you do not always say what you expect, but you still feel it",
+      insightType: "contrast",
+    },
+    {
+      id: "care",
+      line: "you pay attention to the shape of effort, not just the words",
+      insightType: "pattern",
+    },
+  ],
+};
+
+type EntryPhase = "choices" | "pause" | "insights" | "clearer" | "done";
+
 export function CandorHome() {
   const [message, setMessage] = useState("");
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState("");
   const [presets, setPresets] = useState<CandorPresets>(defaultPresets);
+  const [entry, setEntry] = useState<CandorEntryPayload>(defaultEntry);
   const [isLoadingPresets, setIsLoadingPresets] = useState(false);
+  const [isLoadingEntry, setIsLoadingEntry] = useState(false);
+  const [entryPhase, setEntryPhase] = useState<EntryPhase>("choices");
+  const [choiceIndex, setChoiceIndex] = useState(0);
+  const [insightIndex, setInsightIndex] = useState(0);
+  const [entrySignals, setEntrySignals] = useState<
+    Array<{ choicePattern: string | null; insightType: string | null; accepted: boolean | null; engagementSignal: string }>
+  >([]);
   const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
 
@@ -47,12 +102,73 @@ export function CandorHome() {
     };
   }, [isSignedIn]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoadingEntry(true);
+
+    fetch("/api/candor/me/entry", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload: { entry?: CandorEntryPayload } | null) => {
+        if (!cancelled && payload?.entry) setEntry(payload.entry);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setIsLoadingEntry(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    if (entryPhase !== "pause") return;
+    const timer = window.setTimeout(() => setEntryPhase("insights"), 400);
+    return () => window.clearTimeout(timer);
+  }, [entryPhase]);
+
+  useEffect(() => {
+    if (entryPhase !== "clearer") return;
+    const timer = window.setTimeout(() => setEntryPhase("done"), 1000);
+    return () => window.clearTimeout(timer);
+  }, [entryPhase]);
+
+  const logSignal = async (signal: {
+    choicePattern: string | null;
+    insightType: string | null;
+    accepted: boolean | null;
+    engagementSignal: string;
+  }) => {
+    setEntrySignals((current) => [...current, signal]);
+
+    if (!isSignedIn) return;
+
+    try {
+      await fetch("/api/candor/learning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signal),
+      });
+    } catch {
+      return;
+    }
+  };
+
   const start = async (content: string) => {
     if (!content.trim() || isStarting) return;
 
     if (!isSignedIn) {
       router.push(`/candor/login?next=${encodeURIComponent("/candor/home")}`);
       return;
+    }
+
+    if (entrySignals.length) {
+      void logSignal({
+        choicePattern: null,
+        insightType: null,
+        accepted: null,
+        engagementSignal: "continued_to_conversation",
+      });
     }
 
     setError("");
@@ -77,10 +193,7 @@ export function CandorHome() {
             { id: crypto.randomUUID(), role: "user", content: content.trim() },
             ...(data.message ? [data.message] : []),
           ];
-          window.sessionStorage.setItem(
-            `candor:${data.id}:messages`,
-            JSON.stringify(initialMessages),
-          );
+          window.sessionStorage.setItem(`candor:${data.id}:messages`, JSON.stringify(initialMessages));
         }
         router.push(`/candor/session/${data.id}`);
         return;
@@ -115,6 +228,51 @@ export function CandorHome() {
     void start(message);
   };
 
+  const handleChoice = (choice: "a" | "b") => {
+    const current = entry.choices[choiceIndex];
+    if (!current) return;
+
+    const choicePattern = choice === "a" ? current.patternA : current.patternB;
+    void logSignal({
+      choicePattern,
+      insightType: null,
+      accepted: null,
+      engagementSignal: "entry_choice",
+    });
+
+    if (choiceIndex >= Math.min(entry.choices.length, 3) - 1) {
+      setChoiceIndex((value) => value + 1);
+      setEntryPhase("pause");
+      return;
+    }
+
+    setChoiceIndex((value) => value + 1);
+  };
+
+  const handleInsight = (accepted: boolean) => {
+    const current = entry.insights[insightIndex];
+    if (!current) return;
+
+    void logSignal({
+      choicePattern: null,
+      insightType: current.insightType,
+      accepted,
+      engagementSignal: accepted ? "insight_accept" : "insight_reject",
+    });
+
+    if (insightIndex >= Math.min(entry.insights.length, 3) - 1) {
+      setInsightIndex((value) => value + 1);
+      setEntryPhase("clearer");
+      return;
+    }
+
+    setInsightIndex((value) => value + 1);
+  };
+
+  const currentChoice = entry.choices[choiceIndex];
+  const currentInsight = entry.insights[insightIndex];
+  const showEntryLayer = entryPhase !== "done";
+
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-20">
       <AmbientGlow />
@@ -128,9 +286,53 @@ export function CandorHome() {
           </h1>
         </motion.div>
 
+        <AnimatePresence mode="wait">
+          {showEntryLayer ? (
+            <motion.div
+              key={entryPhase}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25 }}
+              className="flex flex-col gap-5"
+            >
+              {isLoadingEntry ? (
+                <PresetCardLoading />
+              ) : null}
+
+              {!isLoadingEntry && entryPhase === "choices" && currentChoice ? (
+                <ChoiceTapCard
+                  prompt={currentChoice.prompt}
+                  optionA={currentChoice.optionA}
+                  optionB={currentChoice.optionB}
+                  onChoose={handleChoice}
+                />
+              ) : null}
+
+              {!isLoadingEntry && entryPhase === "pause" ? (
+                <p className="text-sm font-light text-foreground-secondary">...</p>
+              ) : null}
+
+              {!isLoadingEntry && entryPhase === "insights" && currentInsight ? (
+                <InsightSwipeCard line={currentInsight.line} onDecide={handleInsight} />
+              ) : null}
+
+              {!isLoadingEntry && entryPhase === "clearer" ? (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.8 }}
+                  className="text-sm font-light text-foreground-secondary"
+                >
+                  this is getting clearer...
+                </motion.p>
+              ) : null}
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+
         <motion.div
           initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={{ opacity: showEntryLayer ? 0.45 : 1, y: 0 }}
           transition={{ delay: 0.12, duration: 0.7 }}
           className="flex flex-wrap gap-2"
         >
@@ -153,7 +355,11 @@ export function CandorHome() {
           )}
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.7 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: showEntryLayer ? 0.45 : 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.7 }}
+        >
           <Card className="surface border-border/50 bg-card/50 backdrop-blur-sm">
             <CardContent className="flex flex-col gap-4 p-5">
               <div className="flex items-center gap-2 text-xs font-light text-foreground-secondary">
@@ -190,7 +396,7 @@ export function CandorHome() {
         <motion.form
           onSubmit={submit}
           initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={{ opacity: showEntryLayer ? 0.55 : 1, y: 0 }}
           transition={{ delay: 0.28, duration: 0.7 }}
           className="flex flex-col gap-3"
         >
