@@ -279,9 +279,11 @@ export function CandorHome() {
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-10rem)] max-w-[600px] flex-col justify-center gap-10">
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <p className="mb-4 text-sm font-light text-foreground-secondary">
-            {isSignedIn ? `hey ${user?.email?.split("@")[0]?.toLowerCase() ?? "there"}` : "enter slowly"}
+            {isSignedIn
+              ? `hey ${user?.email?.split("@")[0]?.toLowerCase() ?? "there"}`
+              : "a place for the unsaid parts"}
           </p>
-          <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">
+          <h1 className="max-w-[11ch] text-4xl font-light leading-[0.96] tracking-tight md:text-[4.5rem]">
             what&apos;s been on your mind lately?
           </h1>
         </motion.div>

@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useSignIn } from "@clerk/nextjs/legacy";
 import { ArrowRight, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ function LoginExperience() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createSupabaseBrowser();
+  const { signIn, isLoaded: isClerkLoaded } = useSignIn();
   const next = searchParams.get("next") ?? "/candor/home";
   const getCallbackUrl = () =>
     `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(next)}`;
@@ -89,13 +91,17 @@ function LoginExperience() {
     router.push(next);
   };
 
-  const handleOAuth = async (provider: "google" | "facebook" | "apple") => {
+  const handleClerkOAuth = async (strategy: "oauth_google" | "oauth_facebook" | "oauth_apple") => {
+    if (!isClerkLoaded || !signIn) {
+      toast.message("that door is still waking up. try again in a breath.");
+      return;
+    }
+
     try {
-      await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: getCallbackUrl(),
-        },
+      await signIn.authenticateWithRedirect({
+        strategy,
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: next,
       });
     } catch {
       toast.error("that door did not open. try again later.");
@@ -124,21 +130,21 @@ function LoginExperience() {
           <Button
             variant="outline"
             className="w-full rounded-full h-11 border-border/50 bg-background/50 font-light hover:bg-accent/10 transition-colors"
-            onClick={() => handleOAuth("google")}
+            onClick={() => handleClerkOAuth("oauth_google")}
           >
             continue with google
           </Button>
           <Button
             variant="outline"
             className="w-full rounded-full h-11 border-border/50 bg-background/50 font-light hover:bg-accent/10 transition-colors"
-            onClick={() => handleOAuth("facebook")}
+            onClick={() => handleClerkOAuth("oauth_facebook")}
           >
             continue with facebook
           </Button>
           <Button
             variant="outline"
             className="w-full rounded-full h-11 border-border/50 bg-background/50 font-light hover:bg-accent/10 transition-colors"
-            onClick={() => handleOAuth("apple")}
+            onClick={() => handleClerkOAuth("oauth_apple")}
           >
             continue with apple
           </Button>

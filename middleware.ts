@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+async function refreshSupabaseSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -30,6 +31,10 @@ export async function middleware(request: NextRequest) {
 
   return response;
 }
+
+export default clerkMiddleware(async (_auth, request) => {
+  return refreshSupabaseSession(request);
+});
 
 export const config = {
   matcher: [

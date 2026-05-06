@@ -34,20 +34,20 @@ export function ChoiceTapCard({ prompt, optionA, optionB, onChoose }: ChoiceTapC
             <p className="pt-2 text-sm font-light text-foreground-secondary">which feels more like you?</p>
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => onChoose("a")}
-              className="rounded-2xl border border-border/50 px-4 py-3 text-left text-sm font-light text-foreground-secondary transition-colors hover:border-accent/70 hover:text-foreground"
+              className="flex min-h-24 items-center rounded-2xl border border-border/50 px-4 py-4 text-left text-sm font-light leading-6 text-foreground-secondary transition-colors hover:border-accent/70 hover:text-foreground"
             >
-              a) {optionA}
+              <span className="block text-balance">{optionA}</span>
             </button>
             <button
               type="button"
               onClick={() => onChoose("b")}
-              className="rounded-2xl border border-border/50 px-4 py-3 text-left text-sm font-light text-foreground-secondary transition-colors hover:border-accent/70 hover:text-foreground"
+              className="flex min-h-24 items-center rounded-2xl border border-border/50 px-4 py-4 text-left text-sm font-light leading-6 text-foreground-secondary transition-colors hover:border-accent/70 hover:text-foreground"
             >
-              b) {optionB}
+              <span className="block text-balance">{optionB}</span>
             </button>
           </div>
         </CardContent>
