@@ -1,12 +1,16 @@
 import type { MetadataRoute } from "next";
+import { siteConfig, siteUrl } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-    },
-    sitemap: "https://www.candorai.xyz/sitemap.xml",
-    host: "https://www.candorai.xyz",
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/api/", "/sso-callback"],
+      },
+    ],
+    sitemap: siteUrl("/sitemap.xml"),
+    host: siteConfig.url,
   };
 }

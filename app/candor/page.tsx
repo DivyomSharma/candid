@@ -1,23 +1,61 @@
 import type { Metadata } from "next";
 import CandorLanding from "@/components/candor/CandorLanding";
+import { siteConfig, siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Candor",
-  description: "No swipes. Just honest conversations. A space where you can be understood before you're seen.",
+  title: {
+    absolute: siteConfig.name,
+  },
+  description: siteConfig.socialDescription,
   alternates: {
-    canonical: "https://www.candorai.xyz/candor",
+    canonical: siteUrl(siteConfig.landingPath),
   },
   openGraph: {
-    url: "https://www.candorai.xyz/candor",
-    title: "Candor",
-    description: "No swipes. Just honest conversations. A space where you can be understood before you're seen.",
+    url: siteUrl(siteConfig.landingPath),
+    title: siteConfig.name,
+    description: siteConfig.socialDescription,
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: "Candor - No swipes. Just honest conversations.",
+      },
+    ],
   },
   twitter: {
-    title: "Candor",
-    description: "No swipes. Just honest conversations. A space where you can be understood before you're seen.",
+    card: "summary_large_image",
+    title: siteConfig.name,
+    description: siteConfig.socialDescription,
+    images: [siteConfig.ogImage],
   },
 };
 
 export default function CandorPage() {
-  return <CandorLanding />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: siteConfig.name,
+    applicationCategory: "SocialNetworkingApplication",
+    operatingSystem: "Web",
+    url: siteUrl(siteConfig.landingPath),
+    description: siteConfig.description,
+    image: siteUrl(siteConfig.ogImage),
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <CandorLanding />
+    </>
+  );
 }

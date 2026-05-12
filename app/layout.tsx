@@ -3,21 +3,22 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "lenis/dist/lenis.css";
 import "@/index.css";
 import { Providers } from "@/components/candor/Providers";
+import { siteConfig, siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.candorai.xyz"),
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Candor",
-    template: "%s | Candor",
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
   },
-  description: "Candor is a social app for honest conversations, alignment, and quieter connection without swipes.",
-  applicationName: "Candor",
-  keywords: ["Candor", "candorai", "social app", "honest conversations", "dating app", "alignment", "relationships"],
-  authors: [{ name: "Candor" }],
-  creator: "Candor",
-  publisher: "Candor",
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  keywords: [...siteConfig.keywords],
+  authors: [{ name: siteConfig.name }],
+  creator: siteConfig.name,
+  publisher: siteConfig.name,
   alternates: {
-    canonical: "https://www.candorai.xyz/candor",
+    canonical: siteUrl(siteConfig.landingPath),
   },
   category: "social networking",
   classification: "social networking",
@@ -36,13 +37,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    siteName: "Candor",
-    url: "https://www.candorai.xyz",
-    title: "Candor",
-    description: "No swipes. Just honest conversations. A quieter way to connect.",
+    siteName: siteConfig.name,
+    url: siteUrl(siteConfig.landingPath),
+    title: siteConfig.name,
+    description: siteConfig.socialDescription,
     images: [
       {
-        url: "/og-candor.png",
+        url: siteConfig.ogImage,
         width: 1200,
         height: 630,
         alt: "Candor - No swipes. Just honest conversations.",
@@ -51,9 +52,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Candor",
-    description: "No swipes. Just honest conversations. A quieter way to connect.",
-    images: ["/og-candor.png"],
+    title: siteConfig.name,
+    description: siteConfig.socialDescription,
+    images: [siteConfig.ogImage],
   },
   robots: {
     index: true,

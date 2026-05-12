@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
+import { siteConfig } from "@/lib/site";
 
 export default function Page() {
-  redirect("/candor");
+  permanentRedirect(siteConfig.landingPath);
 }
