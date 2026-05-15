@@ -25,6 +25,7 @@ import type {
   PresenceState,
 } from "@/lib/candor/types";
 import { shapeCandorResponse } from "@/lib/candor-response";
+import { logCandorInternal } from "@/lib/candor/logger";
 
 export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnResult> {
   const lightMemory = mergeMemory(input.memory, extractLightMemory(input.message));
@@ -380,7 +381,7 @@ async function analyzeMemory(message: string, history: CandorTurnInput["history"
       maxTokens: 450,
     });
   } catch (error) {
-    console.error("Candor memory analysis failed:", error);
+    logCandorInternal({ event: "memory_analysis_skipped", level: "warn", error });
     return createEmptyMemory();
   }
 }

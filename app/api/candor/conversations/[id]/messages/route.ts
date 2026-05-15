@@ -20,6 +20,8 @@ import {
 import { factsAsRetrievedMemory, upsertMemoryFacts } from "@/lib/candor/memory-facts";
 import { logInteractionPattern } from "@/lib/candor/interaction-patterns";
 import { maybeQueueInitiative } from "@/lib/candor/initiatives";
+import { safeCandorFallback, sanitizeCandorReply } from "@/lib/candor/fallback";
+import { logCandorInternal } from "@/lib/candor/logger";
 
 async function getOrCreateUser(authId: string) {
   return getOrCreateCandorUser(authId);
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const body = (await request.json()) as {
+  const body = (await request.json().catch(() => ({}))) as {
     message?: string;
     history?: CandorHistoryMessage[];
   };
@@ -87,15 +89,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "message_required" }, { status: 400 });
   }
 
+  try {
   const supabaseAdmin = getSupabaseAdmin();
   const saved = await getUserTraits(userId);
   const history = body.history ?? [];
   const socialState = await getSocialState(saved.userId);
-  const retrievedMemories = await retrieveRelationalMemories({
-    userId: saved.userId,
-    message: content,
-  });
-  const factMemories = await factsAsRetrievedMemory(saved.userId);
+  const [retrievedMemories, factMemories] = await Promise.all([
+    retrieveRelationalMemories({
+      userId: saved.userId,
+      message: content,
+    }).catch((error) => {
+      logCandorInternal({ event: "relational_memory_retrieval_skipped", level: "warn", error });
+      return [];
+    }),
+    factsAsRetrievedMemory(saved.userId).catch((error) => {
+      logCandorInternal({ event: "memory_fact_retrieval_skipped", level: "warn", error });
+      return [];
+    }),
+  ]);
   const persistedUserMessage = await persistMessage({
     userId: saved.userId,
     role: "user",
@@ -125,8 +136,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       weight: 0.55,
     });
   } catch (error) {
-    aiContent = `[DEBUG]: ${error instanceof Error ? error.message : String(error)} \n\nyeah... i lost the thread for a second.\ntry saying that again, simpler.`;
+    logCandorInternal({ event: "conversation_turn_degraded", level: "error", error });
+    aiContent = safeCandorFallback(content);
   }
+
+  aiContent = sanitizeCandorReply(aiContent, content);
 
   await supabaseAdmin.from("candor_traits").upsert(
     { user_id: saved.userId, data: memory },
@@ -164,4 +178,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     userMessage: persistedUserMessage,
     conversationId: CANDOR_THREAD_ID,
   });
+  } catch (error) {
+    logCandorInternal({ event: "conversation_message_failed", level: "error", error });
+    return NextResponse.json({
+      message: {
+        id: crypto.randomUUID(),
+        role: "ai",
+        content: safeCandorFallback(content),
+      },
+      conversationId: CANDOR_THREAD_ID,
+    });
+  }
 }

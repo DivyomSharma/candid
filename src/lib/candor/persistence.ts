@@ -1,4 +1,5 @@
 import type { CandorHistoryMessage } from "@/lib/candor-api";
+import { sanitizeCandorReply } from "@/lib/candor/fallback";
 import { normalizeSocialState } from "@/lib/candor/social-state";
 import type { CandorSocialState } from "@/lib/candor/types";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -57,7 +58,7 @@ export async function fetchRecentMessages(input: {
       .map((item) => ({
         id: item.id as string,
         role: item.role as "user" | "ai",
-        content: item.content as string,
+        content: item.role === "ai" ? sanitizeCandorReply(item.content as string) : item.content as string,
         created_at: item.created_at as string,
       }));
   } catch (error) {
@@ -87,13 +88,14 @@ export async function persistMessage(input: {
 }) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
+    const content = input.role === "ai" ? sanitizeCandorReply(input.content) : input.content;
     const expiresAt = new Date(Date.now() + (input.expiresInDays ?? 21) * 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabaseAdmin
       .from("candor_messages")
       .insert({
         user_id: input.userId,
         role: input.role,
-        content: input.content,
+        content,
         expires_at: expiresAt,
       })
       .select("id, role, content, created_at")

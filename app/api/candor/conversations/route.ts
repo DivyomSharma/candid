@@ -19,6 +19,8 @@ import {
 import { factsAsRetrievedMemory, upsertMemoryFacts } from "@/lib/candor/memory-facts";
 import { logInteractionPattern } from "@/lib/candor/interaction-patterns";
 import { maybeQueueInitiative } from "@/lib/candor/initiatives";
+import { safeCandorFallback, sanitizeCandorReply } from "@/lib/candor/fallback";
+import { logCandorInternal } from "@/lib/candor/logger";
 
 async function getOrCreateUser(authId: string) {
   return getOrCreateCandorUser(authId);
@@ -50,11 +52,19 @@ export async function POST(request: NextRequest) {
     if (opening) {
       let memory = normalizeMemory(traitsRow?.data ?? createEmptyMemory());
       const socialState = await getSocialState(user.id);
-      const retrievedMemories = await retrieveRelationalMemories({
-        userId: user.id,
-        message: opening,
-      });
-      const factMemories = await factsAsRetrievedMemory(user.id);
+      const [retrievedMemories, factMemories] = await Promise.all([
+        retrieveRelationalMemories({
+          userId: user.id,
+          message: opening,
+        }).catch((error) => {
+          logCandorInternal({ event: "relational_memory_retrieval_skipped", level: "warn", error });
+          return [];
+        }),
+        factsAsRetrievedMemory(user.id).catch((error) => {
+          logCandorInternal({ event: "memory_fact_retrieval_skipped", level: "warn", error });
+          return [];
+        }),
+      ]);
       await persistMessage({ userId: user.id, role: "user", content: opening });
 
       try {
@@ -82,9 +92,11 @@ export async function POST(request: NextRequest) {
           weight: 0.55,
         });
       } catch (error) {
-        console.error("Candor AI fallback used:", error);
-        aiContent = `[DEBUG]: ${error instanceof Error ? error.message : String(error)} \n\nhmm... that already says something.\nlet it stay here for a second.`;
+        logCandorInternal({ event: "conversation_turn_degraded", level: "error", error });
+        aiContent = safeCandorFallback(opening);
       }
+
+      aiContent = sanitizeCandorReply(aiContent, opening);
 
       // Upsert traits
       await supabaseAdmin.from("candor_traits").upsert(
@@ -115,7 +127,7 @@ export async function POST(request: NextRequest) {
         : null,
     });
   } catch (error) {
-    console.error("Conversation creation failed:", error);
+    logCandorInternal({ event: "conversation_creation_failed", level: "error", error });
     return NextResponse.json({
       id: CANDOR_THREAD_ID,
       persisted: false,

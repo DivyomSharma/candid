@@ -1,5 +1,6 @@
 import type { CandorRetrievedMemory } from "@/lib/candor/types";
 import { embedCandorText } from "@/lib/candor/embeddings";
+import { logCandorInternal } from "@/lib/candor/logger";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 const MEMORY_KEYWORDS = /\b(family|breakup|ex|work|friend|dating|relationship|music|movie|film|game|politics|startup|founder|finance|design|gym|sleep|travel|texting|ignored|honest|safe|party|drink|smoke|anxious|overwhelmed|argument|conflict)\b/gi;
@@ -10,7 +11,7 @@ export async function retrieveRelationalMemories(input: {
   limit?: number;
 }): Promise<CandorRetrievedMemory[]> {
   const keywords = extractKeywords(input.message);
-  const embedded = await embedCandorText(input.message);
+  const embedded = await safeEmbedCandorText(input.message);
 
   if (embedded) {
     const vectorResults = await retrieveVectorMemories({
@@ -64,7 +65,7 @@ async function retrieveVectorMemories(input: {
       .filter((item) => item.content)
       .slice(0, input.limit);
   } catch (error) {
-    console.error("Candor vector memory retrieval skipped:", error);
+    logCandorInternal({ event: "vector_memory_retrieval_skipped", level: "warn", error });
     return [];
   }
 }
@@ -106,7 +107,7 @@ async function retrieveKeywordMemories(input: {
       .sort((a, b) => b.score - a.score)
       .slice(0, input.limit);
   } catch (error) {
-    console.error("Candor relational memory retrieval skipped:", error);
+    logCandorInternal({ event: "keyword_memory_retrieval_skipped", level: "warn", error });
     return [];
   }
 }
@@ -131,7 +132,7 @@ async function retrieveRecentHighSignalMemories(userId: string, limit: number) {
       score: Number(item.importance ?? 0.4),
     }));
   } catch (error) {
-    console.error("Candor high-signal memory retrieval skipped:", error);
+    logCandorInternal({ event: "high_signal_memory_retrieval_skipped", level: "warn", error });
     return [];
   }
 }
@@ -163,7 +164,7 @@ export async function writeRelationalMemoryEvent(input: {
 
     if (error || !data?.id) return;
 
-    const embedded = await embedCandorText(content);
+    const embedded = await safeEmbedCandorText(content);
     if (!embedded) return;
 
     await supabaseAdmin.from("candor_memory_embeddings").insert({
@@ -175,7 +176,7 @@ export async function writeRelationalMemoryEvent(input: {
       embedding: embedded.embedding,
     });
   } catch (error) {
-    console.error("Candor relational memory write skipped:", error);
+    logCandorInternal({ event: "relational_memory_write_skipped", level: "warn", error });
   }
 }
 
@@ -228,6 +229,15 @@ export function summarizeTurnForRelationalMemory(message: string) {
 
 function extractKeywords(message: string) {
   return Array.from(new Set(message.match(MEMORY_KEYWORDS)?.map((item) => item.toLowerCase()) ?? [])).slice(0, 8);
+}
+
+async function safeEmbedCandorText(text: string) {
+  try {
+    return await embedCandorText(text);
+  } catch (error) {
+    logCandorInternal({ event: "embedding_skipped", level: "warn", error });
+    return null;
+  }
 }
 
 function memoryScore(input: {

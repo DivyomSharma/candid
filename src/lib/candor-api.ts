@@ -1,3 +1,6 @@
+import { sanitizeCandorReply } from "@/lib/candor/fallback";
+import { logCandorInternal } from "@/lib/candor/logger";
+
 export type CandorRole = "user" | "ai";
 
 export type CandorHistoryMessage = {
@@ -87,8 +90,14 @@ export async function sendCandorMessage(payload: ChatPayload) {
     }
     return await sendViaGroq(payload);
   } catch (error) {
+    logCandorInternal({ event: "primary_chat_route_failed", level: "warn", error });
     if (!process.env.OPENROUTER_API_KEY) throw error;
-    return sendViaOpenRouter(payload);
+    try {
+      return await sendViaOpenRouter(payload);
+    } catch (fallbackError) {
+      logCandorInternal({ event: "secondary_chat_route_failed", level: "error", error: fallbackError });
+      throw fallbackError;
+    }
   }
 }
 
@@ -104,7 +113,10 @@ async function sendViaBackend(payload: ChatPayload, baseUrl: string) {
   }
 
   const data = (await response.json()) as ChatResponse;
-  return data.response ?? data.reply ?? data.content ?? data.message ?? "wait yeah... stay with that a little.";
+  return sanitizeCandorReply(
+    data.response ?? data.reply ?? data.content ?? data.message ?? "wait yeah... stay with that a little.",
+    payload.message,
+  );
 }
 
 async function sendViaGroq(payload: ChatPayload) {
@@ -143,7 +155,7 @@ async function sendViaGroq(payload: ChatPayload) {
     choices?: Array<{ message?: { content?: string } }>;
   };
 
-  return data.choices?.[0]?.message?.content ?? "wait yeah... stay with that a little.";
+  return sanitizeCandorReply(data.choices?.[0]?.message?.content ?? "wait yeah... stay with that a little.", payload.message);
 }
 
 async function sendViaOpenRouter(payload: ChatPayload) {
@@ -184,7 +196,7 @@ async function sendViaOpenRouter(payload: ChatPayload) {
     choices?: Array<{ message?: { content?: string } }>;
   };
 
-  return data.choices?.[0]?.message?.content ?? "wait yeah... stay with that a little.";
+  return sanitizeCandorReply(data.choices?.[0]?.message?.content ?? "wait yeah... stay with that a little.", payload.message);
 }
 
 function openRouterModelFor(route?: ChatPayload["model_route"]) {

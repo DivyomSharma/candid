@@ -1,4 +1,5 @@
 import type { CandorRetrievedMemory } from "@/lib/candor/types";
+import { logCandorInternal } from "@/lib/candor/logger";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 type FactCandidate = {
@@ -65,7 +66,7 @@ export async function upsertMemoryFacts(input: {
       { onConflict: "user_id,kind,key" },
     );
   } catch (error) {
-    console.error("Candor memory fact upsert skipped:", error);
+    logCandorInternal({ event: "memory_fact_upsert_skipped", level: "warn", error });
   }
 }
 
@@ -87,7 +88,8 @@ export async function factsAsRetrievedMemory(userId: string, limit = 5): Promise
       content: `${fact.key}: ${formatValue(fact.value)}`,
       score: Number(fact.confidence ?? 0.4),
     }));
-  } catch {
+  } catch (error) {
+    logCandorInternal({ event: "memory_fact_retrieval_skipped", level: "warn", error });
     return [];
   }
 }
