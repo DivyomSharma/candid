@@ -5,25 +5,20 @@ import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { CANDOR_THREAD_ID } from "@/lib/candor/thread";
+import {
+  getOrCreateCandorUser,
+  getSocialState,
+  persistMessage,
+  saveSocialState,
+} from "@/lib/candor/persistence";
+import {
+  retrieveRelationalMemories,
+  summarizeTurnForRelationalMemory,
+  writeRelationalMemoryEvent,
+} from "@/lib/candor/relational-memory";
 
 async function getOrCreateUser(authId: string) {
-  const supabaseAdmin = getSupabaseAdmin();
-  const { data: existing } = await supabaseAdmin
-    .from("candor_users")
-    .select("id")
-    .eq("clerk_id", authId)
-    .maybeSingle();
-
-  if (existing) return existing;
-
-  const { data: created, error } = await supabaseAdmin
-    .from("candor_users")
-    .insert({ clerk_id: authId })
-    .select("id")
-    .single();
-
-  if (error) throw error;
-  return created!;
+  return getOrCreateCandorUser(authId);
 }
 
 export async function POST(request: NextRequest) {
@@ -51,6 +46,12 @@ export async function POST(request: NextRequest) {
 
     if (opening) {
       let memory = normalizeMemory(traitsRow?.data ?? createEmptyMemory());
+      const socialState = await getSocialState(user.id);
+      const retrievedMemories = await retrieveRelationalMemories({
+        userId: user.id,
+        message: opening,
+      });
+      await persistMessage({ userId: user.id, role: "user", content: opening });
 
       try {
         const turn = await runCandorTurn({
@@ -58,9 +59,12 @@ export async function POST(request: NextRequest) {
           message: opening,
           history: [],
           memory,
+          socialState,
+          retrievedMemories,
         });
         aiContent = turn.reply;
         memory = turn.memory;
+        await saveSocialState(user.id, turn.socialState);
       } catch (error) {
         console.error("Candor AI fallback used:", error);
         aiContent = `[DEBUG]: ${error instanceof Error ? error.message : String(error)} \n\nhmm... that already says something.\nlet it stay here for a second.`;
@@ -71,6 +75,15 @@ export async function POST(request: NextRequest) {
         { user_id: user.id, data: memory },
         { onConflict: "user_id" },
       );
+
+      await persistMessage({ userId: user.id, role: "ai", content: aiContent });
+      const relationalMemory = summarizeTurnForRelationalMemory(opening);
+      if (relationalMemory) {
+        await writeRelationalMemoryEvent({
+          userId: user.id,
+          ...relationalMemory,
+        });
+      }
     }
 
     return NextResponse.json({

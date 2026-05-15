@@ -14,6 +14,23 @@ export type CandorTone = "soft" | "neutral" | "direct";
 
 export type CandorStructure = "fragment" | "observation" | "contrast" | "question" | "silence" | "playful";
 
+export type CandorSocialMove =
+  | "react"
+  | "tease"
+  | "challenge"
+  | "ask_side_pick"
+  | "rapid_fire"
+  | "callback"
+  | "shift_topic"
+  | "deepen"
+  | "lighten"
+  | "pause"
+  | "initiative"
+  | "repair"
+  | "curiosity_hook"
+  | "playful_assumption"
+  | "energy_flip";
+
 export type PresenceLevel = "low" | "medium" | "high";
 
 export type PresenceState = {
@@ -51,6 +68,28 @@ export type CandorMemory = {
   interactionProfile: CandorInteractionProfile;
 };
 
+export type CandorSocialState = {
+  archetypeSignals: string[];
+  humorTolerance: number;
+  directnessTolerance: number;
+  emotionalExpressiveness: number;
+  chaosTolerance: number;
+  preferredPace: "slow" | "balanced" | "quick";
+  depthAppetite: "low" | "medium" | "high";
+  socialBattery: "low" | "medium" | "high" | "unknown";
+  trustStage: "glimpse" | "warming" | "rhythm" | "patterns" | "context" | "continuity" | "alignment-ready";
+  recentEnergy: "flat" | "steady" | "bright" | "heavy" | "chaotic";
+  avoid: string[];
+  recentMoves: CandorSocialMove[];
+};
+
+export type CandorRetrievedMemory = {
+  id: string;
+  kind: "episodic" | "semantic" | "emotional" | "social" | "practical" | "interaction";
+  content: string;
+  score: number;
+};
+
 export type CandorIntuitionState = {
   emotionalSignal: PresenceLevel;
   userOpenness: PresenceLevel;
@@ -78,13 +117,17 @@ export type CandorTurnInput = {
   message: string;
   history: CandorHistoryMessage[];
   memory: CandorMemory;
+  socialState?: CandorSocialState;
+  retrievedMemories?: CandorRetrievedMemory[];
 };
 
 export type CandorTurnResult = {
   reply: string;
   memory: CandorMemory;
+  socialState: CandorSocialState;
   mode: CandorMode;
   decision: CandorDecision;
+  socialMove: CandorSocialMove;
 };
 
 export type CandorEntryChoice = {

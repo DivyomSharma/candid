@@ -10,6 +10,7 @@ import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { candorThreadStorageKey } from "@/lib/candor/thread";
+import { responseDelayFor } from "@/lib/candor/timing";
 import type { CandorHistoryMessage } from "@/lib/candor-api";
 
 type Message = CandorHistoryMessage & { id: string; pending?: boolean };
@@ -63,7 +64,7 @@ export function CandorSession({ id }: { id: string }) {
     setDraft("");
     setIsResponding(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await new Promise((resolve) => setTimeout(resolve, responseDelayFor({ message: content })));
 
     const response = await fetch(`/api/candor/conversations/${id}/messages`, {
       method: "POST",

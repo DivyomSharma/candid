@@ -10,6 +10,8 @@ import {
 import { getLearningBias, logLearningEvent } from "@/lib/candor/learning";
 import { buildAnalysisPrompt, buildCandorPrompt } from "@/lib/candor/prompts";
 import { selectScenario } from "@/lib/candor/scenarios";
+import { chooseSocialMove, socialMoveInstruction } from "@/lib/candor/social-moves";
+import { normalizeSocialState, understandingLine, updateSocialState } from "@/lib/candor/social-state";
 import type {
   CandorDecision,
   CandorIntuitionState,
@@ -26,10 +28,19 @@ import { shapeCandorResponse } from "@/lib/candor-response";
 
 export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnResult> {
   const lightMemory = mergeMemory(input.memory, extractLightMemory(input.message));
+  const startingSocialState = normalizeSocialState(input.socialState);
   const intuition = buildIntuitionState(input.message, lightMemory);
   const learningBias = await getLearningBias(lightMemory);
   const interestEnergy = detectInterestEnergy(input.message);
   const decision = decideResponse(intuition, lightMemory, learningBias, input.message, interestEnergy.primaryTopic);
+  const socialMove = chooseSocialMove({
+    message: input.message,
+    memory: lightMemory,
+    socialState: startingSocialState,
+    decision,
+    learningBias,
+    primaryTopic: interestEnergy.primaryTopic,
+  });
   const scenario = decision.mode === "scenario" ? selectScenario(lightMemory) : undefined;
   const suppressedPhrases = buildSuppressedPhrases(lightMemory);
   const momentumCue = buildMomentumCue({
@@ -38,6 +49,8 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     decision,
     primaryTopic: interestEnergy.primaryTopic,
     learningBias,
+    socialMove,
+    socialState: startingSocialState,
   });
 
   const prompt = buildCandorPrompt({
@@ -47,6 +60,11 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     suppressedPhrases,
     learningBias,
     momentumCue,
+    socialState: startingSocialState,
+    socialMove,
+    socialMoveInstruction: socialMoveInstruction(socialMove),
+    retrievedMemories: input.retrievedMemories ?? [],
+    understanding: understandingLine(startingSocialState),
     scenario: scenario?.text,
   });
 
@@ -68,8 +86,18 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     intuition,
     decision,
     learningBias,
+    socialState: startingSocialState,
+    socialMove,
     scenario: scenario?.text,
     suppressedPhrases,
+  });
+
+  const socialState = updateSocialState({
+    current: startingSocialState,
+    message: input.message,
+    memory: lightMemory,
+    move: socialMove,
+    structure: decision.structure,
   });
 
   let memory = updateTurnMemory(
@@ -99,7 +127,7 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     engagementSignal: engagementFromTurn(input.message, intuition, interestEnergy.primaryTopic),
   });
 
-  return { reply, memory, mode: decision.mode, decision };
+  return { reply, memory, socialState, mode: decision.mode, decision, socialMove };
 }
 
 function buildIntuitionState(message: string, memory: CandorMemory): CandorIntuitionState {
@@ -245,6 +273,8 @@ async function maybeRetryForRepetition(input: {
   intuition: CandorIntuitionState;
   decision: CandorDecision;
   learningBias: Awaited<ReturnType<typeof getLearningBias>>;
+  socialState: ReturnType<typeof normalizeSocialState>;
+  socialMove: ReturnType<typeof chooseSocialMove>;
   scenario?: string;
   suppressedPhrases: string[];
 }) {
@@ -264,12 +294,19 @@ async function maybeRetryForRepetition(input: {
     presenceState: input.intuition.presenceState,
     suppressedPhrases: [...input.suppressedPhrases, input.reply.split(/\s+/).slice(0, 4).join(" ")].slice(-8),
     learningBias: input.learningBias,
+    socialState: input.socialState,
+    socialMove: input.socialMove,
+    socialMoveInstruction: socialMoveInstruction(input.socialMove),
+    retrievedMemories: input.input.retrievedMemories ?? [],
+    understanding: understandingLine(input.socialState),
     momentumCue: buildMomentumCue({
       message: input.input.message,
       memory: input.memory,
       decision: fallbackDecision,
       primaryTopic: detectInterestEnergy(input.input.message).primaryTopic,
       learningBias: input.learningBias,
+      socialMove: input.socialMove,
+      socialState: input.socialState,
     }),
     scenario: input.scenario,
     retryReason: "the previous draft sounded too close to something already said. change the rhythm and angle.",
@@ -415,8 +452,10 @@ function buildMomentumCue(input: {
   decision: CandorDecision;
   primaryTopic: string | null;
   learningBias: CandorLearningBias;
+  socialMove: ReturnType<typeof chooseSocialMove>;
+  socialState: ReturnType<typeof normalizeSocialState>;
 }) {
-  const { message, memory, decision, primaryTopic, learningBias } = input;
+  const { message, memory, decision, primaryTopic, learningBias, socialMove, socialState } = input;
   const text = message.trim().toLowerCase();
   const fallbackTopic = primaryTopic ?? learningBias.favoredTopics[0] ?? "movies";
 
@@ -434,6 +473,10 @@ function buildMomentumCue(input: {
 
   if (primaryTopic) {
     return `they just gave a strong topic signal around ${primaryTopic}. double down there. make the reply feel like chemistry, not analysis. add a specific take or playful assumption.`;
+  }
+
+  if (memory.turnCount < 4) {
+    return `onboarding chemistry mode. context is still thin, so candor should carry more of the energy. use ${socialMove}. keep it low-pressure, socially alive, and useful for reading their vibe. current read: ${socialState.archetypeSignals.join(", ") || "still unclear"}.`;
   }
 
   if (decision.mode === "spark") {

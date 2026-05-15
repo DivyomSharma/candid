@@ -5,25 +5,21 @@ import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { CANDOR_THREAD_ID, isCandorThread } from "@/lib/candor/thread";
+import {
+  fetchRecentMessages,
+  getOrCreateCandorUser,
+  getSocialState,
+  persistMessage,
+  saveSocialState,
+} from "@/lib/candor/persistence";
+import {
+  retrieveRelationalMemories,
+  summarizeTurnForRelationalMemory,
+  writeRelationalMemoryEvent,
+} from "@/lib/candor/relational-memory";
 
 async function getOrCreateUser(authId: string) {
-  const supabaseAdmin = getSupabaseAdmin();
-  const { data: existing } = await supabaseAdmin
-    .from("candor_users")
-    .select("id")
-    .eq("clerk_id", authId)
-    .maybeSingle();
-
-  if (existing) return existing;
-
-  const { data: created, error } = await supabaseAdmin
-    .from("candor_users")
-    .insert({ clerk_id: authId })
-    .select("id")
-    .single();
-
-  if (error) throw error;
-  return created!;
+  return getOrCreateCandorUser(authId);
 }
 
 async function getUserTraits(authId: string) {
@@ -53,7 +49,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  return NextResponse.json({ messages: [], persisted: false });
+  const user = await getOrCreateCandorUser(userId);
+  const messages = await fetchRecentMessages(user.id);
+
+  return NextResponse.json({ messages, persisted: messages.length > 0 });
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -81,9 +80,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const supabaseAdmin = getSupabaseAdmin();
   const saved = await getUserTraits(userId);
   const history = body.history ?? [];
+  const socialState = await getSocialState(saved.userId);
+  const retrievedMemories = await retrieveRelationalMemories({
+    userId: saved.userId,
+    message: content,
+  });
+  const persistedUserMessage = await persistMessage({
+    userId: saved.userId,
+    role: "user",
+    content,
+  });
 
   let aiContent: string;
   let memory = normalizeMemory(saved.traits ?? createEmptyMemory());
+  let nextSocialState = socialState;
 
   try {
     const turn = await runCandorTurn({
@@ -91,9 +101,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       message: content,
       history,
       memory,
+      socialState,
+      retrievedMemories,
     });
     aiContent = turn.reply;
     memory = turn.memory;
+    nextSocialState = turn.socialState;
   } catch (error) {
     aiContent = `[DEBUG]: ${error instanceof Error ? error.message : String(error)} \n\nyeah... i lost the thread for a second.\ntry saying that again, simpler.`;
   }
@@ -102,13 +115,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     { user_id: saved.userId, data: memory },
     { onConflict: "user_id" },
   );
+  await saveSocialState(saved.userId, nextSocialState);
+
+  const persistedAiMessage = await persistMessage({
+    userId: saved.userId,
+    role: "ai",
+    content: aiContent,
+  });
+
+  const relationalMemory = summarizeTurnForRelationalMemory(content);
+  if (relationalMemory) {
+    await writeRelationalMemoryEvent({
+      userId: saved.userId,
+      ...relationalMemory,
+    });
+  }
 
   return NextResponse.json({
     message: {
-      id: crypto.randomUUID(),
+      id: persistedAiMessage?.id ?? crypto.randomUUID(),
       role: "ai",
       content: aiContent,
     },
+    userMessage: persistedUserMessage,
     conversationId: CANDOR_THREAD_ID,
   });
 }

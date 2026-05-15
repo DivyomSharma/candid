@@ -5,6 +5,7 @@ import ChatDemo from "@/components/ChatDemo";
 import UnlockSection from "@/components/UnlockSection";
 import MatchReveal from "@/components/MatchReveal";
 import AIChatPreview from "@/components/AIChatPreview";
+import CandorPhilosophySection from "@/components/CandorPhilosophySection";
 import PrivacySection from "@/components/PrivacySection";
 import EmotionalSection from "@/components/EmotionalSection";
 import WaitlistSection from "@/components/WaitlistSection";
@@ -19,6 +20,7 @@ export default function Index() {
       <UnlockSection />
       <MatchReveal />
       <AIChatPreview />
+      <CandorPhilosophySection />
       <PrivacySection />
       <EmotionalSection />
       <WaitlistSection />

@@ -1,4 +1,12 @@
-import type { CandorDecision, CandorLearningBias, CandorMemory, PresenceState } from "@/lib/candor/types";
+import type {
+  CandorDecision,
+  CandorLearningBias,
+  CandorMemory,
+  CandorRetrievedMemory,
+  CandorSocialMove,
+  CandorSocialState,
+  PresenceState,
+} from "@/lib/candor/types";
 
 export function buildCandorPrompt(input: {
   memory: CandorMemory;
@@ -6,11 +14,30 @@ export function buildCandorPrompt(input: {
   presenceState: PresenceState;
   suppressedPhrases: string[];
   learningBias: CandorLearningBias;
+  socialState?: CandorSocialState;
+  socialMove?: CandorSocialMove;
+  socialMoveInstruction?: string;
+  retrievedMemories?: CandorRetrievedMemory[];
+  understanding?: string;
   momentumCue?: string;
   scenario?: string;
   retryReason?: string;
 }) {
-  const { memory, decision, presenceState, suppressedPhrases, learningBias, momentumCue, scenario, retryReason } = input;
+  const {
+    memory,
+    decision,
+    presenceState,
+    suppressedPhrases,
+    learningBias,
+    socialState,
+    socialMove,
+    socialMoveInstruction,
+    retrievedMemories,
+    understanding,
+    momentumCue,
+    scenario,
+    retryReason,
+  } = input;
 
   return `
 you are candor.
@@ -51,6 +78,8 @@ intuition decision:
 - mode: ${decision.mode}
 - tone: ${decision.tone}
 - structure: ${decision.structure}
+- social move: ${socialMove ?? "react"}
+- social move instruction: ${socialMoveInstruction ?? "react first. make it feel immediate, not summarized."}
 
 mode guidance:
 listen: stay close, but do not merely repeat.
@@ -103,6 +132,22 @@ learning bias:
 - choice tendencies seen more often: ${list(learningBias.favoredChoicePatterns)}
 - structure lean: ${learningBias.favoredStructures.join(", ") || "observation, fragment"}
 - topics that tend to open them up: ${list(learningBias.favoredTopics)}
+
+current social read:
+- understanding phase: ${understanding ?? "still getting a first read"}
+- archetype signals: ${list(socialState?.archetypeSignals ?? [])}
+- humor tolerance: ${socialState?.humorTolerance ?? 0.5}
+- directness tolerance: ${socialState?.directnessTolerance ?? 0.45}
+- emotional expressiveness: ${socialState?.emotionalExpressiveness ?? 0.35}
+- chaos tolerance: ${socialState?.chaosTolerance ?? 0.45}
+- preferred pace: ${socialState?.preferredPace ?? "balanced"}
+- depth appetite: ${socialState?.depthAppetite ?? "medium"}
+- recent energy: ${socialState?.recentEnergy ?? "steady"}
+- avoid: ${list(socialState?.avoid ?? [])}
+- recent social moves: ${list(socialState?.recentMoves ?? [])}
+
+retrieved relational memory:
+${formatRetrievedMemories(retrievedMemories ?? [])}
 
 avoid repeating these patterns:
 ${suppressedPhrases.length ? suppressedPhrases.map((item) => `- ${item}`).join("\n") : "- nothing obvious yet"}
@@ -157,4 +202,12 @@ rules:
 
 function list(items: string[]) {
   return items.length ? items.join(", ") : "unknown";
+}
+
+function formatRetrievedMemories(items: CandorRetrievedMemory[]) {
+  if (!items.length) return "- none yet";
+  return items
+    .slice(0, 6)
+    .map((item) => `- ${item.kind}: ${item.content}`)
+    .join("\n");
 }

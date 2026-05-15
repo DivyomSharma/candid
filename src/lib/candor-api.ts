@@ -23,6 +23,7 @@ type ChatResponse = {
 
 const backendUrl = process.env.CANDOR_API_URL ?? process.env.NEXT_PUBLIC_CANDOR_API_URL;
 const groqModel = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
+const openRouterModel = process.env.OPENROUTER_MODEL ?? "anthropic/claude-3.5-haiku";
 
 const systemPrompt = `
 you are candor.
@@ -77,7 +78,12 @@ export async function sendCandorMessage(payload: ChatPayload) {
     return sendViaBackend(payload, backendUrl);
   }
 
-  return sendViaGroq(payload);
+  try {
+    return await sendViaGroq(payload);
+  } catch (error) {
+    if (!process.env.OPENROUTER_API_KEY) throw error;
+    return sendViaOpenRouter(payload);
+  }
 }
 
 async function sendViaBackend(payload: ChatPayload, baseUrl: string) {
@@ -125,6 +131,47 @@ async function sendViaGroq(payload: ChatPayload) {
 
   if (!response.ok) {
     throw new Error("groq_chat_failed");
+  }
+
+  const data = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+
+  return data.choices?.[0]?.message?.content ?? "wait yeah... stay with that a little.";
+}
+
+async function sendViaOpenRouter(payload: ChatPayload) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("missing_openrouter_api_key");
+  }
+
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+      "X-Title": "Candor",
+    },
+    body: JSON.stringify({
+      model: openRouterModel,
+      temperature: payload.temperature ?? 0.82,
+      max_tokens: payload.max_tokens ?? 105,
+      messages: [
+        { role: "system", content: payload.system_prompt ?? systemPrompt },
+        ...payload.history.slice(-16).map((message) => ({
+          role: toGroqRole(message.role),
+          content: message.content,
+        })),
+        { role: "user", content: payload.message },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("openrouter_chat_failed");
   }
 
   const data = (await response.json()) as {

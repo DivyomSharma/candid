@@ -1,5 +1,8 @@
 import os
+import json
 import re
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Literal
 
@@ -16,6 +19,8 @@ load_dotenv()
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 model = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+openrouter_api_key = os.environ.get("OPENROUTER_API_KEY")
+openrouter_model = os.environ.get("OPENROUTER_MODEL", "anthropic/claude-3.5-haiku")
 frontend_origins = [
     origin.strip()
     for origin in os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000").split(",")
@@ -132,6 +137,33 @@ def shape_response(content: str) -> str:
     return "\n".join(lines[:3])
 
 
+def openrouter_completion(request: ChatRequest) -> str:
+    if not openrouter_api_key:
+        raise RuntimeError("missing_openrouter_api_key")
+
+    payload = {
+        "model": openrouter_model,
+        "temperature": request.temperature or 0.82,
+        "max_tokens": request.max_tokens or 90,
+        "messages": build_messages(request),
+    }
+    api_request = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {openrouter_api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000").split(",")[0],
+            "X-Title": "Candor",
+        },
+        method="POST",
+    )
+
+    with urllib.request.urlopen(api_request, timeout=45) as response:
+        data = json.loads(response.read().decode("utf-8"))
+        return data.get("choices", [{}])[0].get("message", {}).get("content", "")
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -139,14 +171,17 @@ def health() -> dict[str, str]:
 
 @app.post("/chat")
 def chat(request: ChatRequest) -> dict[str, str]:
-    completion = client.chat.completions.create(
-        messages=build_messages(request),
-        model=model,
-        temperature=request.temperature or 0.78,
-        max_tokens=request.max_tokens or 90,
-    )
+    try:
+        completion = client.chat.completions.create(
+            messages=build_messages(request),
+            model=model,
+            temperature=request.temperature or 0.78,
+            max_tokens=request.max_tokens or 90,
+        )
+        content = completion.choices[0].message.content or ""
+    except Exception:
+        content = openrouter_completion(request)
 
-    content = completion.choices[0].message.content or ""
     return {"response": shape_response(content)}
 
 
