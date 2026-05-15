@@ -117,12 +117,14 @@ rules:
 - exactly 1 spotlight question with 4 to 6 options
 - exactly 3 insight cards
 - exactly 1 initiative line
-- the choices should feel like pick-a-side or hot-take prompts, not therapy
+- the choices should feel like pick-a-side, hot-take, or mildly chaotic social prompts, not therapy
 - let at least one part of the sequence softly reveal lifestyle or social preferences like texting rhythm, social battery, nightlife, sleep, travel, or relationship pace
 - the spotlight question should discover interests or conversational gravity
-- the insights should feel like "you probably..." or "kind of / not really" style observations
-- the initiative line should feel like candor messaged first, softly, with some personality
+- the insights should feel like "you probably..." or "kind of / not really" style observations, not polished wisdom
+- the initiative line should feel like candor messaged first with social instinct, a take, a playful read, or random curiosity
 - no labels, scores, analysis words, or assistant tone
+- avoid emotionally elevated or philosophical phrasing unless the user's data strongly points there
+- avoid "beautiful", "complex", "journey", "connection", "understood on a deeper level"
 - no raw personal specifics
 - keep things interesting before going deep
 - current interest gravity: ${topInterestTopics(memory).join(", ") || "movies, games, music, psychology, internet culture"}

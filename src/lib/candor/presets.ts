@@ -73,8 +73,9 @@ rules:
 - use interests, culturally relevant hooks, personality tells, and socially revealing preferences
 - it is good if 1 or 2 hooks softly expose lifestyle or social habits
 - make them feel like something a real person would tap immediately
-- avoid aesthetic wallpaper, journaling language, therapy tone, soft sadness, or empty poetic phrases
-- good lanes include media, internet culture, personality, obsessions, social habits, taste, hot takes
+- avoid aesthetic wallpaper, journaling language, therapy tone, soft sadness, polished empathy, or empty poetic phrases
+- good lanes include media, internet culture, personality, obsessions, social habits, taste, hot takes, dumb debates, irrational beliefs
+- the tone can be socially messy: "okay random question", "hot take or valid", "pick one", "be honest"
 - no names or personal specifics
 - current interest gravity: ${topInterestTopics(memory).join(", ") || "movies, games, music, internet culture, relationships"}
 `.trim();

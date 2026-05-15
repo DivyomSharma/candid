@@ -8,12 +8,12 @@ interface Message {
 }
 
 const conversation: Message[] = [
-  { role: "ai", text: "What makes you feel truly understood?" },
+  { role: "ai", text: "okay random question. what tiny thing instantly makes you trust someone more?" },
   { role: "user", text: "When someone remembers the small things I mention." },
-  { role: "ai", text: "That's beautiful. The details matter to you." },
-  { role: "ai", text: "What do you wish people asked you more often?" },
+  { role: "ai", text: "wait yeah. you definitely notice effort in microscopic ways." },
+  { role: "ai", text: "also slightly dangerous trait, because then lazy people become very obvious." },
   { role: "user", text: "How I'm really feeling — not just how my day was." },
-  { role: "ai", text: "understood.", cursive: true },
+  { role: "ai", text: "clocking everything.", cursive: true },
 ];
 
 function TypingIndicator() {
@@ -107,7 +107,7 @@ export default function ChatDemo() {
                         <path d="M12 7l4 0l0 4" />
                       </svg>
                       <span className="text-[11px] font-medium tracking-wide uppercase text-accent">
-                        {isUser ? "You" : "Candor AI"}
+                        {isUser ? "You" : "Candor"}
                       </span>
                     </div>
                   )}

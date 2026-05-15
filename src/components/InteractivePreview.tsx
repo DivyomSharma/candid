@@ -144,13 +144,13 @@ export default function InteractivePreview() {
               transition={{ duration: 0.55, ease: "easeOut" }}
               className="surface rounded-3xl p-7 md:p-9 soft-shadow space-y-6"
             >
-              {/* AI scenario prompt */}
+              {/* Candor scenario prompt */}
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5 mb-3">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 17c0-7 6-10 12-10" /><path d="M12 7l4 0l0 4" />
                   </svg>
-                  <span className="text-[10px] font-medium tracking-widest uppercase text-accent/70">Candor AI</span>
+                  <span className="text-[10px] font-medium tracking-widest uppercase text-accent/70">Candor</span>
                 </div>
                 <div className="surface-secondary rounded-2xl rounded-tl-sm px-5 py-4 text-sm text-foreground-secondary font-light leading-relaxed whitespace-pre-line">
                   {scenario.prompt}
@@ -227,7 +227,7 @@ export default function InteractivePreview() {
                       </div>
                     </div>
 
-                    {/* AI typing / reply */}
+                    {/* Candor typing / reply */}
                     {showAI && (
                       <motion.div
                         initial={{ opacity: 0, y: 6 }}
@@ -239,7 +239,7 @@ export default function InteractivePreview() {
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M4 17c0-7 6-10 12-10" /><path d="M12 7l4 0l0 4" />
                           </svg>
-                          <span className="text-[10px] font-medium tracking-widest uppercase text-accent/70">Candor AI</span>
+                          <span className="text-[10px] font-medium tracking-widest uppercase text-accent/70">Candor</span>
                         </div>
                         <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-tl-sm surface-secondary text-sm text-foreground-secondary font-light leading-relaxed">
                           {aiText}
@@ -250,7 +250,7 @@ export default function InteractivePreview() {
                       </motion.div>
                     )}
 
-                    {/* Typing dots before AI reply appears */}
+                    {/* Typing dots before Candor reply appears */}
                     {!showAI && (
                       <motion.div
                         initial={{ opacity: 0 }}

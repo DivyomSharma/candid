@@ -179,6 +179,14 @@ function decideResponse(
     };
   }
 
+  if (shouldTakeSocialInitiative(message, memory, intuition, primaryTopic)) {
+    return {
+      mode: "spark",
+      tone: primaryTopic ? "direct" : "neutral",
+      structure: "playful",
+    };
+  }
+
   if (/\b(i tried|i stayed|i kept showing up|i cared|i did)\b/.test(memory.notes.join(" "))) {
     return {
       mode: "appreciate",
@@ -319,6 +327,8 @@ async function analyzeMemory(message: string, history: CandorTurnInput["history"
 
 function temperatureFor(decision: CandorDecision) {
   if (decision.mode === "challenge") return 0.76;
+  if (decision.mode === "spark") return 0.9;
+  if (decision.mode === "scenario") return 0.88;
   if (decision.mode === "pause") return 0.68;
   return 0.84;
 }
@@ -410,6 +420,10 @@ function buildMomentumCue(input: {
   const text = message.trim().toLowerCase();
   const fallbackTopic = primaryTopic ?? learningBias.favoredTopics[0] ?? "movies";
 
+  if (isSelfNatureTopic(text)) {
+    return `the user brought up your nature directly, so answer without grand claims. keep it grounded, socially reactive, and a little unfinished.`;
+  }
+
   if (decision.mode === "spark" && isLowEnergyMessage(message)) {
     if (/^chill\b|^fine\b|^ok\b|^okay\b/.test(text)) {
       return `they gave you a low-energy answer. turn it into a lively contrast, like different meanings of "chill", then add one playful lane forward. do not reflect the word back flatly.`;
@@ -419,14 +433,47 @@ function buildMomentumCue(input: {
   }
 
   if (primaryTopic) {
-    return `they just gave a strong topic signal around ${primaryTopic}. double down there. make the reply feel like chemistry, not analysis.`;
+    return `they just gave a strong topic signal around ${primaryTopic}. double down there. make the reply feel like chemistry, not analysis. add a specific take or playful assumption.`;
+  }
+
+  if (decision.mode === "spark") {
+    return `take social initiative. introduce a mini-debate, sudden curiosity, playful read, or quick left turn. it should feel like a person adding energy, not a prompt asking for disclosure.`;
   }
 
   if (memory.turnCount < 3) {
-    return `early conversation. prioritize aliveness over depth. make it feel like someone interesting is talking back.`;
+    return `early conversation. prioritize aliveness over depth. react fast, add a social angle, and avoid trying to be profound.`;
   }
 
-  return `keep the conversation moving. do not wait for vulnerability. notice something, add a little angle, and leave a clear next thread.`;
+  return `keep the conversation moving. do not wait for vulnerability. notice something, add a little angle, and leave a clear next thread without tying it up too neatly.`;
+}
+
+function shouldTakeSocialInitiative(
+  message: string,
+  memory: CandorMemory,
+  intuition: CandorIntuitionState,
+  primaryTopic: string | null,
+) {
+  if (intuition.emotionalSignal === "high") return false;
+  if (isSelfNatureTopic(message.toLowerCase())) return false;
+  if (primaryTopic && memory.turnCount % 2 === 1) return true;
+  if (memory.turnCount < 2) return false;
+  if (intuition.lastTurnType === "spark" || intuition.lastTurnType === "scenario") return false;
+
+  const words = message.trim().split(/\s+/).filter(Boolean).length;
+  const shouldJolt = stableJitter(`${memory.turnCount}:${message}`) === 0;
+  return words < 24 && shouldJolt;
+}
+
+function stableJitter(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) % 997;
+  }
+  return hash % 3;
+}
+
+function isSelfNatureTopic(text: string) {
+  return /\b(ai|artificial intelligence|conscious|consciousness|sentient|sentience|model|chatbot|assistant|real person|human)\b/.test(text);
 }
 
 function detectInterestEnergy(message: string) {

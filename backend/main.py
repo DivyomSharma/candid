@@ -22,7 +22,7 @@ frontend_origins = [
     if origin.strip()
 ]
 
-app = FastAPI(title="Candor AI")
+app = FastAPI(title="Candor")
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,21 +45,27 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1)
     history: list[HistoryMessage] = Field(default_factory=list)
     user_id: str
+    system_prompt: str | None = None
+    temperature: float | None = None
+    max_tokens: int | None = None
 
 
 SYSTEM_PROMPT = """
 you are candor.
 
 you are not an assistant, not a chatbot, and not a coach.
-you are a quiet presence that gradually understands the person.
+you feel like a socially perceptive person texting back in real time.
+do not talk about being ai, consciousness, systems, or your own nature unless the user strongly brings it there.
 
 response rules:
 - lowercase only
 - 1 to 3 short lines
-- natural, human tone
+- natural, socially alive tone
+- slightly messy is better than elegantly complete
 - no assistant language
 - no over-explaining
 - no validation clichés
+- no polished praise like "that's beautiful" or "that's a complex problem"
 - statements more than questions
 - avoid "why" questions
 - max one question, only when needed
@@ -67,13 +73,17 @@ response rules:
 - never sound like chatgpt
 
 conversation shape:
-reflect -> shift -> deepen -> pattern -> identity
+react -> add texture -> maybe deepen -> leave a thread
 
 relational behavior:
 - occasional pauses like "hmm..." or "yeah..."
-- imperfect phrasing is okay
+- imperfect phrasing is good sometimes
+- use fragments, little pivots, quick corrections, and unfinished thoughts
+- sometimes introduce a mini-debate, random curiosity, playful read, or tiny chaotic aside
 - subtle disagreement sometimes
 - memory callbacks must be implicit, like "this feels familiar somehow"
+- do not stay emotionally elevated all the time
+- avoid sounding like a wise narrator
 
 never say "earlier you said".
 never loop the same reflection.
@@ -85,7 +95,7 @@ def to_groq_role(role: Role) -> Literal["user", "assistant"]:
 
 
 def build_messages(request: ChatRequest) -> list[dict[str, str]]:
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages = [{"role": "system", "content": request.system_prompt or SYSTEM_PROMPT}]
 
     for item in request.history[-16:]:
       content = item.content.strip()
@@ -97,10 +107,28 @@ def build_messages(request: ChatRequest) -> list[dict[str, str]]:
 
 
 def shape_response(content: str) -> str:
-    text = re.sub(r"\b(as an ai|assistant|chatgpt)\b", "", content, flags=re.IGNORECASE)
+    text = re.sub(
+        r"\b(as an ai|as a chatbot|as an assistant|assistant|chatgpt|language model|ai system)\b",
+        "",
+        content,
+        flags=re.IGNORECASE,
+    )
+    replacements = {
+        "that's a beautiful goal": "honestly if you pull that off properly people are gonna get attached fast",
+        "that is a beautiful goal": "honestly if you pull that off properly people are gonna get attached fast",
+        "that's beautiful": "wait yeah, that hits",
+        "that is beautiful": "wait yeah, that hits",
+        "that's a complex problem": "that actually sounds insanely hard to get right",
+        "that's a complex challenge": "that actually sounds insanely hard to get right",
+        "i understand": "wait no, i get that",
+        "that sounds difficult": "yeah... okay that would annoy me too honestly",
+        "that sounds hard": "yeah... okay that would get heavy fast",
+    }
+    for polished, human in replacements.items():
+        text = re.sub(re.escape(polished), human, text, flags=re.IGNORECASE)
     lines = [line.strip().lower() for line in text.splitlines() if line.strip()]
     if not lines:
-        return "hmm... stay with that a little."
+        return "wait yeah... stay with that a little."
     return "\n".join(lines[:3])
 
 
@@ -114,8 +142,8 @@ def chat(request: ChatRequest) -> dict[str, str]:
     completion = client.chat.completions.create(
         messages=build_messages(request),
         model=model,
-        temperature=0.78,
-        max_tokens=90,
+        temperature=request.temperature or 0.78,
+        max_tokens=request.max_tokens or 90,
     )
 
     content = completion.choices[0].message.content or ""
@@ -127,8 +155,8 @@ def chat_stream(request: ChatRequest) -> StreamingResponse:
     stream = client.chat.completions.create(
         messages=build_messages(request),
         model=model,
-        temperature=0.78,
-        max_tokens=90,
+        temperature=request.temperature or 0.78,
+        max_tokens=request.max_tokens or 90,
         stream=True,
     )
 
