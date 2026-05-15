@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, MessageCircleMore, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -565,6 +565,19 @@ export function CandorHome() {
           {error && <p className="text-right text-xs font-light leading-5 text-foreground-secondary">{error}</p>}
         </motion.form>
       </section>
+      {isSignedIn ? (
+        <div className="pointer-events-none fixed bottom-24 right-6 z-30 sm:bottom-28 sm:right-8">
+          <Button
+            type="button"
+            onClick={() => router.push(`/candor/session/${CANDOR_THREAD_ID}`)}
+            className="pointer-events-auto soft-shadow h-11 rounded-full border border-border/50 bg-background/45 px-4 text-sm font-light text-foreground backdrop-blur-md hover:bg-background/60"
+            variant="ghost"
+          >
+            <MessageCircleMore className="mr-2 h-4 w-4 text-accent" />
+            continue
+          </Button>
+        </div>
+      ) : null}
       <BottomNav />
     </main>
   );

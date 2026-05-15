@@ -59,6 +59,8 @@ export async function generateCandorEntry(memory: CandorMemory): Promise<CandorE
         relationalPatterns: memory.relationalPatterns,
         communicationNeeds: memory.communicationNeeds,
         appreciatesInPeople: memory.appreciatesInPeople,
+        socialPreferences: memory.socialPreferences,
+        lifestylePreferences: memory.lifestylePreferences,
         notes: memory.notes,
         interests: topInterestTopics(memory),
       }),
@@ -116,6 +118,7 @@ rules:
 - exactly 3 insight cards
 - exactly 1 initiative line
 - the choices should feel like pick-a-side or hot-take prompts, not therapy
+- let at least one part of the sequence softly reveal lifestyle or social preferences like texting rhythm, social battery, nightlife, sleep, travel, or relationship pace
 - the spotlight question should discover interests or conversational gravity
 - the insights should feel like "you probably..." or "kind of / not really" style observations
 - the initiative line should feel like candor messaged first, softly, with some personality

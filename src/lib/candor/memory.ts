@@ -20,6 +20,8 @@ export function createEmptyMemory(): CandorMemory {
     relationalPatterns: [],
     communicationNeeds: [],
     appreciatesInPeople: [],
+    socialPreferences: [],
+    lifestylePreferences: [],
     seenScenarios: [],
     alignmentReady: false,
     notes: [],
@@ -46,6 +48,8 @@ export function normalizeMemory(value: unknown): CandorMemory {
     relationalPatterns: cleanList(input.relationalPatterns),
     communicationNeeds: cleanList(input.communicationNeeds),
     appreciatesInPeople: cleanList(input.appreciatesInPeople),
+    socialPreferences: cleanList(input.socialPreferences),
+    lifestylePreferences: cleanList(input.lifestylePreferences),
     seenScenarios: cleanList(input.seenScenarios, 40),
     alignmentReady: Boolean(input.alignmentReady),
     notes: cleanList(input.notes, 20),
@@ -66,6 +70,8 @@ export function mergeMemory(existing: CandorMemory, incoming: Partial<CandorMemo
     relationalPatterns: mergeList(existing.relationalPatterns, incoming.relationalPatterns),
     communicationNeeds: mergeList(existing.communicationNeeds, incoming.communicationNeeds),
     appreciatesInPeople: mergeList(existing.appreciatesInPeople, incoming.appreciatesInPeople),
+    socialPreferences: mergeList(existing.socialPreferences, incoming.socialPreferences),
+    lifestylePreferences: mergeList(existing.lifestylePreferences, incoming.lifestylePreferences),
     seenScenarios: mergeList(existing.seenScenarios, incoming.seenScenarios, 40),
     notes: mergeList(existing.notes, incoming.notes, 20),
     presenceState: normalizePresenceState(incoming.presenceState ?? existing.presenceState),
@@ -81,7 +87,9 @@ export function mergeMemory(existing: CandorMemory, incoming: Partial<CandorMemo
     merged.lifeThemes.length +
     merged.relationalPatterns.length +
     merged.communicationNeeds.length +
-    merged.appreciatesInPeople.length;
+    merged.appreciatesInPeople.length +
+    merged.socialPreferences.length +
+    merged.lifestylePreferences.length;
 
   merged.alignmentReady = knownSignals >= 10 && merged.values.length >= 2 && merged.turnCount >= 8;
 
@@ -181,6 +189,38 @@ export function extractLightMemory(message: string): Partial<CandorMemory> {
     memory.appreciatesInPeople = ["follow-through"];
   }
 
+  if (/\b(introvert|crowd|crowds|overwhelmed|social battery|too many people)\b/.test(text)) {
+    memory.socialPreferences = ["needs recovery after too much social noise"];
+  }
+
+  if (/\b(texting|text back|replying|replies|double text|left on seen)\b/.test(text)) {
+    memory.socialPreferences = ["texting rhythm means more than they admit"];
+  }
+
+  if (/\b(smoke|smoking|cigarette|cigarettes|vape|vaping)\b/.test(text)) {
+    memory.lifestylePreferences = ["has a real opinion about smoking"];
+  }
+
+  if (/\b(drink|drinking|alcohol|sober|party|clubbing|rave)\b/.test(text)) {
+    memory.lifestylePreferences = ["their relationship to nightlife matters"];
+  }
+
+  if (/\b(late night|3am|night owl|sleep schedule|insomnia|sleep)\b/.test(text)) {
+    memory.lifestylePreferences = ["more awake at night than they pretend"];
+  }
+
+  if (/\b(travel|trip|vacation|airport|road trip)\b/.test(text)) {
+    memory.lifestylePreferences = ["cares how travel feels, not just where it goes"];
+  }
+
+  if (/\b(gym|workout|run|fitness|lifting|pilates|training)\b/.test(text)) {
+    memory.lifestylePreferences = ["feels steadier with some movement in the week"];
+  }
+
+  if (/\b(casual|commitment|serious relationship|long term|dating)\b/.test(text)) {
+    memory.socialPreferences = ["wants clearer relationship intentions than surface talk suggests"];
+  }
+
   return memory;
 }
 
@@ -189,6 +229,7 @@ export function buildTraitCluster(memory: CandorMemory) {
     memory.values[0],
     memory.lifeThemes[0],
     memory.communicationNeeds[0],
+    memory.socialPreferences[0],
     memory.softSpots[0],
   ]
     .filter(Boolean)

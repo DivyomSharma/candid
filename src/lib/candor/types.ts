@@ -39,6 +39,8 @@ export type CandorMemory = {
   relationalPatterns: string[];
   communicationNeeds: string[];
   appreciatesInPeople: string[];
+  socialPreferences: string[];
+  lifestylePreferences: string[];
   seenScenarios: string[];
   alignmentReady: boolean;
   notes: string[];

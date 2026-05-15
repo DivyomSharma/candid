@@ -35,6 +35,8 @@ export async function generateCandorPresets(memory: CandorMemory): Promise<Cando
         relationalPatterns: memory.relationalPatterns,
         communicationNeeds: memory.communicationNeeds,
         appreciatesInPeople: memory.appreciatesInPeople,
+        socialPreferences: memory.socialPreferences,
+        lifestylePreferences: memory.lifestylePreferences,
         notes: memory.notes,
         interests: topInterestTopics(memory),
       }),
@@ -69,6 +71,7 @@ rules:
 - scenario.title: 2 to 4 words
 - scenario.lines: exactly 3 strings, 3 to 8 words each
 - use interests, culturally relevant hooks, personality tells, and socially revealing preferences
+- it is good if 1 or 2 hooks softly expose lifestyle or social habits
 - make them feel like something a real person would tap immediately
 - avoid aesthetic wallpaper, journaling language, therapy tone, soft sadness, or empty poetic phrases
 - good lanes include media, internet culture, personality, obsessions, social habits, taste, hot takes

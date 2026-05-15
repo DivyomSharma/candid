@@ -81,6 +81,8 @@ life themes: ${list(memory.lifeThemes)}
 relational patterns: ${list(memory.relationalPatterns)}
 communication needs: ${list(memory.communicationNeeds)}
 appreciates in people: ${list(memory.appreciatesInPeople)}
+social preferences: ${list(memory.socialPreferences)}
+lifestyle preferences: ${list(memory.lifestylePreferences)}
 notes: ${list(memory.notes)}
 interest gravity: ${list(input.memory.interactionProfile ? Object.entries(input.memory.interactionProfile.interestSignals).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([topic]) => topic) : [])}
 
@@ -125,6 +127,8 @@ return only valid json:
   "relationalPatterns": [],
   "communicationNeeds": [],
   "appreciatesInPeople": [],
+  "socialPreferences": [],
+  "lifestylePreferences": [],
   "notes": []
 }
 
