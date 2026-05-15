@@ -5,7 +5,7 @@ export function shapeCandorResponse(content: string) {
     .map((line) => line.trim().toLowerCase())
     .filter(Boolean)
     .filter((line, index, lines) => lines.findIndex((item) => normalize(item) === normalize(line)) === index)
-    .slice(0, 3);
+    .slice(0, 4);
 
   if (cleaned.length === 0) return "hmm... stay with that a little.";
 

@@ -1,4 +1,4 @@
-import { buildTraitCluster, recordInteractionSignals } from "@/lib/candor/memory";
+import { buildTraitCluster, recordInteractionSignals, topInterestTopics } from "@/lib/candor/memory";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import type {
   CandorLearningBias,
@@ -38,6 +38,7 @@ export async function getLearningBias(memory: CandorMemory): Promise<CandorLearn
         localBias.favoredChoicePatterns,
       ),
       favoredStructures: localBias.favoredStructures,
+      favoredTopics: localBias.favoredTopics,
     };
   } catch {
     return localBias;
@@ -86,6 +87,7 @@ function biasFromMemory(memory: CandorMemory): CandorLearningBias {
     favoredInsightTypes: accepted,
     favoredChoicePatterns: choices,
     favoredStructures: structure,
+    favoredTopics: topInterestTopics(memory),
   };
 }
 
@@ -96,7 +98,7 @@ function structureBiasFromMemory(memory: CandorMemory): CandorStructure[] {
 
   if (favorsChallenge) return ["contrast", "observation"];
   if (favorsQuiet) return ["fragment", "silence"];
-  return ["observation", "fragment"];
+  return ["playful", "observation", "fragment"];
 }
 
 function pickAccepted(items: string[], fallback: string[]) {

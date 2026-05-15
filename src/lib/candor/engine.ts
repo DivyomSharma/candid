@@ -1,5 +1,6 @@
 import { sendCandorJson, sendCandorMessage } from "@/lib/candor-api";
 import {
+  addInterestSignals,
   buildTraitCluster,
   createEmptyMemory,
   extractLightMemory,
@@ -12,7 +13,7 @@ import { selectScenario } from "@/lib/candor/scenarios";
 import type {
   CandorDecision,
   CandorIntuitionState,
-  CandorLearningEvent,
+  CandorLearningBias,
   CandorMemory,
   CandorMode,
   CandorStructure,
@@ -27,9 +28,17 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
   const lightMemory = mergeMemory(input.memory, extractLightMemory(input.message));
   const intuition = buildIntuitionState(input.message, lightMemory);
   const learningBias = await getLearningBias(lightMemory);
-  const decision = decideResponse(intuition, lightMemory, learningBias);
+  const interestEnergy = detectInterestEnergy(input.message);
+  const decision = decideResponse(intuition, lightMemory, learningBias, input.message, interestEnergy.primaryTopic);
   const scenario = decision.mode === "scenario" ? selectScenario(lightMemory) : undefined;
   const suppressedPhrases = buildSuppressedPhrases(lightMemory);
+  const momentumCue = buildMomentumCue({
+    message: input.message,
+    memory: lightMemory,
+    decision,
+    primaryTopic: interestEnergy.primaryTopic,
+    learningBias,
+  });
 
   const prompt = buildCandorPrompt({
     memory: lightMemory,
@@ -37,6 +46,7 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     presenceState: intuition.presenceState,
     suppressedPhrases,
     learningBias,
+    momentumCue,
     scenario: scenario?.text,
   });
 
@@ -72,6 +82,10 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     },
   );
 
+  if (Object.keys(interestEnergy.topics).length) {
+    memory = addInterestSignals(memory, interestEnergy.topics);
+  }
+
   if (shouldAnalyzeDeeply(memory)) {
     const deepMemory = await analyzeMemory(input.message, input.history, memory);
     memory = mergeMemory(memory, deepMemory);
@@ -79,10 +93,10 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
 
   void logLearningEvent(input.userId, memory, {
     traitCluster: buildTraitCluster(memory),
-    choicePattern: null,
+    choicePattern: interestEnergy.primaryTopic ? `topic:${interestEnergy.primaryTopic}` : null,
     insightType: decision.structure,
     accepted: null,
-    engagementSignal: engagementFromTurn(input.message, intuition),
+    engagementSignal: engagementFromTurn(input.message, intuition, interestEnergy.primaryTopic),
   });
 
   return { reply, memory, mode: decision.mode, decision };
@@ -110,9 +124,20 @@ function buildIntuitionState(message: string, memory: CandorMemory): CandorIntui
 function decideResponse(
   intuition: CandorIntuitionState,
   memory: CandorMemory,
-  learningBias: { favoredStructures: CandorStructure[] },
+  learningBias: CandorLearningBias,
+  message: string,
+  primaryTopic: string | null,
 ): CandorDecision {
   const preferredStructure = pickStructure(memory, learningBias.favoredStructures);
+  const lowEnergy = isLowEnergyMessage(message);
+
+  if (lowEnergy) {
+    return {
+      mode: "spark",
+      tone: primaryTopic || learningBias.favoredTopics.length ? "direct" : "neutral",
+      structure: primaryTopic ? "playful" : preferredStructure === "silence" ? "contrast" : "playful",
+    };
+  }
 
   if (intuition.repetitionRisk === "high") {
     return {
@@ -132,9 +157,9 @@ function decideResponse(
 
   if (intuition.userOpenness === "low") {
     return {
-      mode: memory.turnCount < 2 ? "scenario" : "pause",
+      mode: memory.turnCount < 2 ? "scenario" : "spark",
       tone: "neutral",
-      structure: memory.turnCount < 2 ? "question" : "silence",
+      structure: memory.turnCount < 2 ? "question" : "playful",
     };
   }
 
@@ -191,7 +216,7 @@ function derivePresenceState(input: {
 
 function pickStructure(memory: CandorMemory, favored: CandorStructure[]) {
   const recent = new Set(memory.recentStructures.slice(-3));
-  const pool: CandorStructure[] = ["observation", "fragment", "contrast", "question", "silence"];
+  const pool: CandorStructure[] = ["playful", "observation", "fragment", "contrast", "question", "silence"];
   const ordered = [...favored, ...pool];
   return ordered.find((structure) => !recent.has(structure)) ?? "observation";
 }
@@ -231,6 +256,13 @@ async function maybeRetryForRepetition(input: {
     presenceState: input.intuition.presenceState,
     suppressedPhrases: [...input.suppressedPhrases, input.reply.split(/\s+/).slice(0, 4).join(" ")].slice(-8),
     learningBias: input.learningBias,
+    momentumCue: buildMomentumCue({
+      message: input.input.message,
+      memory: input.memory,
+      decision: fallbackDecision,
+      primaryTopic: detectInterestEnergy(input.input.message).primaryTopic,
+      learningBias: input.learningBias,
+    }),
     scenario: input.scenario,
     retryReason: "the previous draft sounded too close to something already said. change the rhythm and angle.",
   });
@@ -251,7 +283,8 @@ function nextStructure(current: CandorStructure): CandorStructure {
   const rotation: Record<CandorStructure, CandorStructure> = {
     fragment: "observation",
     observation: "contrast",
-    contrast: "question",
+    contrast: "playful",
+    playful: "question",
     question: "silence",
     silence: "fragment",
   };
@@ -293,7 +326,7 @@ function temperatureFor(decision: CandorDecision) {
 function maxTokensFor(presenceState: PresenceState) {
   if (presenceState.resonance === "high") return 120;
   if (presenceState.clarity === "low") return 90;
-  return 105;
+  return 112;
 }
 
 function isTooSimilar(reply: string, history: string[]) {
@@ -349,9 +382,87 @@ function levelToScore(level: PresenceLevel) {
   return 0;
 }
 
-function engagementFromTurn(message: string, intuition: CandorIntuitionState) {
-  if (message.trim().split(/\s+/).length >= 18) return "deep_continuation";
+function engagementFromTurn(message: string, intuition: CandorIntuitionState, primaryTopic?: string | null) {
+  if (message.trim().split(/\s+/).length >= 18) {
+    return primaryTopic ? `deep_continuation:${primaryTopic}` : "deep_continuation";
+  }
   if (intuition.userOpenness === "low") return "brief_turn";
   if (intuition.presenceState.resonance === "high") return "emotionally_open";
+  if (primaryTopic) return `interest_spike:${primaryTopic}`;
   return "continued";
+}
+
+function isLowEnergyMessage(message: string) {
+  const text = message.trim().toLowerCase();
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length <= 2) return true;
+  return /\b(chill|lol|lmao|idk|meh|whatever|fine|nothing|nm|k|ok|okay|yo)\b/.test(text);
+}
+
+function buildMomentumCue(input: {
+  message: string;
+  memory: CandorMemory;
+  decision: CandorDecision;
+  primaryTopic: string | null;
+  learningBias: CandorLearningBias;
+}) {
+  const { message, memory, decision, primaryTopic, learningBias } = input;
+  const text = message.trim().toLowerCase();
+  const fallbackTopic = primaryTopic ?? learningBias.favoredTopics[0] ?? "movies";
+
+  if (decision.mode === "spark" && isLowEnergyMessage(message)) {
+    if (/^chill\b|^fine\b|^ok\b|^okay\b/.test(text)) {
+      return `they gave you a low-energy answer. turn it into a lively contrast, like different meanings of "chill", then add one playful lane forward. do not reflect the word back flatly.`;
+    }
+
+    return `energy is low. do not get passive. offer a mini interaction, a side-pick, a teasing observation, or a hot take. if you need a topic, pull toward ${fallbackTopic}.`;
+  }
+
+  if (primaryTopic) {
+    return `they just gave a strong topic signal around ${primaryTopic}. double down there. make the reply feel like chemistry, not analysis.`;
+  }
+
+  if (memory.turnCount < 3) {
+    return `early conversation. prioritize aliveness over depth. make it feel like someone interesting is talking back.`;
+  }
+
+  return `keep the conversation moving. do not wait for vulnerability. notice something, add a little angle, and leave a clear next thread.`;
+}
+
+function detectInterestEnergy(message: string) {
+  const text = message.toLowerCase();
+  const topics: Record<string, number> = {};
+  const topicMap: Record<string, RegExp> = {
+    movies: /\b(movie|movies|film|films|cinema|director|scene|letterboxd)\b/,
+    games: /\b(game|games|gaming|rpg|rpgs|lore|playstation|xbox|nintendo|story game)\b/,
+    music: /\b(music|album|song|songs|playlist|producer|production|lyrics|artists?)\b/,
+    politics: /\b(politics|political|government|election|policy|geopolitics|debate)\b/,
+    psychology: /\b(psychology|attachment|behavior|mind|trauma|personality)\b/,
+    philosophy: /\b(philosophy|existential|meaning|ethics|nihilism|absurdism)\b/,
+    history: /\b(history|historical|war|empire|ancient|revolution)\b/,
+    "internet culture": /\b(internet|meme|memes|algorithm|youtube|reddit|tiktok|discord|online)\b/,
+    startups: /\b(startup|startups|product|saas|business|founder|vc|idea|ideas)\b/,
+    design: /\b(design|branding|ui|ux|typeface|layout|product design)\b/,
+    relationships: /\b(relationship|relationships|dating|friendship|friendships|people|love)\b/,
+  };
+
+  for (const [topic, pattern] of Object.entries(topicMap)) {
+    if (pattern.test(text)) {
+      topics[topic] = 2;
+    }
+  }
+
+  const energyBoost =
+    (message.includes("!") ? 1 : 0) +
+    (message.trim().split(/\s+/).length >= 16 ? 1 : 0) +
+    (/\b(obsessed|consume|hours|rabbit hole|cannot stop|always end up)\b/.test(text) ? 1 : 0);
+
+  for (const topic of Object.keys(topics)) {
+    topics[topic] += energyBoost;
+  }
+
+  const primaryTopic =
+    Object.entries(topics).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+  return { topics, primaryTopic };
 }

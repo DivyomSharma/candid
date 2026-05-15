@@ -59,10 +59,10 @@ export function InsightSwipeCard({ line, onDecide }: InsightSwipeCardProps) {
         <div className="flex items-center justify-between px-2 text-xs font-light text-foreground-secondary/80">
           <span className="flex items-center gap-1.5">
             <ArrowLeft className="h-3.5 w-3.5" />
-            not quite
+            not really
           </span>
           <span className="flex items-center gap-1.5">
-            feels right
+            kind of
             <ArrowRight className="h-3.5 w-3.5" />
           </span>
         </div>

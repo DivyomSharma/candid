@@ -1,4 +1,5 @@
 import { sendCandorJson } from "@/lib/candor-api";
+import { topInterestTopics } from "@/lib/candor/memory";
 import type { CandorMemory } from "@/lib/candor/types";
 
 export type CandorPresets = {
@@ -10,17 +11,23 @@ export type CandorPresets = {
 };
 
 const GENERIC_PRESETS: CandorPresets = {
-  chips: ["something i keep replaying", "a person i miss", "a small win", "i feel off", "no idea yet"],
+  chips: [
+    "emotionally devastating films",
+    "games where choices matter",
+    "video essays at 2am",
+    "replaying conversations",
+    "internet rabbit holes",
+  ],
   scenario: {
-    title: "tonight feels like",
-    lines: ["a thought half-formed", "a little too much noise", "wanting to be known without performing"],
+    title: "okay, maybe this",
+    lines: ["a story that quietly wrecked you", "something you keep overthinking", "a topic you could disappear into"],
   },
 };
 
 export async function generateCandorPresets(memory: CandorMemory): Promise<CandorPresets> {
   try {
     const generated = await sendCandorJson<Partial<CandorPresets>>({
-      systemPrompt: buildPresetPrompt(),
+      systemPrompt: buildPresetPrompt(memory),
       message: JSON.stringify({
         values: memory.values,
         softSpots: memory.softSpots,
@@ -29,9 +36,10 @@ export async function generateCandorPresets(memory: CandorMemory): Promise<Cando
         communicationNeeds: memory.communicationNeeds,
         appreciatesInPeople: memory.appreciatesInPeople,
         notes: memory.notes,
+        interests: topInterestTopics(memory),
       }),
-      temperature: 0.82,
-      maxTokens: 320,
+      temperature: 0.86,
+      maxTokens: 360,
     });
 
     return normalizePresets(generated, memory);
@@ -41,10 +49,10 @@ export async function generateCandorPresets(memory: CandorMemory): Promise<Cando
   }
 }
 
-function buildPresetPrompt() {
+function buildPresetPrompt(memory: CandorMemory) {
   return `
 you are candor.
-generate fresh conversation starts for this person from the private understanding provided.
+generate home-screen conversation hooks that create energy, curiosity, and identity.
 
 return only valid json:
 {
@@ -57,21 +65,23 @@ return only valid json:
 
 rules:
 - lowercase only
-- chips: exactly 5 strings, 2 to 7 words each
-- scenario.title: 2 to 5 words
-- scenario.lines: exactly 3 strings, 3 to 9 words each
-- intimate, quiet, human
-- no therapy words
-- no mention of traits, memory, profile, matching, analysis, or ai
-- do not include names or sensitive specifics
+- chips: exactly 5 strings, 2 to 6 words each
+- scenario.title: 2 to 4 words
+- scenario.lines: exactly 3 strings, 3 to 8 words each
+- use interests, culturally relevant hooks, personality tells, and socially revealing preferences
+- make them feel like something a real person would tap immediately
+- avoid aesthetic wallpaper, journaling language, therapy tone, soft sadness, or empty poetic phrases
+- good lanes include media, internet culture, personality, obsessions, social habits, taste, hot takes
+- no names or personal specifics
+- current interest gravity: ${topInterestTopics(memory).join(", ") || "movies, games, music, internet culture, relationships"}
 `.trim();
 }
 
 function normalizePresets(input: Partial<CandorPresets>, memory: CandorMemory): CandorPresets {
   const fallback = fallbackPresets(memory);
-  const chips = cleanList(input.chips, 5);
-  const lines = cleanList(input.scenario?.lines, 3);
-  const title = cleanText(input.scenario?.title);
+  const chips = cleanList(input.chips, 5, 6);
+  const lines = cleanList(input.scenario?.lines, 3, 8);
+  const title = cleanText(input.scenario?.title, 4);
 
   return {
     chips: chips.length === 5 ? chips : fallback.chips,
@@ -83,54 +93,60 @@ function normalizePresets(input: Partial<CandorPresets>, memory: CandorMemory): 
 }
 
 function fallbackPresets(memory: CandorMemory): CandorPresets {
-  const themes = [
-    ...memory.lifeThemes,
-    ...memory.softSpots,
-    ...memory.values,
-    ...memory.communicationNeeds,
-  ];
+  const interests = topInterestTopics(memory, 3);
 
-  if (!themes.length) return GENERIC_PRESETS;
+  if (!interests.length) return GENERIC_PRESETS;
 
-  const first = themes[0];
-  const second = themes[1] ?? "something unsaid";
+  const topicLines: Record<string, string> = {
+    movies: "films that stay with you",
+    games: "games where choices matter",
+    music: "songs that ruin your mood",
+    politics: "geopolitics spirals",
+    psychology: "psychology obsessions",
+    philosophy: "philosophy at night",
+    history: "history rabbit holes",
+    "internet culture": "internet culture analysis",
+    startups: "startup ideas at midnight",
+    design: "design details people miss",
+    relationships: "replaying conversations",
+  };
+
+  const mapped = interests.map((topic) => topicLines[topic] ?? topic);
 
   return {
     chips: [
-      `something about ${first}`,
-      `the part i keep quiet`,
-      `what ${second} brings up`,
-      "a tiny honest thing",
-      "i don't know yet",
+      mapped[0] ?? "emotionally devastating films",
+      mapped[1] ?? "games where choices matter",
+      mapped[2] ?? "video essays at 2am",
+      "noticing small tone shifts",
+      "pretending not to care",
     ].slice(0, 5),
     scenario: {
-      title: "what keeps returning",
+      title: "start here maybe",
       lines: [
-        `something around ${first}`,
-        "the feeling under the story",
-        "what i almost say",
+        mapped[0] ?? "what actually has your attention",
+        "something socially weird lately",
+        "a topic you keep returning to",
       ],
     },
   };
 }
 
-function cleanList(value: unknown, max: number) {
+function cleanList(value: unknown, max: number, maxWords: number) {
   if (!Array.isArray(value)) return [];
-  return value.map(cleanText).filter(Boolean).slice(0, max);
+  return value.map((item) => cleanText(item, maxWords)).filter(Boolean).slice(0, max);
 }
 
-function cleanText(value: unknown) {
+function cleanText(value: unknown, maxWords = 9) {
   if (typeof value !== "string") return "";
   return dedupeWords(value.trim().toLowerCase().replace(/\s+/g, " "))
     .split(" ")
-    .slice(0, 9)
+    .slice(0, maxWords)
     .join(" ")
-    .slice(0, 80);
+    .slice(0, 90);
 }
 
 function dedupeWords(value: string) {
   const words = value.split(" ").filter(Boolean);
-  return words
-    .filter((word, index) => index === 0 || word !== words[index - 1])
-    .join(" ");
+  return words.filter((word, index) => index === 0 || word !== words[index - 1]).join(" ");
 }

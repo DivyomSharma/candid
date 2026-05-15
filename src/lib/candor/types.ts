@@ -6,12 +6,13 @@ export type CandorMode =
   | "comfort"
   | "appreciate"
   | "challenge"
+  | "spark"
   | "pause"
   | "scenario";
 
 export type CandorTone = "soft" | "neutral" | "direct";
 
-export type CandorStructure = "fragment" | "observation" | "contrast" | "question" | "silence";
+export type CandorStructure = "fragment" | "observation" | "contrast" | "question" | "silence" | "playful";
 
 export type PresenceLevel = "low" | "medium" | "high";
 
@@ -26,6 +27,7 @@ export type CandorInteractionProfile = {
   acceptedInsightTypes: string[];
   rejectedInsightTypes: string[];
   engagementSignals: string[];
+  interestSignals: Record<string, number>;
 };
 
 export type CandorMemory = {
@@ -66,6 +68,7 @@ export type CandorLearningBias = {
   favoredInsightTypes: string[];
   favoredChoicePatterns: string[];
   favoredStructures: CandorStructure[];
+  favoredTopics: string[];
 };
 
 export type CandorTurnInput = {
@@ -97,9 +100,23 @@ export type CandorEntryInsight = {
   insightType: string;
 };
 
+export type CandorEntrySpotlight = {
+  id: string;
+  prompt: string;
+  options: string[];
+  interestTags: string[];
+};
+
+export type CandorInitiativeMessage = {
+  line: string;
+  status: string;
+};
+
 export type CandorEntryPayload = {
   choices: CandorEntryChoice[];
+  spotlight: CandorEntrySpotlight;
   insights: CandorEntryInsight[];
+  initiative: CandorInitiativeMessage;
 };
 
 export type CandorLearningEvent = {

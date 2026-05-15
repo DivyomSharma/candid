@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { ChoiceTapCard } from "@/components/candor/ChoiceTapCard";
+import { InterestSpotlightCard } from "@/components/candor/InterestSpotlightCard";
 import { InsightSwipeCard } from "@/components/candor/InsightSwipeCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { CANDOR_THREAD_ID, candorThreadStorageKey } from "@/lib/candor/thread";
@@ -16,56 +17,64 @@ import type { CandorPresets } from "@/lib/candor/presets";
 import type { CandorEntryPayload } from "@/lib/candor/types";
 
 const defaultPresets: CandorPresets = {
-  chips: ["something i keep replaying", "a person i miss", "a small win", "i feel off", "no idea yet"],
+  chips: [
+    "emotionally devastating films",
+    "games where choices matter",
+    "video essays at 2am",
+    "replaying conversations",
+    "internet rabbit holes",
+  ],
   scenario: {
-    title: "tonight feels like",
-    lines: ["a thought half-formed", "a little too much noise", "wanting to be known without performing"],
+    title: "okay, maybe this",
+    lines: ["a story that wrecked you", "something socially weird lately", "a topic you keep returning to"],
   },
 };
 
 const defaultEntry: CandorEntryPayload = {
   choices: [
     {
-      id: "quiet-weight",
-      prompt: "imagine this...\nsomething sits wrong with you for hours, and no one can tell.",
-      optionA: "you stay with it quietly",
-      optionB: "you look for one person to tell",
-      patternA: "internal processing",
-      patternB: "selective reaching",
+      id: "comfort-vs-chaos",
+      prompt: "pick a side...\ncomfort movie or emotionally devastating masterpiece",
+      optionA: "comfort movie every time",
+      optionB: "wreck me a little",
+      patternA: "comfort-seeking",
+      patternB: "intensity-seeking",
     },
     {
-      id: "room-shift",
-      prompt: "imagine this...\na room changes slightly, and you notice before anyone says anything.",
-      optionA: "you trust the feeling first",
-      optionB: "you wait for proof",
-      patternA: "signal-trusting",
-      patternB: "evidence-checking",
+      id: "stories-or-winning",
+      prompt: "pick a side...\nstory games or competitive games",
+      optionA: "give me choices that matter",
+      optionB: "i want the rush",
+      patternA: "story-gravity",
+      patternB: "competitive-energy",
     },
     {
-      id: "care-shape",
-      prompt: "imagine this...\nsomeone cares, but the way they show it is uneven.",
-      optionA: "you feel the gap quickly",
-      optionB: "you give it more time",
-      patternA: "consistency-seeking",
-      patternB: "patience-first",
+      id: "understood-or-loved",
+      prompt: "hot take or valid...\npeople care more about being understood than being loved",
+      optionA: "hot take",
+      optionB: "honestly true",
+      patternA: "pushback-first",
+      patternB: "recognition-seeking",
     },
   ],
+  spotlight: {
+    id: "spotlight-obsession",
+    prompt: "okay serious question\nwhat topic accidentally consumes your entire attention",
+    options: ["movies", "games", "music", "psychology", "philosophy", "internet culture"],
+    interestTags: ["movies", "games", "music", "psychology", "philosophy", "internet culture"],
+  },
   insights: [
-    { id: "offness", line: "you notice when something feels slightly off", insightType: "observation" },
-    {
-      id: "expectation",
-      line: "you do not always say what you expect, but you still feel it",
-      insightType: "contrast",
-    },
-    {
-      id: "care",
-      line: "you pay attention to the shape of effort, not just the words",
-      insightType: "pattern",
-    },
+    { id: "replay", line: "you probably replay conversations later", insightType: "you-probably" },
+    { id: "tone", line: "you notice small tone shifts before most people do", insightType: "social-signal" },
+    { id: "care", line: "you act casual about things that actually stay with you", insightType: "contrast" },
   ],
+  initiative: {
+    line: "i have a feeling your algorithm knows too much about you already",
+    status: "unread",
+  },
 };
 
-type EntryPhase = "choices" | "pause" | "insights" | "clearer" | "done";
+type EntryPhase = "choices" | "spotlight" | "pause" | "insights" | "clearer" | "done";
 type PreviewMessage = { role: "user" | "ai"; content: string };
 
 export function CandorHome() {
@@ -85,6 +94,7 @@ export function CandorHome() {
   >([]);
   const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
+  const interactionStartedAt = useRef(Date.now());
 
   useEffect(() => {
     let cancelled = false;
@@ -143,7 +153,7 @@ export function CandorHome() {
 
   useEffect(() => {
     if (!isSignedIn || !user?.id) {
-      setPreview(null);
+      setPreview({ role: "ai", content: entry.initiative.line });
       return;
     }
 
@@ -157,11 +167,15 @@ export function CandorHome() {
       const parsed = JSON.parse(saved) as PreviewMessage[];
       const lastAi = [...parsed].reverse().find((item) => item.role === "ai");
       const lastUser = [...parsed].reverse().find((item) => item.role === "user");
-      setPreview(lastAi ?? lastUser ?? null);
+      setPreview(lastAi ?? lastUser ?? { role: "ai", content: entry.initiative.line });
     } catch {
-      setPreview(null);
+      setPreview({ role: "ai", content: entry.initiative.line });
     }
-  }, [isSignedIn, user?.id]);
+  }, [entry.initiative.line, isSignedIn, user?.id]);
+
+  useEffect(() => {
+    interactionStartedAt.current = Date.now();
+  }, [choiceIndex, insightIndex, entryPhase]);
 
   const logSignal = async (signal: {
     choicePattern: string | null;
@@ -258,6 +272,13 @@ export function CandorHome() {
     void start(message);
   };
 
+  const speedSignal = () => {
+    const elapsed = Date.now() - interactionStartedAt.current;
+    if (elapsed < 2200) return "quick";
+    if (elapsed < 5200) return "steady";
+    return "slow";
+  };
+
   const handleChoice = (choice: "a" | "b") => {
     const current = entry.choices[choiceIndex];
     if (!current) return;
@@ -267,16 +288,29 @@ export function CandorHome() {
       choicePattern,
       insightType: null,
       accepted: null,
-      engagementSignal: "entry_choice",
+      engagementSignal: `entry_choice_${speedSignal()}`,
     });
 
     if (choiceIndex >= Math.min(entry.choices.length, 3) - 1) {
       setChoiceIndex((value) => value + 1);
-      setEntryPhase("pause");
+      setEntryPhase("spotlight");
       return;
     }
 
     setChoiceIndex((value) => value + 1);
+  };
+
+  const handleSpotlight = (index: number) => {
+    const topic = entry.spotlight.interestTags[index] ?? entry.spotlight.options[index] ?? null;
+
+    void logSignal({
+      choicePattern: topic ? `topic:${topic}` : null,
+      insightType: null,
+      accepted: null,
+      engagementSignal: `interest_pick_${speedSignal()}`,
+    });
+
+    window.setTimeout(() => setEntryPhase("pause"), 220);
   };
 
   const handleInsight = (accepted: boolean) => {
@@ -287,7 +321,7 @@ export function CandorHome() {
       choicePattern: null,
       insightType: current.insightType,
       accepted,
-      engagementSignal: accepted ? "insight_accept" : "insight_reject",
+      engagementSignal: accepted ? `insight_accept_${speedSignal()}` : `insight_reject_${speedSignal()}`,
     });
 
     if (insightIndex >= Math.min(entry.insights.length, 3) - 1) {
@@ -301,7 +335,9 @@ export function CandorHome() {
 
   const currentChoice = entry.choices[choiceIndex];
   const currentInsight = entry.insights[insightIndex];
+  const currentSpotlight = entry.spotlight;
   const showEntryLayer = isSignedIn && entryPhase !== "done";
+  const isInitiativePreview = preview?.content === entry.initiative.line;
 
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-20">
@@ -322,19 +358,24 @@ export function CandorHome() {
           </h1>
         </motion.div>
 
-        {isSignedIn && preview ? (
+        {preview ? (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06, duration: 0.5 }}>
             <Card className="surface soft-shadow border-border/50 bg-card/52 backdrop-blur-md shadow-[inset_0_1px_0_hsl(var(--foreground)/0.03),0_18px_60px_-34px_hsl(var(--glow)/0.18)]">
               <CardContent className="flex flex-col gap-3 p-5">
                 <div className="flex items-center justify-between gap-4 text-xs font-light text-foreground-secondary">
-                  <span>still open between you two</span>
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/candor/session/${CANDOR_THREAD_ID}`)}
-                    className="text-foreground transition-colors hover:text-accent"
-                  >
-                    continue
-                  </button>
+                  <span className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-accent/80" />
+                    {isInitiativePreview ? "unread from candor" : "still open between you two"}
+                  </span>
+                  {isSignedIn ? (
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/candor/session/${CANDOR_THREAD_ID}`)}
+                      className="text-foreground transition-colors hover:text-accent"
+                    >
+                      continue
+                    </button>
+                  ) : null}
                 </div>
                 <p className="max-w-[34rem] text-base font-light leading-7 text-foreground-secondary break-words">
                   {preview.content}
@@ -372,13 +413,24 @@ export function CandorHome() {
                 </AnimatePresence>
               ) : null}
 
+              {!isLoadingEntry && entryPhase === "spotlight" ? (
+                <AnimatePresence mode="wait" initial={false}>
+                  <InterestSpotlightCard
+                    key={currentSpotlight.id}
+                    prompt={currentSpotlight.prompt}
+                    options={currentSpotlight.options}
+                    onChoose={handleSpotlight}
+                  />
+                </AnimatePresence>
+              ) : null}
+
               {!isLoadingEntry && entryPhase === "pause" ? (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 0.7 }}
                   className="text-sm font-light text-foreground-secondary"
                 >
-                  just a second...
+                  this is getting more interesting...
                 </motion.p>
               ) : null}
 
@@ -441,7 +493,7 @@ export function CandorHome() {
             <CardContent className="flex flex-col gap-4 p-5">
               <div className="flex items-center gap-2 text-xs font-light text-foreground-secondary">
                 <Sparkles data-icon="inline-start" />
-                a possible start
+                or start here
               </div>
               {isLoadingPresets ? (
                 <PresetCardLoading />
@@ -483,7 +535,7 @@ export function CandorHome() {
               type="text"
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              placeholder="say it in the messy version"
+              placeholder="start with the thing you actually care about"
               className="h-14 w-full rounded-full border border-border/50 bg-background/45 pl-6 pr-32 text-base font-light text-foreground placeholder:text-muted-foreground outline-none transition-shadow focus:border-accent/40 focus:ring-1 focus:ring-accent/40"
             />
 

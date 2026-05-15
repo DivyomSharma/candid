@@ -122,6 +122,7 @@ export function recordInteractionSignals(
   return {
     ...memory,
     interactionProfile: {
+      ...profile,
       choicePatterns: mergeList(profile.choicePatterns, input.choicePattern ? [input.choicePattern] : []),
       acceptedInsightTypes:
         input.accepted && input.insightType
@@ -210,6 +211,7 @@ function createEmptyInteractionProfile(): CandorInteractionProfile {
     acceptedInsightTypes: [],
     rejectedInsightTypes: [],
     engagementSignals: [],
+    interestSignals: {},
   };
 }
 
@@ -232,6 +234,7 @@ function normalizeInteractionProfile(value: unknown): CandorInteractionProfile {
     acceptedInsightTypes: cleanList(input?.acceptedInsightTypes, 20) || empty.acceptedInsightTypes,
     rejectedInsightTypes: cleanList(input?.rejectedInsightTypes, 20) || empty.rejectedInsightTypes,
     engagementSignals: cleanList(input?.engagementSignals, 20) || empty.engagementSignals,
+    interestSignals: normalizeInterestSignals(input?.interestSignals),
   };
 }
 
@@ -241,6 +244,33 @@ function mergeInteractionProfiles(existing: CandorInteractionProfile, incoming?:
     acceptedInsightTypes: mergeList(existing.acceptedInsightTypes, incoming?.acceptedInsightTypes, 20),
     rejectedInsightTypes: mergeList(existing.rejectedInsightTypes, incoming?.rejectedInsightTypes, 20),
     engagementSignals: mergeList(existing.engagementSignals, incoming?.engagementSignals, 20),
+    interestSignals: mergeInterestSignals(existing.interestSignals, incoming?.interestSignals),
+  };
+}
+
+export function topInterestTopics(memory: CandorMemory, count = 4) {
+  return Object.entries(memory.interactionProfile.interestSignals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, count)
+    .map(([topic]) => topic);
+}
+
+export function interestLevelMap(memory: CandorMemory) {
+  return Object.fromEntries(
+    Object.entries(memory.interactionProfile.interestSignals).map(([topic, score]) => [
+      topic,
+      score >= 6 ? "very_high" : score >= 4 ? "high" : score >= 2 ? "medium" : "low",
+    ]),
+  );
+}
+
+export function addInterestSignals(memory: CandorMemory, interests: Record<string, number>) {
+  return {
+    ...memory,
+    interactionProfile: {
+      ...memory.interactionProfile,
+      interestSignals: mergeInterestSignals(memory.interactionProfile.interestSignals, interests),
+    },
   };
 }
 
@@ -264,7 +294,8 @@ function cleanStructures(value: unknown) {
         item === "observation" ||
         item === "contrast" ||
         item === "question" ||
-        item === "silence",
+        item === "silence" ||
+        item === "playful",
     )
     .slice(-6);
 }
@@ -309,4 +340,30 @@ function normalizeReply(value: string) {
 
 function level(value: unknown, fallback: PresenceState["clarity"] = "low"): PresenceState["clarity"] {
   return value === "low" || value === "medium" || value === "high" ? value : fallback;
+}
+
+function normalizeInterestSignals(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter((entry): entry is [string, number] => typeof entry[0] === "string" && typeof entry[1] === "number")
+      .map(([topic, score]) => [topic.trim().toLowerCase(), Math.max(0, Math.min(9, Math.round(score)))])
+      .filter(([topic]) => Boolean(topic)),
+  );
+}
+
+function mergeInterestSignals(current: Record<string, number>, incoming: unknown) {
+  const normalized = normalizeInterestSignals(incoming) as Record<string, number>;
+  const merged = new Map<string, number>(Object.entries(current));
+
+  for (const [topic, score] of Object.entries(normalized)) {
+    merged.set(topic, Math.min(9, (merged.get(topic) ?? 0) + score));
+  }
+
+  return Object.fromEntries(
+    [...merged.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12),
+  );
 }

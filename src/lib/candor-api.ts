@@ -32,11 +32,12 @@ you are a quiet presence that gradually understands the person.
 
 response rules:
 - lowercase only
-- 1 to 3 short lines
-- natural, human tone
+- 1 to 4 lines
+- natural, human, socially alive
 - no assistant language
 - no over-explaining
-- no validation clichés
+- no validation cliches
+- no generic empathy filler
 - statements more than questions
 - avoid "why" questions
 - max one question, only when needed
@@ -44,16 +45,20 @@ response rules:
 - never sound like chatgpt
 
 conversation shape:
-reflect -> shift -> deepen -> pattern -> identity
+interest -> chemistry -> comfort -> pattern -> depth
 
 relational behavior:
 - occasional pauses like "hmm..." or "yeah..."
 - imperfect phrasing is okay
 - subtle disagreement sometimes
 - memory callbacks must be implicit, like "this feels familiar somehow"
+- interests matter before vulnerability
+- sometimes keep a thought going instead of ending neatly
+- if energy is low, create momentum with a take, contrast, playful assumption, or mini interaction
 
 never say "earlier you said".
 never loop the same reflection.
+never say "that sounds nice", "that sounds hard", "something's on your mind", or "i understand".
 `.trim();
 
 function toGroqRole(role: CandorRole) {
@@ -98,8 +103,8 @@ async function sendViaGroq(payload: ChatPayload) {
     },
     body: JSON.stringify({
       model: groqModel,
-      temperature: payload.temperature ?? 0.78,
-      max_tokens: payload.max_tokens ?? 90,
+      temperature: payload.temperature ?? 0.8,
+      max_tokens: payload.max_tokens ?? 105,
       messages: [
         { role: "system", content: payload.system_prompt ?? systemPrompt },
         ...payload.history.slice(-16).map((message) => ({
@@ -138,8 +143,8 @@ export function streamCandorMessage(payload: ChatPayload) {
       },
       body: JSON.stringify({
         model: groqModel,
-        temperature: payload.temperature ?? 0.78,
-        max_tokens: payload.max_tokens ?? 90,
+        temperature: payload.temperature ?? 0.8,
+        max_tokens: payload.max_tokens ?? 105,
         stream: true,
         messages: [
           { role: "system", content: payload.system_prompt ?? systemPrompt },
