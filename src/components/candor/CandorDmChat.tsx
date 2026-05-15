@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowUp } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCandorComposerClearance } from "@/hooks/use-candor-composer-clearance";
 
 type AlignProfile = {
   id: string;
@@ -37,6 +38,43 @@ export function CandorDmChat({ id }: { id: string }) {
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const shouldStickToBottomRef = useRef(true);
+  const forceAutoscrollRef = useRef(false);
+  const { composerRef, composerClearance, measureComposerClearance } = useCandorComposerClearance<HTMLFormElement>();
+
+  const isNearBottom = useCallback(() => {
+    if (typeof window === "undefined") return true;
+    const page = document.documentElement;
+    return page.scrollHeight - window.scrollY - window.innerHeight <= composerClearance + 160;
+  }, [composerClearance]);
+
+  const scrollToConversationEnd = useCallback(
+    (behavior: ScrollBehavior = "smooth") => {
+      scrollRef.current?.scrollIntoView({ behavior, block: "end" });
+      window.requestAnimationFrame(() => {
+        const composerTop = composerRef.current?.getBoundingClientRect().top;
+        const markerBottom = scrollRef.current?.getBoundingClientRect().bottom;
+        if (composerTop === undefined || markerBottom === undefined || markerBottom <= composerTop - 24) return;
+        window.scrollBy({ top: markerBottom - composerTop + 24, behavior });
+      });
+    },
+    [composerRef],
+  );
+
+  useEffect(() => {
+    const updateStickiness = () => {
+      shouldStickToBottomRef.current = isNearBottom();
+    };
+
+    updateStickiness();
+    window.addEventListener("scroll", updateStickiness, { passive: true });
+    window.addEventListener("resize", updateStickiness);
+
+    return () => {
+      window.removeEventListener("scroll", updateStickiness);
+      window.removeEventListener("resize", updateStickiness);
+    };
+  }, [isNearBottom]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -74,10 +112,14 @@ export function CandorDmChat({ id }: { id: string }) {
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      measureComposerClearance();
+      if (forceAutoscrollRef.current || shouldStickToBottomRef.current) {
+        scrollToConversationEnd("smooth");
+        forceAutoscrollRef.current = false;
+      }
     }, 80);
     return () => window.clearTimeout(timeout);
-  }, [messages, isSending]);
+  }, [messages, isSending, measureComposerClearance, scrollToConversationEnd]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -85,6 +127,7 @@ export function CandorDmChat({ id }: { id: string }) {
     if (!content || isSending) return;
 
     const optimistic: DmMessage = { id: crypto.randomUUID(), mine: true, content, pending: true };
+    forceAutoscrollRef.current = true;
     setMessages((current) => [...current, optimistic]);
     setDraft("");
     setIsSending(true);
@@ -142,7 +185,10 @@ export function CandorDmChat({ id }: { id: string }) {
           )}
         </div>
 
-        <div className="flex min-h-[60vh] flex-col gap-8 pb-36">
+        <div
+          className="flex min-h-[60vh] flex-col gap-8"
+          style={{ paddingBottom: `calc(${composerClearance}px + env(safe-area-inset-bottom, 0px))` }}
+        >
           {messages.length === 0 && (
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.65 }} className="pt-16 text-center text-lg font-light text-foreground-secondary">
               say something simple first.
@@ -168,10 +214,15 @@ export function CandorDmChat({ id }: { id: string }) {
               </p>
             </motion.div>
           ))}
-          <div ref={scrollRef} className="h-8" />
+          <div ref={scrollRef} className="h-8" style={{ scrollMarginBottom: `calc(${composerClearance}px + env(safe-area-inset-bottom, 0px))` }} />
         </div>
 
-        <form onSubmit={submit} className="fixed inset-x-0 bottom-24 z-30 mx-auto flex max-w-[600px] gap-3 px-6">
+        <form
+          ref={composerRef}
+          onSubmit={submit}
+          className="fixed inset-x-0 bottom-24 z-30 mx-auto flex max-w-[600px] gap-3 px-6"
+          style={{ bottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}
+        >
           <Textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCandorComposerClearance } from "@/hooks/use-candor-composer-clearance";
 import { candorThreadStorageKey } from "@/lib/candor/thread";
 import { responseDelayFor } from "@/lib/candor/timing";
 import type { CandorHistoryMessage } from "@/lib/candor-api";
@@ -25,6 +26,45 @@ export function CandorSession({ id }: { id: string }) {
   const [hasMoreHistory, setHasMoreHistory] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const shouldRestoreHistoryPositionRef = useRef(false);
+  const previousScrollHeightRef = useRef(0);
+  const shouldStickToBottomRef = useRef(true);
+  const forceAutoscrollRef = useRef(false);
+  const { composerRef, composerClearance, measureComposerClearance } = useCandorComposerClearance<HTMLFormElement>();
+
+  const isNearBottom = useCallback(() => {
+    if (typeof window === "undefined") return true;
+    const page = document.documentElement;
+    return page.scrollHeight - window.scrollY - window.innerHeight <= composerClearance + 160;
+  }, [composerClearance]);
+
+  const scrollToConversationEnd = useCallback(
+    (behavior: ScrollBehavior = "smooth") => {
+      scrollRef.current?.scrollIntoView({ behavior, block: "end" });
+      window.requestAnimationFrame(() => {
+        const composerTop = composerRef.current?.getBoundingClientRect().top;
+        const markerBottom = scrollRef.current?.getBoundingClientRect().bottom;
+        if (composerTop === undefined || markerBottom === undefined || markerBottom <= composerTop - 24) return;
+        window.scrollBy({ top: markerBottom - composerTop + 24, behavior });
+      });
+    },
+    [composerRef],
+  );
+
+  useEffect(() => {
+    const updateStickiness = () => {
+      shouldStickToBottomRef.current = isNearBottom();
+    };
+
+    updateStickiness();
+    window.addEventListener("scroll", updateStickiness, { passive: true });
+    window.addEventListener("resize", updateStickiness);
+
+    return () => {
+      window.removeEventListener("scroll", updateStickiness);
+      window.removeEventListener("resize", updateStickiness);
+    };
+  }, [isNearBottom]);
 
   useEffect(() => {
     if (!isSignedIn || !user?.id) return;
@@ -51,10 +91,21 @@ export function CandorSession({ id }: { id: string }) {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      if (shouldRestoreHistoryPositionRef.current) {
+        const delta = document.documentElement.scrollHeight - previousScrollHeightRef.current;
+        window.scrollBy({ top: delta, behavior: "instant" });
+        shouldRestoreHistoryPositionRef.current = false;
+        return;
+      }
+
+      measureComposerClearance();
+      if (forceAutoscrollRef.current || shouldStickToBottomRef.current) {
+        scrollToConversationEnd("smooth");
+        forceAutoscrollRef.current = false;
+      }
     }, 100);
     return () => clearTimeout(timeout);
-  }, [messages, isResponding]);
+  }, [messages, isResponding, measureComposerClearance, scrollToConversationEnd]);
 
   const history = useMemo(
     () => messages.filter((message) => !message.pending).map(({ role, content }) => ({ role, content })),
@@ -67,6 +118,7 @@ export function CandorSession({ id }: { id: string }) {
     if (!content || isResponding) return;
 
     const optimistic: Message = { id: crypto.randomUUID(), role: "user", content };
+    forceAutoscrollRef.current = true;
     setMessages((current) => [...current, optimistic]);
     setDraft("");
     setIsResponding(true);
@@ -95,10 +147,12 @@ export function CandorSession({ id }: { id: string }) {
   const loadOlder = async () => {
     if (!historyCursor || isLoadingHistory || !hasMoreHistory) return;
     setIsLoadingHistory(true);
+    previousScrollHeightRef.current = document.documentElement.scrollHeight;
     const response = await fetch(`/api/candor/conversations/${id}/messages?before=${encodeURIComponent(historyCursor)}&limit=60`);
     if (response.ok) {
       const data = (await response.json()) as { messages: Message[]; nextCursor?: string | null; hasMore?: boolean };
       if (data.messages.length) {
+        shouldRestoreHistoryPositionRef.current = true;
         setMessages((current) => {
           const existing = new Set(current.map((message) => message.id));
           return [...data.messages.filter((message) => !existing.has(message.id)), ...current];
@@ -108,6 +162,8 @@ export function CandorSession({ id }: { id: string }) {
       } else {
         setHasMoreHistory(false);
       }
+    } else {
+      shouldRestoreHistoryPositionRef.current = false;
     }
     setIsLoadingHistory(false);
   };
@@ -140,7 +196,10 @@ export function CandorSession({ id }: { id: string }) {
           <p className="text-sm font-light text-foreground-secondary">the same thread. still here.</p>
         </div>
 
-        <div className="flex min-h-[55vh] flex-col gap-8 pb-36">
+        <div
+          className="flex min-h-[55vh] flex-col gap-8"
+          style={{ paddingBottom: `calc(${composerClearance}px + env(safe-area-inset-bottom, 0px))` }}
+        >
           {hasMoreHistory && (
             <button
               type="button"
@@ -177,10 +236,15 @@ export function CandorSession({ id }: { id: string }) {
               hmm...
             </motion.p>
           )}
-          <div ref={scrollRef} className="h-8" />
+          <div ref={scrollRef} className="h-8" style={{ scrollMarginBottom: `calc(${composerClearance}px + env(safe-area-inset-bottom, 0px))` }} />
         </div>
 
-        <form onSubmit={submit} className="fixed inset-x-0 bottom-24 z-30 mx-auto flex max-w-[600px] gap-3 px-6">
+        <form
+          ref={composerRef}
+          onSubmit={submit}
+          className="fixed inset-x-0 bottom-24 z-30 mx-auto flex max-w-[600px] gap-3 px-6"
+          style={{ bottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}
+        >
           <Textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
