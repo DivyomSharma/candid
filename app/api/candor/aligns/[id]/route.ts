@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { normalizeMemory } from "@/lib/candor/memory";
 import { buildPublicProfile } from "@/lib/candor/matching";
 import { getPublicIdentityForCandorUserId } from "@/lib/candor/identity";
+import { getAlignmentSignals } from "@/lib/candor/alignment-memory";
 
 type AlignmentRow = {
   id: string;
@@ -60,11 +61,17 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const myDmOn = dmEnabledFor(alignment, user.id);
   const theirDmOn = otherDmEnabledFor(alignment, user.id);
   const identity = await getPublicIdentityForCandorUserId(otherUserId);
+  const signals = await getAlignmentSignals([otherUserId]);
+  const profile = buildPublicProfile(normalizeMemory(traits.data), otherUserId, identity);
+  const conversationSignals = signals.get(otherUserId)?.slice(0, 2) ?? [];
 
   return NextResponse.json({
     id: alignment.id,
     score: alignment.score,
-    profile: buildPublicProfile(normalizeMemory(traits.data), otherUserId, identity),
+    profile: {
+      ...profile,
+      conversation: [...conversationSignals, ...profile.conversation].slice(0, 4),
+    },
     myDmOn,
     theirDmOn,
     canText: myDmOn && theirDmOn,

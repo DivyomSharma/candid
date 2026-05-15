@@ -3,8 +3,9 @@ import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { getAlignmentPreview } from "@/lib/candor/alignment";
-import { alignmentLanguage, alignmentScore, buildPublicProfile } from "@/lib/candor/matching";
+import { alignmentLanguageWithSignals, alignmentScoreWithSignals, buildPublicProfile } from "@/lib/candor/matching";
 import { getPublicIdentitiesForCandorUserIds } from "@/lib/candor/identity";
+import { getAlignmentSignals } from "@/lib/candor/alignment-memory";
 
 type AlignmentRow = {
   id: string;
@@ -92,13 +93,22 @@ export async function GET() {
     .select("user_id, data")
     .neq("user_id", user.id);
 
+  const allUserIds = [user.id as string, ...(allTraits ?? []).map((row) => row.user_id as string)];
+  const signalMap = await getAlignmentSignals(allUserIds);
+  const mySignals = signalMap.get(user.id as string) ?? [];
+
   const scored = (allTraits ?? [])
     .map((row) => {
       const otherMemory = normalizeMemory(row.data);
+      const otherUserId = row.user_id as string;
+      const theirSignals = signalMap.get(otherUserId) ?? [];
       return {
-        userId: row.user_id as string,
+        userId: otherUserId,
         memory: otherMemory,
-        score: otherMemory.alignmentReady ? alignmentScore(memory, otherMemory) : 0,
+        signals: theirSignals,
+        score: otherMemory.alignmentReady
+          ? alignmentScoreWithSignals({ a: memory, b: otherMemory, aSignals: mySignals, bSignals: theirSignals })
+          : 0,
       };
     })
     .filter((item) => item.score > 0)
@@ -114,7 +124,7 @@ export async function GET() {
       return {
         id: alignment.id,
         score: item.score,
-        language: alignmentLanguage(memory, item.memory),
+        language: alignmentLanguageWithSignals(memory, item.memory, item.signals),
         profile: buildPublicProfile(item.memory, item.userId, identities.get(item.userId)),
         myDmOn,
         theirDmOn,

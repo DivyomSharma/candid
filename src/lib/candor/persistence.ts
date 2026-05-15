@@ -28,17 +28,27 @@ export async function getOrCreateCandorUser(authId: string) {
   return created!;
 }
 
-export async function fetchRecentMessages(userId: string, limit = 80): Promise<PersistedMessage[]> {
+export async function fetchRecentMessages(input: {
+  userId: string;
+  limit?: number;
+  before?: string | null;
+}): Promise<PersistedMessage[]> {
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const { data, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("candor_messages")
       .select("id, role, content, created_at")
-      .eq("user_id", userId)
+      .eq("user_id", input.userId)
       .is("deleted_at", null)
       .or("expires_at.is.null,expires_at.gt.now()")
       .order("created_at", { ascending: false })
-      .limit(limit);
+      .limit(input.limit ?? 80);
+
+    if (input.before) {
+      query = query.lt("created_at", input.before);
+    }
+
+    const { data, error } = await query;
 
     if (error || !data) return [];
 
@@ -53,6 +63,19 @@ export async function fetchRecentMessages(userId: string, limit = 80): Promise<P
   } catch (error) {
     console.error("Candor message fetch skipped:", error);
     return [];
+  }
+}
+
+export async function clearCanonicalMessages(userId: string) {
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+    await supabaseAdmin
+      .from("candor_messages")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .is("deleted_at", null);
+  } catch (error) {
+    console.error("Candor message clear skipped:", error);
   }
 }
 
@@ -120,5 +143,14 @@ export async function saveSocialState(userId: string, socialState: CandorSocialS
     );
   } catch (error) {
     console.error("Candor social state save skipped:", error);
+  }
+}
+
+export async function clearSocialState(userId: string) {
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+    await supabaseAdmin.from("candor_social_state").delete().eq("user_id", userId);
+  } catch (error) {
+    console.error("Candor social state clear skipped:", error);
   }
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { ProfileSurface } from "@/components/candor/ProfileSurface";
+import { MemoryControls } from "@/components/candor/MemoryControls";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildCandorProfilePresentation } from "@/lib/candor/profile";
 import type { CandorMemory } from "@/lib/candor/types";
@@ -79,23 +80,28 @@ export function CandorProfile() {
   }
 
   return (
-    <ProfileSurface
-      profile={profile}
-      heading="your candor profile"
-      subheading="identity-rich, soft-edged, and shareable without giving too much away."
-      actionSlot={
-        <Button
-          type="button"
-          variant="outline"
-          onClick={async () => {
-            await signOut();
-            router.push("/candor");
-          }}
-          className="rounded-full border-border/50 bg-background/50 px-5 font-light backdrop-blur-md hover:bg-accent/10"
-        >
-          sign out
-        </Button>
-      }
-    />
+    <div className="gradient-bg grain relative min-h-screen overflow-hidden pb-28">
+      <ProfileSurface
+        profile={profile}
+        heading="your candor profile"
+        subheading="identity-rich, soft-edged, and shareable without giving too much away."
+        actionSlot={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={async () => {
+              await signOut();
+              router.push("/candor");
+            }}
+            className="rounded-full border-border/50 bg-background/50 px-5 font-light backdrop-blur-md hover:bg-accent/10"
+          >
+            sign out
+          </Button>
+        }
+      />
+      <section className="relative z-10 mx-auto -mt-20 max-w-[680px] px-6">
+        <MemoryControls />
+      </section>
+    </div>
   );
 }

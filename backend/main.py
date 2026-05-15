@@ -53,6 +53,7 @@ class ChatRequest(BaseModel):
     system_prompt: str | None = None
     temperature: float | None = None
     max_tokens: int | None = None
+    model_route: Literal["default", "banter", "reflective", "nuance", "extraction"] | None = None
 
 
 SYSTEM_PROMPT = """
@@ -142,7 +143,7 @@ def openrouter_completion(request: ChatRequest) -> str:
         raise RuntimeError("missing_openrouter_api_key")
 
     payload = {
-        "model": openrouter_model,
+        "model": openrouter_model_for(request.model_route),
         "temperature": request.temperature or 0.82,
         "max_tokens": request.max_tokens or 90,
         "messages": build_messages(request),
@@ -172,6 +173,9 @@ def health() -> dict[str, str]:
 @app.post("/chat")
 def chat(request: ChatRequest) -> dict[str, str]:
     try:
+        if request.model_route in {"reflective", "nuance"} and openrouter_api_key:
+            return {"response": shape_response(openrouter_completion(request))}
+
         completion = client.chat.completions.create(
             messages=build_messages(request),
             model=model,
@@ -183,6 +187,14 @@ def chat(request: ChatRequest) -> dict[str, str]:
         content = openrouter_completion(request)
 
     return {"response": shape_response(content)}
+
+
+def openrouter_model_for(route: str | None) -> str:
+    if route == "nuance":
+        return os.environ.get("OPENROUTER_NUANCE_MODEL", openrouter_model)
+    if route == "reflective":
+        return os.environ.get("OPENROUTER_REFLECTIVE_MODEL", openrouter_model)
+    return openrouter_model
 
 
 @app.post("/chat/stream")

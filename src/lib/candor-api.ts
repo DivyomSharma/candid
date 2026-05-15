@@ -12,6 +12,7 @@ type ChatPayload = {
   system_prompt?: string;
   temperature?: number;
   max_tokens?: number;
+  model_route?: "default" | "banter" | "reflective" | "nuance" | "extraction";
 };
 
 type ChatResponse = {
@@ -24,6 +25,8 @@ type ChatResponse = {
 const backendUrl = process.env.CANDOR_API_URL ?? process.env.NEXT_PUBLIC_CANDOR_API_URL;
 const groqModel = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
 const openRouterModel = process.env.OPENROUTER_MODEL ?? "anthropic/claude-3.5-haiku";
+const openRouterReflectiveModel = process.env.OPENROUTER_REFLECTIVE_MODEL ?? openRouterModel;
+const openRouterNuanceModel = process.env.OPENROUTER_NUANCE_MODEL ?? openRouterReflectiveModel;
 
 const systemPrompt = `
 you are candor.
@@ -79,6 +82,9 @@ export async function sendCandorMessage(payload: ChatPayload) {
   }
 
   try {
+    if (payload.model_route === "reflective" || payload.model_route === "nuance") {
+      if (process.env.OPENROUTER_API_KEY) return sendViaOpenRouter(payload);
+    }
     return await sendViaGroq(payload);
   } catch (error) {
     if (!process.env.OPENROUTER_API_KEY) throw error;
@@ -156,7 +162,7 @@ async function sendViaOpenRouter(payload: ChatPayload) {
       "X-Title": "Candor",
     },
     body: JSON.stringify({
-      model: openRouterModel,
+      model: openRouterModelFor(payload.model_route),
       temperature: payload.temperature ?? 0.82,
       max_tokens: payload.max_tokens ?? 105,
       messages: [
@@ -179,6 +185,12 @@ async function sendViaOpenRouter(payload: ChatPayload) {
   };
 
   return data.choices?.[0]?.message?.content ?? "wait yeah... stay with that a little.";
+}
+
+function openRouterModelFor(route?: ChatPayload["model_route"]) {
+  if (route === "nuance") return openRouterNuanceModel;
+  if (route === "reflective") return openRouterReflectiveModel;
+  return openRouterModel;
 }
 
 export function streamCandorMessage(payload: ChatPayload) {

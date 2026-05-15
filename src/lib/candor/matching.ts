@@ -68,10 +68,33 @@ export function alignmentScore(a: CandorMemory, b: CandorMemory) {
   return sharedValues * 4 + sharedThemes * 2 + communicationFit * 2 + softnessFit + 1;
 }
 
+export function alignmentScoreWithSignals(input: {
+  a: CandorMemory;
+  b: CandorMemory;
+  aSignals?: string[];
+  bSignals?: string[];
+}) {
+  const base = alignmentScore(input.a, input.b);
+  const signalFit = overlap(normalizeSignals(input.aSignals ?? []), normalizeSignals(input.bSignals ?? []));
+  const energyFit =
+    shared(aList(input.a.socialPreferences), aList(input.b.appreciatesInPeople)) ||
+    shared(aList(input.b.socialPreferences), aList(input.a.appreciatesInPeople))
+      ? 2
+      : 0;
+  return base + signalFit * 2 + energyFit;
+}
+
 export function alignmentLanguage(memory: CandorMemory, other: CandorMemory) {
   const value = shared(aList(memory.values), aList(other.values)) ?? memory.values[0] ?? "something real";
   const need = memory.communicationNeeds[0] ?? other.appreciatesInPeople[0] ?? "gentle honesty";
   return `this could feel easy around ${value}. ${need} may make the conversation open naturally.`;
+}
+
+export function alignmentLanguageWithSignals(memory: CandorMemory, other: CandorMemory, signals: string[]) {
+  const base = alignmentLanguage(memory, other);
+  const signal = signals[0];
+  if (!signal) return base;
+  return `${base} there is also a small compatibility signal around ${signal}.`;
 }
 
 export function resonanceLabel(score: number): AlignmentResonance {
@@ -178,4 +201,11 @@ function aList(items: string[]) {
 
 function fallback(items: string[], backup: string[]) {
   return items.length ? items : backup;
+}
+
+function normalizeSignals(signals: string[]) {
+  return signals
+    .flatMap((signal) => signal.toLowerCase().split(/[^a-z0-9]+/))
+    .filter((word) => word.length > 4)
+    .slice(0, 20);
 }

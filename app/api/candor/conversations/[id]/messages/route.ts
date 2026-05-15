@@ -17,6 +17,9 @@ import {
   summarizeTurnForRelationalMemory,
   writeRelationalMemoryEvent,
 } from "@/lib/candor/relational-memory";
+import { factsAsRetrievedMemory, upsertMemoryFacts } from "@/lib/candor/memory-facts";
+import { logInteractionPattern } from "@/lib/candor/interaction-patterns";
+import { maybeQueueInitiative } from "@/lib/candor/initiatives";
 
 async function getOrCreateUser(authId: string) {
   return getOrCreateCandorUser(authId);
@@ -37,7 +40,7 @@ async function getUserTraits(authId: string) {
   };
 }
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getCurrentUserId();
   const { id } = await params;
 
@@ -50,9 +53,16 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   }
 
   const user = await getOrCreateCandorUser(userId);
-  const messages = await fetchRecentMessages(user.id);
+  const cursor = request.nextUrl.searchParams.get("before");
+  const limit = Number(request.nextUrl.searchParams.get("limit") ?? 60);
+  const messages = await fetchRecentMessages({
+    userId: user.id,
+    before: cursor,
+    limit: Number.isFinite(limit) ? Math.min(Math.max(limit, 20), 100) : 60,
+  });
+  const nextCursor = messages[0]?.created_at ?? null;
 
-  return NextResponse.json({ messages, persisted: messages.length > 0 });
+  return NextResponse.json({ messages, persisted: messages.length > 0, nextCursor, hasMore: messages.length > 0 });
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -85,6 +95,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     userId: saved.userId,
     message: content,
   });
+  const factMemories = await factsAsRetrievedMemory(saved.userId);
   const persistedUserMessage = await persistMessage({
     userId: saved.userId,
     role: "user",
@@ -102,11 +113,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       history,
       memory,
       socialState,
-      retrievedMemories,
+      retrievedMemories: [...retrievedMemories, ...factMemories].slice(0, 8),
     });
     aiContent = turn.reply;
     memory = turn.memory;
     nextSocialState = turn.socialState;
+    void logInteractionPattern({
+      userId: saved.userId,
+      socialMove: turn.socialMove,
+      outcome: "continued",
+      weight: 0.55,
+    });
   } catch (error) {
     aiContent = `[DEBUG]: ${error instanceof Error ? error.message : String(error)} \n\nyeah... i lost the thread for a second.\ntry saying that again, simpler.`;
   }
@@ -116,6 +133,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     { onConflict: "user_id" },
   );
   await saveSocialState(saved.userId, nextSocialState);
+  await maybeQueueInitiative({
+    userId: saved.userId,
+    memory,
+    socialState: nextSocialState,
+    lastUserMessage: content,
+  });
 
   const persistedAiMessage = await persistMessage({
     userId: saved.userId,
@@ -130,6 +153,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       ...relationalMemory,
     });
   }
+  await upsertMemoryFacts({ userId: saved.userId, message: content });
 
   return NextResponse.json({
     message: {

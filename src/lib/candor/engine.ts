@@ -76,7 +76,13 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
       system_prompt: prompt,
       temperature: temperatureFor(decision),
       max_tokens: maxTokensFor(intuition.presenceState),
+      model_route: routeForTurn(decision, socialMove, intuition),
     }),
+    {
+      socialMove,
+      socialState: startingSocialState,
+      previousReplies: lightMemory.responseHistory,
+    },
   );
 
   const reply = await maybeRetryForRepetition({
@@ -320,8 +326,25 @@ async function maybeRetryForRepetition(input: {
       system_prompt: retryPrompt,
       temperature: Math.min(temperatureFor(fallbackDecision) + 0.06, 0.94),
       max_tokens: maxTokensFor(input.intuition.presenceState),
+      model_route: routeForTurn(fallbackDecision, input.socialMove, input.intuition),
     }),
+    {
+      socialMove: input.socialMove,
+      socialState: input.socialState,
+      previousReplies: input.memory.responseHistory,
+    },
   );
+}
+
+function routeForTurn(
+  decision: CandorDecision,
+  socialMove: ReturnType<typeof chooseSocialMove>,
+  intuition: CandorIntuitionState,
+) {
+  if (intuition.emotionalSignal === "high" || decision.mode === "comfort") return "reflective";
+  if (socialMove === "rapid_fire" || socialMove === "tease" || socialMove === "energy_flip") return "banter";
+  if (decision.mode === "challenge") return "nuance";
+  return "default";
 }
 
 function nextStructure(current: CandorStructure): CandorStructure {

@@ -21,20 +21,27 @@ export function CandorSession({ id }: { id: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [isResponding, setIsResponding] = useState(false);
+  const [historyCursor, setHistoryCursor] = useState<string | null>(null);
+  const [hasMoreHistory, setHasMoreHistory] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isSignedIn || !user?.id) return;
 
-    const saved = window.localStorage.getItem(candorThreadStorageKey(user.id));
-    if (saved) {
-      setMessages(JSON.parse(saved) as Message[]);
-      return;
-    }
-
     fetch(`/api/candor/conversations/${id}/messages`)
       .then((response) => (response.ok ? response.json() : { messages: [] }))
-      .then((data: { messages: Message[] }) => setMessages(data.messages ?? []));
+      .then((data: { messages: Message[]; nextCursor?: string | null; hasMore?: boolean }) => {
+        if (data.messages?.length) {
+          setMessages(data.messages);
+          setHistoryCursor(data.nextCursor ?? null);
+          setHasMoreHistory(Boolean(data.hasMore));
+          return;
+        }
+
+        const saved = window.localStorage.getItem(candorThreadStorageKey(user.id));
+        if (saved) setMessages(JSON.parse(saved) as Message[]);
+      });
   }, [id, isSignedIn, user?.id]);
 
   useEffect(() => {
@@ -85,6 +92,26 @@ export function CandorSession({ id }: { id: string }) {
     setIsResponding(false);
   };
 
+  const loadOlder = async () => {
+    if (!historyCursor || isLoadingHistory || !hasMoreHistory) return;
+    setIsLoadingHistory(true);
+    const response = await fetch(`/api/candor/conversations/${id}/messages?before=${encodeURIComponent(historyCursor)}&limit=60`);
+    if (response.ok) {
+      const data = (await response.json()) as { messages: Message[]; nextCursor?: string | null; hasMore?: boolean };
+      if (data.messages.length) {
+        setMessages((current) => {
+          const existing = new Set(current.map((message) => message.id));
+          return [...data.messages.filter((message) => !existing.has(message.id)), ...current];
+        });
+        setHistoryCursor(data.nextCursor ?? null);
+        setHasMoreHistory(Boolean(data.hasMore));
+      } else {
+        setHasMoreHistory(false);
+      }
+    }
+    setIsLoadingHistory(false);
+  };
+
   if (isLoaded && !isSignedIn) {
     return (
       <main className="gradient-bg grain relative flex min-h-screen items-center justify-center overflow-hidden px-6">
@@ -114,6 +141,17 @@ export function CandorSession({ id }: { id: string }) {
         </div>
 
         <div className="flex min-h-[55vh] flex-col gap-8 pb-36">
+          {hasMoreHistory && (
+            <button
+              type="button"
+              onClick={loadOlder}
+              disabled={isLoadingHistory}
+              className="self-center rounded-full border border-border/45 bg-background/35 px-4 py-2 text-xs font-light text-foreground-secondary backdrop-blur-md transition-colors hover:border-accent/40 hover:text-foreground"
+            >
+              {isLoadingHistory ? "finding older thread..." : "older thread"}
+            </button>
+          )}
+
           {messages.map((message, index) => (
             <motion.div
               key={message.id}

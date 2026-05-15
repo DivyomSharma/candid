@@ -16,6 +16,9 @@ import {
   summarizeTurnForRelationalMemory,
   writeRelationalMemoryEvent,
 } from "@/lib/candor/relational-memory";
+import { factsAsRetrievedMemory, upsertMemoryFacts } from "@/lib/candor/memory-facts";
+import { logInteractionPattern } from "@/lib/candor/interaction-patterns";
+import { maybeQueueInitiative } from "@/lib/candor/initiatives";
 
 async function getOrCreateUser(authId: string) {
   return getOrCreateCandorUser(authId);
@@ -51,6 +54,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         message: opening,
       });
+      const factMemories = await factsAsRetrievedMemory(user.id);
       await persistMessage({ userId: user.id, role: "user", content: opening });
 
       try {
@@ -60,11 +64,23 @@ export async function POST(request: NextRequest) {
           history: [],
           memory,
           socialState,
-          retrievedMemories,
+          retrievedMemories: [...retrievedMemories, ...factMemories].slice(0, 8),
         });
         aiContent = turn.reply;
         memory = turn.memory;
         await saveSocialState(user.id, turn.socialState);
+        await maybeQueueInitiative({
+          userId: user.id,
+          memory,
+          socialState: turn.socialState,
+          lastUserMessage: opening,
+        });
+        void logInteractionPattern({
+          userId: user.id,
+          socialMove: turn.socialMove,
+          outcome: "continued",
+          weight: 0.55,
+        });
       } catch (error) {
         console.error("Candor AI fallback used:", error);
         aiContent = `[DEBUG]: ${error instanceof Error ? error.message : String(error)} \n\nhmm... that already says something.\nlet it stay here for a second.`;
@@ -84,6 +100,7 @@ export async function POST(request: NextRequest) {
           ...relationalMemory,
         });
       }
+      await upsertMemoryFacts({ userId: user.id, message: opening });
     }
 
     return NextResponse.json({

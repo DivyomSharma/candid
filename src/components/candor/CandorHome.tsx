@@ -174,6 +174,17 @@ export function CandorHome() {
   }, [entry.initiative.line, isSignedIn, user?.id]);
 
   useEffect(() => {
+    if (!isSignedIn || !user?.id) return;
+
+    fetch("/api/candor/initiatives")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { message?: PreviewMessage | null } | null) => {
+        if (data?.message) setPreview({ role: "ai", content: data.message.content });
+      })
+      .catch(() => {});
+  }, [isSignedIn, user?.id]);
+
+  useEffect(() => {
     interactionStartedAt.current = Date.now();
   }, [choiceIndex, insightIndex, entryPhase]);
 
