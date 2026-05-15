@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
+import { resonanceLabel } from "@/lib/candor/matching";
 
 type Align = {
   id: string;
@@ -105,7 +106,7 @@ export function CandorAligns() {
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">aligns</h1>
           <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">
-            {isSearching ? "looking for enough signal before saying anything." : data?.language ?? "candor is still learning the shape of you."}
+            {isSearching ? "looking for a rhythm that would feel natural, not forced." : data?.language ?? "candor is still learning the shape of you."}
           </p>
         </motion.div>
 
@@ -129,7 +130,7 @@ export function CandorAligns() {
                 not yet. a real align should come from understanding, not a quick guess.
               </p>
               <p className="text-sm font-light leading-6 text-foreground-secondary/80">
-                keep talking. family, friends, career, fear, ambition, love, all of it matters here.
+                keep talking. family, friends, work, fear, ambition, love, all of it quietly changes who opens well with you.
               </p>
             </CardContent>
           </Card>
@@ -165,7 +166,9 @@ export function CandorAligns() {
                       <h2 className="truncate text-xl font-light">{align.profile.username}</h2>
                       <p className="mt-1 truncate text-xs font-light text-foreground-secondary">{align.profile.handle}</p>
                     </div>
-                    <p className="shrink-0 text-xs font-light text-accent/80">{Math.round(align.score * 10)}%</p>
+                    <p className="shrink-0 rounded-full border border-accent/30 px-2.5 py-1 text-[11px] font-light text-accent/85">
+                      {resonanceLabel(align.score)}
+                    </p>
                   </div>
                   <p className="mt-3 line-clamp-2 text-sm font-light leading-6 text-foreground-secondary break-words">
                     {align.profile.line}
@@ -174,21 +177,22 @@ export function CandorAligns() {
               </button>
 
               <div className="flex flex-col gap-3 border-t border-border/40 pt-4">
+                <p className="text-sm font-light leading-6 text-foreground-secondary">{align.language}</p>
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2 text-sm font-light text-foreground-secondary">
                     {align.canText ? <MessageCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                     {align.canText
-                      ? "both of you opened dms"
+                      ? "the conversation can open now"
                       : align.theirDmOn
-                        ? "they opened dms. accept to chat."
-                        : "they will see your profile when you open dms."}
+                        ? "they left the door open first."
+                        : "open the door and candor will let them notice you."}
                   </div>
                   <Button
                     type="button"
                     onClick={() => (align.canText ? router.push(`/candor/aligns/${align.id}/chat`) : toggleDm(align))}
                     className="rounded-full bg-accent px-5 text-primary-foreground hover:bg-accent/90"
                   >
-                    {align.canText ? "open chat" : align.theirDmOn ? "accept dms" : align.myDmOn ? "dms on" : "open dms"}
+                    {align.canText ? "open conversation" : align.theirDmOn ? "let it open" : align.myDmOn ? "door open" : "open the door"}
                   </Button>
                 </div>
               </div>

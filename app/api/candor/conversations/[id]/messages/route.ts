@@ -4,6 +4,7 @@ import { runCandorTurn } from "@/lib/candor/engine";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { CANDOR_THREAD_ID, isCandorThread } from "@/lib/candor/thread";
 
 async function getOrCreateUser(authId: string) {
   const supabaseAdmin = getSupabaseAdmin();
@@ -40,16 +41,16 @@ async function getUserTraits(authId: string) {
   };
 }
 
-function isLocalConversation(id: string) {
-  return id.startsWith("local-");
-}
-
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getCurrentUserId();
   const { id } = await params;
 
   if (!userId) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  if (!isCandorThread(id)) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
   return NextResponse.json({ messages: [], persisted: false });
@@ -61,6 +62,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (!userId) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  if (!isCandorThread(id)) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
   const body = (await request.json()) as {
@@ -104,5 +109,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       role: "ai",
       content: aiContent,
     },
+    conversationId: CANDOR_THREAD_ID,
   });
 }

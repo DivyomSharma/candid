@@ -4,6 +4,7 @@ import { runCandorTurn } from "@/lib/candor/engine";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { CANDOR_THREAD_ID } from "@/lib/candor/thread";
 
 async function getOrCreateUser(authId: string) {
   const supabaseAdmin = getSupabaseAdmin();
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    const id = `local-${crypto.randomUUID()}`;
+    const id = CANDOR_THREAD_ID;
     let aiContent: string | null = null;
 
     if (opening) {
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Conversation creation failed:", error);
     return NextResponse.json({
-      id: `local-${crypto.randomUUID()}`,
+      id: CANDOR_THREAD_ID,
       persisted: false,
       warning: "database_unavailable",
     });

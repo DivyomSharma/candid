@@ -3,12 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Sparkles, UserRound, Sun, Moon } from "lucide-react";
+import { MessageCircleMore, Sparkles, UserRound, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme, accents } from "@/contexts/ThemeContext";
 
 const navItems = [
-  { href: "/candor/home", label: "home", icon: Home },
+  { href: "/candor/home", label: "candor", icon: MessageCircleMore },
   { href: "/candor/aligns", label: "aligns", icon: Sparkles },
   { href: "/candor/you", label: "you", icon: UserRound },
 ];
@@ -116,14 +116,6 @@ export function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-4 z-40 flex justify-center gap-2 px-3 pointer-events-none sm:bottom-5 sm:gap-3 sm:px-6">
       <div className="pointer-events-auto surface soft-shadow flex max-w-[calc(100vw-4.5rem)] items-center gap-0.5 rounded-full border border-border/50 px-1.5 py-1.5 backdrop-blur-md sm:max-w-none sm:gap-1 sm:px-2 sm:py-2">
-        <Link
-          href="/candor"
-          className="flex h-9 items-center rounded-full px-3 text-sm font-light tracking-tight text-foreground transition-colors active:scale-95 sm:h-10 sm:px-4"
-          aria-label="Candor landing page"
-        >
-          Candor
-        </Link>
-        <div className="mx-0.5 h-5 w-px bg-border/50 sm:mx-1" aria-hidden="true" />
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

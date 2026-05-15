@@ -11,6 +11,7 @@ import { BottomNav } from "@/components/candor/BottomNav";
 import { ChoiceTapCard } from "@/components/candor/ChoiceTapCard";
 import { InsightSwipeCard } from "@/components/candor/InsightSwipeCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { CANDOR_THREAD_ID, candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorPresets } from "@/lib/candor/presets";
 import type { CandorEntryPayload } from "@/lib/candor/types";
 
@@ -65,6 +66,7 @@ const defaultEntry: CandorEntryPayload = {
 };
 
 type EntryPhase = "choices" | "pause" | "insights" | "clearer" | "done";
+type PreviewMessage = { role: "user" | "ai"; content: string };
 
 export function CandorHome() {
   const [message, setMessage] = useState("");
@@ -77,6 +79,7 @@ export function CandorHome() {
   const [entryPhase, setEntryPhase] = useState<EntryPhase>("choices");
   const [choiceIndex, setChoiceIndex] = useState(0);
   const [insightIndex, setInsightIndex] = useState(0);
+  const [preview, setPreview] = useState<PreviewMessage | null>(null);
   const [entrySignals, setEntrySignals] = useState<
     Array<{ choicePattern: string | null; insightType: string | null; accepted: boolean | null; engagementSignal: string }>
   >([]);
@@ -138,6 +141,28 @@ export function CandorHome() {
     return () => window.clearTimeout(timer);
   }, [entryPhase]);
 
+  useEffect(() => {
+    if (!isSignedIn || !user?.id) {
+      setPreview(null);
+      return;
+    }
+
+    const saved = window.localStorage.getItem(candorThreadStorageKey(user.id));
+    if (!saved) {
+      setPreview(null);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(saved) as PreviewMessage[];
+      const lastAi = [...parsed].reverse().find((item) => item.role === "ai");
+      const lastUser = [...parsed].reverse().find((item) => item.role === "user");
+      setPreview(lastAi ?? lastUser ?? null);
+    } catch {
+      setPreview(null);
+    }
+  }, [isSignedIn, user?.id]);
+
   const logSignal = async (signal: {
     choicePattern: string | null;
     insightType: string | null;
@@ -193,14 +218,14 @@ export function CandorHome() {
           warning?: string;
           message?: { id: string; role: "ai"; content: string } | null;
         };
-        if (data.persisted === false) {
+        if (data.persisted === false && user?.id) {
           const initialMessages = [
-            { id: crypto.randomUUID(), role: "user", content: content.trim() },
+            { id: crypto.randomUUID(), role: "user" as const, content: content.trim() },
             ...(data.message ? [data.message] : []),
           ];
-          window.sessionStorage.setItem(`candor:${data.id}:messages`, JSON.stringify(initialMessages));
+          window.localStorage.setItem(candorThreadStorageKey(user.id), JSON.stringify(initialMessages));
         }
-        router.push(`/candor/session/${data.id}`);
+        router.push(`/candor/session/${data.id || CANDOR_THREAD_ID}`);
         return;
       }
 
@@ -296,6 +321,28 @@ export function CandorHome() {
             what&apos;s been on your mind lately?
           </h1>
         </motion.div>
+
+        {isSignedIn && preview ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06, duration: 0.5 }}>
+            <Card className="surface soft-shadow border-border/50 bg-card/52 backdrop-blur-md shadow-[inset_0_1px_0_hsl(var(--foreground)/0.03),0_18px_60px_-34px_hsl(var(--glow)/0.18)]">
+              <CardContent className="flex flex-col gap-3 p-5">
+                <div className="flex items-center justify-between gap-4 text-xs font-light text-foreground-secondary">
+                  <span>still open between you two</span>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/candor/session/${CANDOR_THREAD_ID}`)}
+                    className="text-foreground transition-colors hover:text-accent"
+                  >
+                    continue
+                  </button>
+                </div>
+                <p className="max-w-[34rem] text-base font-light leading-7 text-foreground-secondary break-words">
+                  {preview.content}
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ) : null}
 
         <AnimatePresence mode="wait">
           {showEntryLayer ? (
@@ -447,7 +494,7 @@ export function CandorHome() {
                   disabled={!message.trim() || isStarting}
                   className="h-11 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground hover:bg-accent/90"
                 >
-                  {isStarting ? "entering" : "begin"}
+                  {isStarting ? "opening..." : preview ? "keep it going" : "open the thread"}
                   <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
                 </Button>
               ) : (

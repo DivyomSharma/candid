@@ -18,6 +18,13 @@ export type PublicCandorProfile = {
   };
 };
 
+export type AlignmentResonance =
+  | "familiar"
+  | "shared rhythm"
+  | "natural flow"
+  | "strong resonance"
+  | "rare alignment";
+
 export function buildPublicProfile(
   memory: CandorMemory,
   userId = "candor",
@@ -64,33 +71,41 @@ export function alignmentScore(a: CandorMemory, b: CandorMemory) {
 export function alignmentLanguage(memory: CandorMemory, other: CandorMemory) {
   const value = shared(aList(memory.values), aList(other.values)) ?? memory.values[0] ?? "something real";
   const need = memory.communicationNeeds[0] ?? other.appreciatesInPeople[0] ?? "gentle honesty";
-  return `you may connect around ${value}. ${need} may help the conversation.`;
+  return `this could feel easy around ${value}. ${need} may make the conversation open naturally.`;
+}
+
+export function resonanceLabel(score: number): AlignmentResonance {
+  if (score >= 13) return "rare alignment";
+  if (score >= 10) return "strong resonance";
+  if (score >= 7) return "natural flow";
+  if (score >= 5) return "shared rhythm";
+  return "familiar";
 }
 
 function titleFrom(memory: CandorMemory) {
   const value = memory.values[0];
   const theme = memory.lifeThemes[0];
-  if (value && theme) return `cares about ${value} and has dealt with ${theme}`;
-  if (value) return `cares about ${value}`;
-  if (theme) return `has dealt with ${theme}`;
+  if (value && theme) return `more at home in honest conversations than surface ones`;
+  if (value) return `seems guided by ${value}`;
+  if (theme) return `has been shaped by ${theme}`;
   return "still being understood";
 }
 
 function aboutFrom(memory: CandorMemory) {
   const need = memory.communicationNeeds[0];
   const softSpot = memory.softSpots[0];
-  if (need && softSpot) return `they may take time to open up, especially around ${softSpot}. ${need} helps.`;
-  if (need) return `they open up more with ${need}.`;
-  if (softSpot) return `they may feel hurt around ${softSpot}.`;
+  if (need && softSpot) return `seems to settle more with ${need}, especially when ${softSpot} is nearby.`;
+  if (need) return `opens more easily with ${need}.`;
+  if (softSpot) return `that sensitive spot around ${softSpot} still seems to matter.`;
   return "candor is still learning about them.";
 }
 
 function oneLineFrom(memory: CandorMemory) {
   const value = memory.values[0];
   const need = memory.communicationNeeds[0];
-  if (value && need) return `cares about ${value}. opens up with ${need}.`;
-  if (value) return `cares about ${value}.`;
-  if (need) return `opens up with ${need}.`;
+  if (value && need) return `seems more comfortable with ${value} than performance, and opens better with ${need}.`;
+  if (value) return `seems drawn to ${value} over surface talk.`;
+  if (need) return `opens better with ${need}.`;
   return "candor is still learning about them.";
 }
 

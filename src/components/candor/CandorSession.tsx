@@ -9,12 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
+import { candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorHistoryMessage } from "@/lib/candor-api";
 
 type Message = CandorHistoryMessage & { id: string; pending?: boolean };
 
 export function CandorSession({ id }: { id: string }) {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
@@ -22,23 +23,23 @@ export function CandorSession({ id }: { id: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isSignedIn) return;
+    if (!isSignedIn || !user?.id) return;
 
-    if (id.startsWith("local-")) {
-      const saved = window.sessionStorage.getItem(`candor:${id}:messages`);
-      setMessages(saved ? (JSON.parse(saved) as Message[]) : []);
+    const saved = window.localStorage.getItem(candorThreadStorageKey(user.id));
+    if (saved) {
+      setMessages(JSON.parse(saved) as Message[]);
       return;
     }
 
     fetch(`/api/candor/conversations/${id}/messages`)
       .then((response) => (response.ok ? response.json() : { messages: [] }))
       .then((data: { messages: Message[] }) => setMessages(data.messages ?? []));
-  }, [id, isSignedIn]);
+  }, [id, isSignedIn, user?.id]);
 
   useEffect(() => {
-    if (!id.startsWith("local-")) return;
-    window.sessionStorage.setItem(`candor:${id}:messages`, JSON.stringify(messages));
-  }, [id, messages]);
+    if (!user?.id) return;
+    window.localStorage.setItem(candorThreadStorageKey(user.id), JSON.stringify(messages));
+  }, [messages, user?.id]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -108,7 +109,7 @@ export function CandorSession({ id }: { id: string }) {
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[600px] flex-col gap-12">
         <div className="pt-8">
-          <p className="text-sm font-light text-foreground-secondary">candor is listening</p>
+          <p className="text-sm font-light text-foreground-secondary">the same thread. still here.</p>
         </div>
 
         <div className="flex min-h-[55vh] flex-col gap-8 pb-36">
