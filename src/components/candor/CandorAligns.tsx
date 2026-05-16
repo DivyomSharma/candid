@@ -11,6 +11,7 @@ import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { resonanceLabel } from "@/lib/candor/matching";
+import { cn } from "@/lib/utils";
 
 type Align = {
   id: string;
@@ -144,11 +145,18 @@ export function CandorAligns() {
           </Card>
         )}
 
-        {!isSearching && ready && data?.aligns.map((align) => (
+        {!isSearching && ready && data?.aligns.map((align) => {
+          const resonance = resonanceLabel(align.score);
+          const atmosphere = alignAtmosphere(resonance);
+          return (
           <Card
             key={align.id}
-            className="surface border-border/50 bg-card/45 backdrop-blur-sm transition-colors hover:border-accent/45"
+            className={cn(
+              "surface relative overflow-hidden border backdrop-blur-sm transition-colors",
+              atmosphere.card,
+            )}
           >
+            <div className={cn("pointer-events-none absolute inset-0", atmosphere.light)} />
             <CardContent className="flex flex-col gap-5 p-5">
               <button
                 type="button"
@@ -166,8 +174,8 @@ export function CandorAligns() {
                       <h2 className="truncate text-xl font-light">{align.profile.username}</h2>
                       <p className="mt-1 truncate text-xs font-light text-foreground-secondary">{align.profile.handle}</p>
                     </div>
-                    <p className="shrink-0 rounded-full border border-accent/30 px-2.5 py-1 text-[11px] font-light text-accent/85">
-                      {resonanceLabel(align.score)}
+                    <p className={cn("shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-light", atmosphere.badge)}>
+                      {resonance}
                     </p>
                   </div>
                   <p className="mt-3 line-clamp-2 text-sm font-light leading-6 text-foreground-secondary break-words">
@@ -181,11 +189,7 @@ export function CandorAligns() {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2 text-sm font-light text-foreground-secondary">
                     {align.canText ? <MessageCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                    {align.canText
-                      ? "the conversation can open now"
-                      : align.theirDmOn
-                        ? "they left the door open first."
-                        : "open the door and candor will let them notice you."}
+                    {opennessLanguage(align)}
                   </div>
                   <Button
                     type="button"
@@ -198,11 +202,51 @@ export function CandorAligns() {
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </section>
       <BottomNav />
     </main>
   );
+}
+
+function alignAtmosphere(resonance: ReturnType<typeof resonanceLabel>) {
+  const styles = {
+    distant: {
+      card: "border-border/42 bg-card/36 shadow-[0_16px_56px_-42px_hsl(var(--foreground)/0.22)] hover:border-border/60",
+      badge: "border-border/45 text-foreground-secondary",
+      light: "bg-transparent",
+    },
+    familiar: {
+      card: "border-accent/20 bg-[linear-gradient(135deg,hsl(var(--accent)/0.045),hsl(var(--card)/0.42))] shadow-[0_18px_62px_-40px_hsl(var(--accent)/0.26)] hover:border-accent/34",
+      badge: "border-accent/25 text-accent/78",
+      light: "bg-[radial-gradient(circle_at_18%_12%,hsl(var(--accent)/0.07),transparent_34%)]",
+    },
+    "natural flow": {
+      card: "border-accent/28 bg-[linear-gradient(135deg,hsl(var(--accent)/0.09),hsl(var(--card)/0.48)_48%,hsl(var(--background)/0.26))] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.035),0_22px_72px_-38px_hsl(var(--accent)/0.36)] hover:border-accent/42",
+      badge: "border-accent/34 text-accent/88 bg-accent/5",
+      light: "bg-[radial-gradient(circle_at_18%_16%,hsl(var(--accent)/0.1),transparent_36%)]",
+    },
+    magnetic: {
+      card: "border-accent/36 bg-[linear-gradient(135deg,hsl(var(--accent)/0.13),hsl(var(--card)/0.50)_46%,hsl(var(--glow)/0.06))] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.05),0_28px_86px_-38px_hsl(var(--accent)/0.50)] hover:border-accent/52",
+      badge: "border-accent/45 text-accent bg-accent/8",
+      light: "bg-[radial-gradient(circle_at_22%_12%,hsl(var(--accent)/0.14),transparent_34%),radial-gradient(circle_at_88%_88%,hsl(var(--glow)/0.10),transparent_30%)]",
+    },
+    candid: {
+      card: "border-accent/46 bg-[linear-gradient(135deg,hsl(var(--accent)/0.17),hsl(var(--card)/0.52)_42%,hsl(var(--glow)/0.09))] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.065),inset_0_0_42px_hsl(var(--accent)/0.04),0_34px_100px_-40px_hsl(var(--accent)/0.62)] hover:border-accent/62",
+      badge: "border-accent/55 text-accent bg-accent/10 shadow-[0_0_22px_-12px_hsl(var(--accent)/0.8)]",
+      light: "bg-[radial-gradient(circle_at_20%_12%,hsl(var(--accent)/0.18),transparent_35%),radial-gradient(circle_at_82%_86%,hsl(var(--glow)/0.13),transparent_32%)]",
+    },
+  } satisfies Record<ReturnType<typeof resonanceLabel>, { card: string; badge: string; light: string }>;
+
+  return styles[resonance];
+}
+
+function opennessLanguage(align: Align) {
+  if (align.canText) return "conversation feels emotionally open";
+  if (align.theirDmOn) return "they opened the door first";
+  if (align.myDmOn) return "the door is open on your side";
+  return "open the door when it feels easy";
 }
 
 function SearchingLine() {

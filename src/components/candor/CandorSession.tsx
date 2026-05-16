@@ -10,7 +10,7 @@ import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCandorComposerClearance } from "@/hooks/use-candor-composer-clearance";
-import { candorThreadStorageKey } from "@/lib/candor/thread";
+import { candorThreadPresenceStorageKey, candorThreadReadStorageKey, candorThreadStorageKey } from "@/lib/candor/thread";
 import { responseDelayFor } from "@/lib/candor/timing";
 import type { CandorHistoryMessage } from "@/lib/candor-api";
 
@@ -87,6 +87,9 @@ export function CandorSession({ id }: { id: string }) {
   useEffect(() => {
     if (!user?.id) return;
     window.localStorage.setItem(candorThreadStorageKey(user.id), JSON.stringify(messages));
+    window.localStorage.setItem(candorThreadReadStorageKey(user.id), String(Date.now()));
+    window.localStorage.removeItem(candorThreadPresenceStorageKey(user.id));
+    window.dispatchEvent(new Event("candor-thread-presence"));
   }, [messages, user?.id]);
 
   useEffect(() => {

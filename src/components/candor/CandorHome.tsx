@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, MessageCircleMore, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { ChoiceTapCard } from "@/components/candor/ChoiceTapCard";
 import { InterestSpotlightCard } from "@/components/candor/InterestSpotlightCard";
 import { InsightSwipeCard } from "@/components/candor/InsightSwipeCard";
 import { useAuth } from "@/contexts/AuthContext";
-import { CANDOR_THREAD_ID, candorThreadStorageKey } from "@/lib/candor/thread";
+import { CANDOR_THREAD_ID, candorThreadPresenceStorageKey, candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorPresets } from "@/lib/candor/presets";
 import type { CandorEntryPayload } from "@/lib/candor/types";
 
@@ -179,7 +179,11 @@ export function CandorHome() {
     fetch("/api/candor/initiatives")
       .then((response) => (response.ok ? response.json() : null))
       .then((data: { message?: PreviewMessage | null } | null) => {
-        if (data?.message) setPreview({ role: "ai", content: data.message.content });
+        if (data?.message) {
+          setPreview({ role: "ai", content: data.message.content });
+          window.localStorage.setItem(candorThreadPresenceStorageKey(user.id), "initiative");
+          window.dispatchEvent(new Event("candor-thread-presence"));
+        }
       })
       .catch(() => {});
   }, [isSignedIn, user?.id]);
@@ -349,6 +353,14 @@ export function CandorHome() {
   const currentSpotlight = entry.spotlight;
   const showEntryLayer = isSignedIn && entryPhase !== "done";
   const isInitiativePreview = preview?.content === entry.initiative.line;
+  const understandingLine =
+    entrySignals.length >= 5
+      ? "your continuity feels stronger lately"
+      : entrySignals.length >= 3
+        ? "patterns are becoming clearer"
+        : entrySignals.length >= 1
+          ? "candor is beginning to understand your rhythm"
+          : "the thread is still learning your rhythm";
 
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-20">
@@ -371,11 +383,13 @@ export function CandorHome() {
 
         {preview ? (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06, duration: 0.5 }}>
-            <Card className="surface soft-shadow border-border/50 bg-card/52 backdrop-blur-md shadow-[inset_0_1px_0_hsl(var(--foreground)/0.03),0_18px_60px_-34px_hsl(var(--glow)/0.18)]">
+            <Card className="surface soft-shadow relative overflow-hidden border-accent/30 bg-[linear-gradient(135deg,hsl(var(--accent)/0.13),hsl(var(--card)/0.48)_42%,hsl(var(--background)/0.34))] backdrop-blur-md shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),inset_0_0_34px_hsl(var(--accent)/0.045),0_22px_80px_-36px_hsl(var(--accent)/0.55)]">
+              <div className="pointer-events-none absolute -left-20 -top-20 h-40 w-40 rounded-full bg-[hsl(var(--accent)/0.13)] blur-3xl" />
+              <div className="pointer-events-none absolute bottom-0 right-8 h-16 w-32 rounded-full bg-[hsl(var(--glow)/0.08)] blur-2xl" />
               <CardContent className="flex flex-col gap-3 p-5">
                 <div className="flex items-center justify-between gap-4 text-xs font-light text-foreground-secondary">
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-accent/80" />
+                    <span className="h-2 w-2 rounded-full bg-accent/80 shadow-[0_0_14px_hsl(var(--accent)/0.65)] animate-[candor-breathe_3.2s_ease-in-out_infinite]" />
                     {isInitiativePreview ? "unread from candor" : "still open between you two"}
                   </span>
                   {isSignedIn ? (
@@ -388,9 +402,10 @@ export function CandorHome() {
                     </button>
                   ) : null}
                 </div>
-                <p className="max-w-[34rem] text-base font-light leading-7 text-foreground-secondary break-words">
+                <p className="max-w-[34rem] text-base font-light leading-7 text-foreground break-words">
                   {preview.content}
                 </p>
+                <p className="text-xs font-light leading-5 text-foreground-secondary">{understandingLine}</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -576,19 +591,6 @@ export function CandorHome() {
           {error && <p className="text-right text-xs font-light leading-5 text-foreground-secondary">{error}</p>}
         </motion.form>
       </section>
-      {isSignedIn ? (
-        <div className="pointer-events-none fixed bottom-24 right-6 z-30 sm:bottom-28 sm:right-8">
-          <Button
-            type="button"
-            onClick={() => router.push(`/candor/session/${CANDOR_THREAD_ID}`)}
-            className="pointer-events-auto soft-shadow h-11 rounded-full border border-border/50 bg-background/45 px-4 text-sm font-light text-foreground backdrop-blur-md hover:bg-background/60"
-            variant="ghost"
-          >
-            <MessageCircleMore className="mr-2 h-4 w-4 text-accent" />
-            continue
-          </Button>
-        </div>
-      ) : null}
       <BottomNav />
     </main>
   );

@@ -103,11 +103,41 @@ export function ProfileSurface({
             </CardContent>
           </Card>
 
+          <Card className="surface border-accent/25 bg-[linear-gradient(135deg,hsl(var(--accent)/0.08),hsl(var(--card)/0.44))] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04),0_22px_76px_-42px_hsl(var(--accent)/0.36)] backdrop-blur-sm">
+            <CardContent className="grid gap-3 p-5 md:grid-cols-[0.7fr_1.3fr]">
+              <div>
+                <p className="text-xs font-light uppercase tracking-[0.22em] text-accent/75">understanding depth</p>
+                <h3 className="mt-3 text-2xl font-light leading-8">{profile.understandingDepth.phase}</h3>
+              </div>
+              <p className="text-sm font-light leading-6 text-foreground-secondary">{profile.understandingDepth.line}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
+                <UserRound className="h-4 w-4 text-accent" />
+                confirmed by you
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-2 p-5 pt-3 sm:grid-cols-2">
+              {profile.confirmedByYou.map((item) => (
+                <div key={item.label} className="rounded-2xl border border-border/40 bg-background/24 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[11px] font-light uppercase tracking-[0.18em] text-foreground-secondary">{item.label}</p>
+                    <p className="shrink-0 text-xs font-light text-foreground">{item.value}</p>
+                  </div>
+                  <p className="mt-2 text-xs font-light leading-5 text-foreground-secondary">{item.prompt}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
           <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
             <CardHeader className="p-5 pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
                 <Sparkles className="h-4 w-4 text-accent" />
-                what candor notices
+                candor noticed
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 p-5 pt-3">
@@ -115,6 +145,20 @@ export function ProfileSurface({
                 <p key={item} className="rounded-2xl border border-border/40 bg-background/25 px-4 py-3 text-sm font-light leading-6 text-foreground-secondary break-words">
                   {item}
                 </p>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
+                <Sparkles className="h-4 w-4 text-accent" />
+                relational atmosphere
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-6 p-5 pt-3 sm:grid-cols-2">
+              {profile.relationalSections.map((section) => (
+                <TextBlock key={section.title} title={section.title} items={section.items} />
               ))}
             </CardContent>
           </Card>

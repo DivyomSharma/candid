@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
+import { resonanceLabel } from "@/lib/candor/matching";
+import { cn } from "@/lib/utils";
 
 type AlignProfile = {
   id: string;
@@ -102,7 +104,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
         ) : (
           <>
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
-              <Card className="surface overflow-hidden border-border/50 bg-card/45 backdrop-blur-sm">
+              <Card className={cn("surface overflow-hidden backdrop-blur-sm", profileAtmosphere(resonanceLabel(align.score)))}>
                 <div className="h-32" style={{ background: align.profile.avatarTone }} />
                 <CardContent className="flex flex-col gap-6 p-5">
                   <div className="-mt-16 flex items-end justify-between gap-4">
@@ -116,7 +118,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
                       onClick={() => (align.canText ? router.push(`/candor/aligns/${id}/chat`) : toggleDm())}
                       className="mb-1 rounded-full bg-accent px-5 text-primary-foreground hover:bg-accent/90"
                     >
-                      {align.canText ? "open dm" : align.theirDmOn ? "accept dms" : align.myDmOn ? "dms on" : "open dms"}
+                      {align.canText ? "open conversation" : align.theirDmOn ? "let it open" : align.myDmOn ? "door open" : "open the door"}
                     </Button>
                   </div>
 
@@ -128,7 +130,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
 
                   <div className="flex items-center gap-2 text-sm font-light text-foreground-secondary">
                     {align.canText ? <MessageCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                    {align.canText ? "dm mode is open" : align.theirDmOn ? "they already opened dms" : "open dms to let them see your interest"}
+                    {align.canText ? "there's a real ease forming here" : align.theirDmOn ? "they opened the door first" : "open the door when it feels natural"}
                   </div>
                 </CardContent>
               </Card>
@@ -180,4 +182,20 @@ export function CandorAlignProfile({ id }: { id: string }) {
       <BottomNav />
     </main>
   );
+}
+
+function profileAtmosphere(resonance: ReturnType<typeof resonanceLabel>) {
+  if (resonance === "candid") {
+    return "border-accent/46 bg-[linear-gradient(135deg,hsl(var(--accent)/0.16),hsl(var(--card)/0.52)_46%,hsl(var(--glow)/0.08))] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.06),0_34px_100px_-42px_hsl(var(--accent)/0.6)]";
+  }
+  if (resonance === "magnetic") {
+    return "border-accent/36 bg-[linear-gradient(135deg,hsl(var(--accent)/0.12),hsl(var(--card)/0.50)_48%,hsl(var(--background)/0.24))] shadow-[0_28px_86px_-40px_hsl(var(--accent)/0.48)]";
+  }
+  if (resonance === "natural flow") {
+    return "border-accent/28 bg-[linear-gradient(135deg,hsl(var(--accent)/0.09),hsl(var(--card)/0.48))] shadow-[0_22px_72px_-40px_hsl(var(--accent)/0.34)]";
+  }
+  if (resonance === "familiar") {
+    return "border-accent/20 bg-[linear-gradient(135deg,hsl(var(--accent)/0.045),hsl(var(--card)/0.42))] shadow-[0_18px_62px_-42px_hsl(var(--accent)/0.24)]";
+  }
+  return "border-border/42 bg-card/36 shadow-[0_16px_56px_-42px_hsl(var(--foreground)/0.22)]";
 }

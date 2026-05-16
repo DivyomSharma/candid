@@ -19,11 +19,11 @@ export type PublicCandorProfile = {
 };
 
 export type AlignmentResonance =
+  | "distant"
   | "familiar"
-  | "shared rhythm"
   | "natural flow"
-  | "strong resonance"
-  | "rare alignment";
+  | "magnetic"
+  | "candid";
 
 export function buildPublicProfile(
   memory: CandorMemory,
@@ -87,22 +87,22 @@ export function alignmentScoreWithSignals(input: {
 export function alignmentLanguage(memory: CandorMemory, other: CandorMemory) {
   const value = shared(aList(memory.values), aList(other.values)) ?? memory.values[0] ?? "something real";
   const need = memory.communicationNeeds[0] ?? other.appreciatesInPeople[0] ?? "gentle honesty";
-  return `this could feel easy around ${value}. ${need} may make the conversation open naturally.`;
+  return `there could be real ease around ${value}. ${need} may help the conversation unfold naturally.`;
 }
 
 export function alignmentLanguageWithSignals(memory: CandorMemory, other: CandorMemory, signals: string[]) {
   const base = alignmentLanguage(memory, other);
   const signal = signals[0];
   if (!signal) return base;
-  return `${base} there is also a small compatibility signal around ${signal}.`;
+  return `${base} there is also a quiet shared signal around ${signal}.`;
 }
 
 export function resonanceLabel(score: number): AlignmentResonance {
-  if (score >= 13) return "rare alignment";
-  if (score >= 10) return "strong resonance";
+  if (score >= 13) return "candid";
+  if (score >= 10) return "magnetic";
   if (score >= 7) return "natural flow";
-  if (score >= 5) return "shared rhythm";
-  return "familiar";
+  if (score >= 5) return "familiar";
+  return "distant";
 }
 
 function titleFrom(memory: CandorMemory) {

@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Sparkles, UserRound, Sun, Moon } from "lucide-react";
+import { Home, MessageCircleMore, Sparkles, UserRound, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme, accents } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { CANDOR_THREAD_ID, candorThreadPresenceStorageKey, candorThreadReadStorageKey, candorThreadStorageKey } from "@/lib/candor/thread";
 
 const navItems = [
+  { href: `/candor/session/${CANDOR_THREAD_ID}`, label: "thread", icon: MessageCircleMore, kind: "thread" },
   { href: "/candor/home", label: "home", icon: Home },
   { href: "/candor/aligns", label: "aligns", icon: Sparkles },
   { href: "/candor/you", label: "you", icon: UserRound },
@@ -112,6 +115,52 @@ function ThemeIsland() {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { isSignedIn, user } = useAuth();
+  const [threadHasPresence, setThreadHasPresence] = useState(false);
+
+  useEffect(() => {
+    if (!isSignedIn || !user?.id || typeof window === "undefined") {
+      setThreadHasPresence(false);
+      return;
+    }
+
+    const updatePresence = () => {
+      const savedPresence = window.localStorage.getItem(candorThreadPresenceStorageKey(user.id));
+      const savedMessages = window.localStorage.getItem(candorThreadStorageKey(user.id));
+      const readAt = Number(window.localStorage.getItem(candorThreadReadStorageKey(user.id)) ?? 0);
+
+      if (savedPresence) {
+        setThreadHasPresence(true);
+        return;
+      }
+
+      if (!savedMessages) {
+        setThreadHasPresence(false);
+        return;
+      }
+
+      try {
+        const messages = JSON.parse(savedMessages) as Array<{ role?: string; created_at?: string }>;
+        const lastAiIndex = messages.findLastIndex((message) => message.role === "ai");
+        const lastAi = messages[lastAiIndex];
+        const lastAiTime = lastAi?.created_at ? new Date(lastAi.created_at).getTime() : lastAiIndex + 1;
+        setThreadHasPresence(Boolean(lastAi) && lastAiTime > readAt);
+      } catch {
+        setThreadHasPresence(false);
+      }
+    };
+
+    updatePresence();
+    window.addEventListener("storage", updatePresence);
+    window.addEventListener("focus", updatePresence);
+    window.addEventListener("candor-thread-presence", updatePresence);
+
+    return () => {
+      window.removeEventListener("storage", updatePresence);
+      window.removeEventListener("focus", updatePresence);
+      window.removeEventListener("candor-thread-presence", updatePresence);
+    };
+  }, [isSignedIn, user?.id]);
 
   return (
     <nav className="fixed inset-x-0 bottom-4 z-40 flex justify-center gap-2 px-3 pointer-events-none sm:bottom-5 sm:gap-3 sm:px-6">
@@ -126,17 +175,20 @@ export function BottomNav() {
         <div className="mx-0.5 h-5 w-px bg-border/50 sm:mx-1" aria-hidden="true" />
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isThread = item.kind === "thread";
+          const isActive = isThread ? pathname.startsWith("/candor/session") : pathname === item.href;
 
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-light tracking-wide transition-colors active:scale-95 sm:h-auto sm:min-w-24 sm:gap-2 sm:px-4 sm:py-2",
+                "relative flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-light tracking-wide transition-colors active:scale-95 sm:h-auto sm:min-w-24 sm:gap-2 sm:px-4 sm:py-2",
                 isActive ? "bg-accent text-accent-foreground" : "text-foreground-secondary sm:hover:text-foreground",
+                isThread && threadHasPresence && !isActive && "text-foreground shadow-[0_0_28px_-10px_hsl(var(--accent)/0.72)]",
               )}
             >
+              {isThread && threadHasPresence && !isActive ? <PresenceDot /> : null}
               <Icon data-icon="inline-start" />
               <span className="max-[380px]:sr-only">{item.label}</span>
             </Link>
@@ -148,5 +200,14 @@ export function BottomNav() {
          <ThemeIsland />
       </div>
     </nav>
+  );
+}
+
+function PresenceDot() {
+  return (
+    <span
+      aria-hidden
+      className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-accent/80 shadow-[0_0_12px_hsl(var(--accent)/0.85)] animate-[candor-breathe_2.8s_ease-in-out_infinite]"
+    />
   );
 }
