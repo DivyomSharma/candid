@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { safeCandorFallback, sanitizeCandorReply } from "@/lib/candor/fallback";
+import { candorFailureReply, safeCandorFallback, sanitizeCandorReply } from "@/lib/candor/fallback";
 
 describe("candor fallback safety", () => {
   it("removes debug and provider leakage from user-facing replies", () => {
@@ -14,5 +14,12 @@ describe("candor fallback safety", () => {
 
     expect(reply).toBe(safeCandorFallback("hello"));
     expect(reply).not.toMatch(/debug|openrouter|failed/i);
+  });
+
+  it("uses honest operational copy for missing model configuration", () => {
+    const reply = candorFailureReply(new Error("missing_groq_api_key"));
+
+    expect(reply).toMatch(/not connected to a reply model/i);
+    expect(reply).not.toMatch(/lost the thread|brain lagged|processed that weirdly/i);
   });
 });

@@ -20,7 +20,7 @@ import {
 import { factsAsRetrievedMemory, upsertMemoryFacts } from "@/lib/candor/memory-facts";
 import { logInteractionPattern } from "@/lib/candor/interaction-patterns";
 import { maybeQueueInitiative } from "@/lib/candor/initiatives";
-import { safeCandorFallback, sanitizeCandorReply } from "@/lib/candor/fallback";
+import { candorFailureReply, sanitizeCandorReply } from "@/lib/candor/fallback";
 import { logCandorInternal } from "@/lib/candor/logger";
 
 async function getOrCreateUser(authId: string) {
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
   } catch (error) {
     logCandorInternal({ event: "conversation_turn_degraded", level: "error", error });
-    aiContent = safeCandorFallback(content);
+    aiContent = candorFailureReply(error, content);
   }
 
   aiContent = sanitizeCandorReply(aiContent, content);
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       message: {
         id: crypto.randomUUID(),
         role: "ai",
-        content: safeCandorFallback(content),
+        content: candorFailureReply(error, content),
       },
       conversationId: CANDOR_THREAD_ID,
     });

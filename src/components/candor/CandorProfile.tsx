@@ -84,7 +84,7 @@ export function CandorProfile() {
       <ProfileSurface
         profile={profile}
         heading="your candor profile"
-        subheading="identity-rich, soft-edged, and shareable without giving too much away."
+        subheading="small signals up front. the rest should arrive naturally, through time and conversation."
         actionSlot={
           <Button
             type="button"

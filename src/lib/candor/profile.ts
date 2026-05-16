@@ -8,11 +8,15 @@ export type CandorProfilePresentation = {
   publicPath: string;
   bannerTone: string;
   bio: string;
+  coreIdentity: {
+    lines: string[];
+    fragments: string[];
+    note: string;
+  };
   understandingDepth: {
     phase: "spark" | "rhythm" | "patterns" | "nuance" | "continuity" | "resonance";
     line: string;
   };
-  confirmedByYou: Array<{ label: string; value: string; prompt: string }>;
   whatCandorNotices: string[];
   relationalSections: Array<{ title: string; items: string[] }>;
   conversationalThemes: string[];
@@ -58,6 +62,16 @@ export function buildCandorProfilePresentation(input: {
   const interestLevels = interestLevelMap(memory ?? emptyMemoryStub());
   const alignmentStyle = buildAlignmentStyle(values[0], needs[0], socialPreferences[0], interests[0]);
   const understandingDepth = buildUnderstandingDepth(memory);
+  const coreIdentity = buildCoreIdentity({
+    username,
+    handle,
+    values,
+    needs,
+    interests,
+    socialPreferences,
+    lifestylePreferences,
+    turns: memory?.turnCount ?? 0,
+  });
 
   return {
     username,
@@ -69,8 +83,8 @@ export function buildCandorProfilePresentation(input: {
       memory && memory.turnCount >= 3
         ? `candor reads a mix of ${values[0]}, ${themeLabel(interests[0] ?? themes[0] ?? "quiet intensity")}, and ${softPhrase(needs[0])}.`
         : "candor is still reading the shape of this person.",
+    coreIdentity,
     understandingDepth,
-    confirmedByYou: buildConfirmedByYou({ username, handle }),
     whatCandorNotices: notices,
     relationalSections: buildRelationalSections({
       memory,
@@ -124,28 +138,32 @@ function buildUnderstandingDepth(memory: CandorMemory | null): CandorProfilePres
   return { phase: "spark", line: "the first signal is forming" };
 }
 
-function buildConfirmedByYou(input: { username: string; handle: string }) {
-  return [
-    { label: "username", value: input.handle, prompt: "what should people recognize you by?" },
-    { label: "display name", value: input.username, prompt: "what name feels like you?" },
-    { label: "age / dob", value: "not shared yet", prompt: "what age should candor hold clearly?" },
-    { label: "gender identity", value: "not shared yet", prompt: "how should your identity be held?" },
-    { label: "pronouns", value: "optional", prompt: "what should feel natural in conversation?" },
-    { label: "city", value: "not shared yet", prompt: "where does your life mostly happen?" },
-    { label: "height", value: "not shared yet", prompt: "share it only if it matters to you." },
-    { label: "body vibe", value: "not shared yet", prompt: "how would you describe your physical energy?" },
-    { label: "smoking", value: "not shared yet", prompt: "smoke, sometimes, or not your thing?" },
-    { label: "drinking", value: "not shared yet", prompt: "social drinker or completely sober?" },
-    { label: "weed", value: "not shared yet", prompt: "part of your life or not really?" },
-    { label: "workout rhythm", value: "not shared yet", prompt: "movement daily, sometimes, or rarely?" },
-    { label: "sleep schedule", value: "not shared yet", prompt: "early person or late-night thinker?" },
-    { label: "diet", value: "not shared yet", prompt: "anything people should know gently?" },
-    { label: "relationship intention", value: "not shared yet", prompt: "what kind of connection are you open to?" },
-    { label: "social battery", value: "not shared yet", prompt: "do people recharge you or drain you faster?" },
-    { label: "texting style", value: "not shared yet", prompt: "fast replies, slow warmth, or bursts?" },
-    { label: "affection style", value: "not shared yet", prompt: "how do you usually show care?" },
-    { label: "communication comfort", value: "not shared yet", prompt: "direct, soft, playful, or spacious?" },
-  ];
+function buildCoreIdentity(input: {
+  username: string;
+  handle: string;
+  values: string[];
+  needs: string[];
+  interests: string[];
+  socialPreferences: string[];
+  lifestylePreferences: string[];
+  turns: number;
+}) {
+  const fragments = dedupe([
+    fragmentFromSocial(input.socialPreferences[0]),
+    fragmentFromLifestyle(input.lifestylePreferences[0]),
+    fragmentFromInterest(input.interests[0]),
+    fragmentFromNeed(input.needs[0]),
+    fragmentFromValue(input.values[0]),
+  ]).slice(0, 3);
+
+  return {
+    lines: [input.handle, input.username],
+    fragments: fragments.length ? fragments : ["still unfolding in conversation"],
+    note:
+      input.turns >= 3
+        ? "the rest gets learned sideways, in actual conversation."
+        : "candor keeps this light at first. the rest gets learned in conversation.",
+  };
 }
 
 function buildRelationalSections(input: {
@@ -293,6 +311,58 @@ function softPhrase(value: string) {
 
 function soften(value: string) {
   return value.replace(/\bneeds\b/g, "seems to need").replace(/\bhas\b/g, "seems to have");
+}
+
+function fragmentFromSocial(value?: string) {
+  if (!value) return "";
+  const text = value.toLowerCase();
+  if (text.includes("texting rhythm")) return "texts with timing";
+  if (text.includes("direct")) return "likes clear energy";
+  if (text.includes("slow")) return "opens slowly";
+  if (text.includes("warm")) return "warms up sideways";
+  return soften(value).replace(/^seems to /, "");
+}
+
+function fragmentFromLifestyle(value?: string) {
+  if (!value) return "";
+  const text = value.toLowerCase();
+  if (text.includes("films")) return "film rabbit holes";
+  if (text.includes("music")) return "lets music set the mood";
+  if (text.includes("worlds")) return "disappears into worlds";
+  if (text.includes("routine")) return "rhythm still forming";
+  return value;
+}
+
+function fragmentFromInterest(value?: string) {
+  if (!value) return "";
+  const labels: Record<string, string> = {
+    movies: "movie spiral person",
+    games: "choice-heavy game brain",
+    music: "music-first moods",
+    psychology: "psychology spirals",
+    philosophy: "late-night philosophy",
+    relationships: "reads people closely",
+    design: "notices design details",
+  };
+
+  return labels[value] ?? "";
+}
+
+function fragmentFromNeed(value?: string) {
+  if (!value) return "";
+  const text = value.toLowerCase();
+  if (text.includes("gentle")) return "needs gentler pacing";
+  if (text.includes("direct")) return "prefers direct honesty";
+  if (text.includes("space")) return "needs some room";
+  return "";
+}
+
+function fragmentFromValue(value?: string) {
+  if (!value) return "";
+  const text = value.toLowerCase();
+  if (text.includes("honest")) return "low tolerance for fake vibes";
+  if (text.includes("safe")) return "protective of their peace";
+  return "";
 }
 
 function bannerFrom(seed: string) {

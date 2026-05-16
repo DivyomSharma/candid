@@ -1,8 +1,8 @@
 const FALLBACK_REPLIES = [
-  "wait i lost the thread for a second.\nsay that again but simpler?",
-  "my brain lagged there for a second.\ntry me again.",
-  "hold on, i processed that weirdly.\nrun it past me one more time.",
-  "okay, i caught that badly.\ngive me the simpler version.",
+  "the reply slipped on my side.\ntry me again in a second.",
+  "something glitched before i could answer properly.\nrun that back once more.",
+  "that one did not come through cleanly here.\ntry it again.",
+  "my side dropped the reply for a second.\nsend that again.",
 ];
 
 const INTERNAL_LINE_PATTERNS = [
@@ -20,6 +20,27 @@ const INTERNAL_LINE_PATTERNS = [
 export function safeCandorFallback(seed = "") {
   const index = stableIndex(seed, FALLBACK_REPLIES.length);
   return FALLBACK_REPLIES[index];
+}
+
+export function candorFailureReply(error: unknown, seed = "") {
+  const message = String(
+    error && typeof error === "object" && "message" in error ? (error as { message?: unknown }).message ?? "" : error ?? "",
+  ).toLowerCase();
+
+  if (message.includes("missing_groq_api_key") || message.includes("missing_openrouter_api_key")) {
+    return "candor is not connected to a reply model yet.\nadd the model key, then try again.";
+  }
+
+  if (
+    message.includes("groq_chat_failed") ||
+    message.includes("openrouter_chat_failed") ||
+    message.includes("candor_chat_failed") ||
+    message.includes("timeout")
+  ) {
+    return "the reply did not make it through on my side.\ntry again in a second.";
+  }
+
+  return safeCandorFallback(seed);
 }
 
 export function sanitizeCandorReply(content: string | null | undefined, seed = "") {

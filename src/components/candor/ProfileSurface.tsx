@@ -113,27 +113,7 @@ export function ProfileSurface({
             </CardContent>
           </Card>
 
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
-            <CardHeader className="p-5 pb-2">
-              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
-                <UserRound className="h-4 w-4 text-accent" />
-                confirmed by you
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-2 p-5 pt-3 sm:grid-cols-2">
-              {profile.confirmedByYou.map((item) => (
-                <div key={item.label} className="rounded-2xl border border-border/40 bg-background/24 px-4 py-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-[11px] font-light uppercase tracking-[0.18em] text-foreground-secondary">{item.label}</p>
-                    <p className="shrink-0 text-xs font-light text-foreground">{item.value}</p>
-                  </div>
-                  <p className="mt-2 text-xs font-light leading-5 text-foreground-secondary">{item.prompt}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+          <Card className="surface border-accent/20 bg-[linear-gradient(160deg,hsl(var(--accent)/0.07),hsl(var(--card)/0.4)_55%,hsl(var(--background)/0.32))] backdrop-blur-sm">
             <CardHeader className="p-5 pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
                 <Sparkles className="h-4 w-4 text-accent" />
@@ -141,11 +121,60 @@ export function ProfileSurface({
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 p-5 pt-3">
-              {profile.whatCandorNotices.map((item) => (
-                <p key={item} className="rounded-2xl border border-border/40 bg-background/25 px-4 py-3 text-sm font-light leading-6 text-foreground-secondary break-words">
+              {profile.whatCandorNotices.map((item, index) => (
+                <p
+                  key={item}
+                  className={
+                    index === 0
+                      ? "rounded-[22px] border border-accent/30 bg-background/28 px-4 py-4 text-base font-light leading-7 text-foreground"
+                      : "rounded-[22px] border border-border/35 bg-background/22 px-4 py-3 text-sm font-light leading-6 text-foreground-secondary"
+                  }
+                >
                   {item}
                 </p>
               ))}
+            </CardContent>
+          </Card>
+
+          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
+                <UserRound className="h-4 w-4 text-accent" />
+                confirmed by you
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 pt-3">
+              <div className="rounded-[24px] border border-border/40 bg-background/24 p-5">
+                <div className="flex flex-col gap-1">
+                  {profile.coreIdentity.lines.map((line, index) => (
+                    <p
+                      key={`${line}-${index}`}
+                      className={
+                        index === 0
+                          ? "text-sm font-light text-accent/78"
+                          : "text-2xl font-light tracking-tight text-foreground"
+                      }
+                    >
+                      {line}
+                    </p>
+                  ))}
+                </div>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {profile.coreIdentity.fragments.map((fragment) => (
+                    <span
+                      key={fragment}
+                      className="rounded-full border border-border/45 bg-background/30 px-3 py-1.5 text-xs font-light text-foreground-secondary"
+                    >
+                      {fragment}
+                    </span>
+                  ))}
+                </div>
+
+                <p className="mt-4 max-w-[38rem] text-sm font-light leading-6 text-foreground-secondary">
+                  {profile.coreIdentity.note}
+                </p>
+              </div>
             </CardContent>
           </Card>
 
