@@ -259,36 +259,131 @@ export async function sendCandorJson<T>({
   maxTokens: number;
 }) {
   const apiKey = process.env.GROQ_API_KEY;
+  const messages = [
+    { role: "system", content: `${systemPrompt}\n\nreturn valid json only. no markdown fences.` },
+    { role: "user", content: message },
+  ];
+  const errors: string[] = [];
 
-  if (!apiKey) {
-    throw new Error("missing_groq_api_key");
+  if (apiKey) {
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: groqModel,
+          temperature,
+          max_tokens: maxTokens,
+          response_format: { type: "json_object" },
+          messages,
+        }),
+      });
+
+      if (!response.ok) {
+        errors.push(`groq_json_strict:${response.status}`);
+      } else {
+        const data = (await response.json()) as {
+          choices?: Array<{ message?: { content?: string } }>;
+        };
+        return parseJsonPayload<T>(data.choices?.[0]?.message?.content);
+      }
+    } catch (error) {
+      logCandorInternal({ event: "groq_json_strict_failed", level: "warn", error });
+      errors.push("groq_json_strict:error");
+    }
+
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: groqModel,
+          temperature,
+          max_tokens: maxTokens,
+          messages,
+        }),
+      });
+
+      if (!response.ok) {
+        errors.push(`groq_json_loose:${response.status}`);
+      } else {
+        const data = (await response.json()) as {
+          choices?: Array<{ message?: { content?: string } }>;
+        };
+        return parseJsonPayload<T>(data.choices?.[0]?.message?.content);
+      }
+    } catch (error) {
+      logCandorInternal({ event: "groq_json_loose_failed", level: "warn", error });
+      errors.push("groq_json_loose:error");
+    }
+  } else {
+    errors.push("groq_json:missing_key");
   }
 
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: groqModel,
-      temperature,
-      max_tokens: maxTokens,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: message },
-      ],
-    }),
-  });
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (openRouterKey) {
+    try {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openRouterKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+          "X-Title": "Candor",
+        },
+        body: JSON.stringify({
+          model: openRouterModelFor("extraction"),
+          temperature,
+          max_tokens: maxTokens,
+          messages,
+        }),
+      });
 
-  if (!response.ok) {
-    throw new Error("groq_json_failed");
+      if (!response.ok) {
+        errors.push(`openrouter_json:${response.status}`);
+      } else {
+        const data = (await response.json()) as {
+          choices?: Array<{ message?: { content?: string } }>;
+        };
+        return parseJsonPayload<T>(data.choices?.[0]?.message?.content);
+      }
+    } catch (error) {
+      logCandorInternal({ event: "openrouter_json_failed", level: "warn", error });
+      errors.push("openrouter_json:error");
+    }
+  } else {
+    errors.push("openrouter_json:missing_key");
   }
 
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
+  throw new Error(`candor_json_failed:${errors.join(",")}`);
+}
 
-  return JSON.parse(data.choices?.[0]?.message?.content ?? "{}") as T;
+function parseJsonPayload<T>(content: string | null | undefined) {
+  const raw = String(content ?? "").trim();
+  if (!raw) throw new Error("empty_json_response");
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch (error) {
+    void error;
+  }
+
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1]?.trim();
+  if (fenced) {
+    return JSON.parse(fenced) as T;
+  }
+
+  const firstBrace = raw.indexOf("{");
+  const lastBrace = raw.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    return JSON.parse(raw.slice(firstBrace, lastBrace + 1)) as T;
+  }
+
+  throw new Error("invalid_json_response");
 }
