@@ -80,11 +80,15 @@ function toGroqRole(role: CandorRole) {
 }
 
 export async function sendCandorMessage(payload: ChatPayload) {
-  if (backendUrl) {
-    return sendViaBackend(payload, backendUrl);
-  }
-
   try {
+    if (backendUrl) {
+      try {
+        return await sendViaBackend(payload, backendUrl);
+      } catch (error) {
+        logCandorInternal({ event: "backend_chat_route_failed", level: "warn", error });
+      }
+    }
+
     if (payload.model_route === "reflective" || payload.model_route === "nuance") {
       if (process.env.OPENROUTER_API_KEY) return sendViaOpenRouter(payload);
     }

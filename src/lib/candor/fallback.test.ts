@@ -19,7 +19,7 @@ describe("candor fallback safety", () => {
   it("uses honest operational copy for missing model configuration", () => {
     const reply = candorFailureReply(new Error("missing_groq_api_key"));
 
-    expect(reply).toMatch(/not connected to a reply model/i);
+    expect(reply).toMatch(/ai reply failed/i);
     expect(reply).not.toMatch(/lost the thread|brain lagged|processed that weirdly/i);
   });
 });

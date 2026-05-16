@@ -28,7 +28,7 @@ export function candorFailureReply(error: unknown, seed = "") {
   ).toLowerCase();
 
   if (message.includes("missing_groq_api_key") || message.includes("missing_openrouter_api_key")) {
-    return "candor is not connected to a reply model yet.\nadd the model key, then try again.";
+    return "the ai reply failed because no model key is connected.\nadd the key, then try again.";
   }
 
   if (
@@ -37,7 +37,7 @@ export function candorFailureReply(error: unknown, seed = "") {
     message.includes("candor_chat_failed") ||
     message.includes("timeout")
   ) {
-    return "the reply did not make it through on my side.\ntry again in a second.";
+    return "the ai reply failed on my side.\ntry again in a second.";
   }
 
   return safeCandorFallback(seed);
