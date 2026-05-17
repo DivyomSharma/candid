@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAlignmentPreview } from "@/lib/candor/alignment";
+import { getCandorAccess, normalizeCandorAccess } from "@/lib/candor/access";
 import { getPublicIdentityForCandorUserId } from "@/lib/candor/identity";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
+import { emptyCandorPersonalProfile, getCandorPersonalProfile } from "@/lib/candor/personal-profile";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
@@ -26,6 +28,8 @@ export async function GET() {
         memory,
         alignment: getAlignmentPreview(memory),
         identity: { username: null, handle: null },
+        personalProfile: emptyCandorPersonalProfile,
+        access: normalizeCandorAccess(null),
       });
     }
 
@@ -37,11 +41,15 @@ export async function GET() {
 
     const memory = normalizeMemory(traits?.data ?? createEmptyMemory());
     const identity = await getPublicIdentityForCandorUserId(user.id as string);
+    const personalProfile = await getCandorPersonalProfile(user.id as string);
+    const access = await getCandorAccess(user.id as string);
 
     return NextResponse.json({
       memory,
       alignment: getAlignmentPreview(memory),
       identity,
+      personalProfile,
+      access,
     });
   } catch (error) {
     console.error("Traits fetch failed:", error);
@@ -50,6 +58,8 @@ export async function GET() {
       memory,
       alignment: getAlignmentPreview(memory),
       identity: { username: null, handle: null },
+      personalProfile: emptyCandorPersonalProfile,
+      access: normalizeCandorAccess(null),
     });
   }
 }

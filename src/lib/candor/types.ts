@@ -29,7 +29,29 @@ export type CandorSocialMove =
   | "repair"
   | "curiosity_hook"
   | "playful_assumption"
-  | "energy_flip";
+  | "energy_flip"
+  | "dangerous_honesty"
+  | "confessional_nudge";
+
+export type CandorConversationAtmosphere =
+  | "curious"
+  | "playful"
+  | "teasing"
+  | "chaotic"
+  | "emotionally_honest"
+  | "tension_heavy"
+  | "confessional"
+  | "intimate"
+  | "soft"
+  | "socially_dangerous"
+  | "flirt_adjacent"
+  | "late_night_vulnerable"
+  | "absurd"
+  | "debate_energy"
+  | "emotionally_avoidant"
+  | "warm"
+  | "sarcastic"
+  | "emotionally_charged";
 
 export type PresenceLevel = "low" | "medium" | "high";
 
@@ -74,11 +96,17 @@ export type CandorSocialState = {
   directnessTolerance: number;
   emotionalExpressiveness: number;
   chaosTolerance: number;
+  teasingComfort: number;
+  flirtTolerance: number;
+  confessionalComfort: number;
+  socialBoldness: number;
+  vulnerabilityPacing: "guarded" | "gradual" | "open";
   preferredPace: "slow" | "balanced" | "quick";
   depthAppetite: "low" | "medium" | "high";
   socialBattery: "low" | "medium" | "high" | "unknown";
-  trustStage: "glimpse" | "warming" | "rhythm" | "patterns" | "context" | "continuity" | "alignment-ready";
-  recentEnergy: "flat" | "steady" | "bright" | "heavy" | "chaotic";
+  trustStage: "spark" | "rhythm" | "patterns" | "nuance" | "continuity" | "resonance";
+  currentAtmosphere: CandorConversationAtmosphere;
+  recentEnergy: "flat" | "steady" | "bright" | "heavy" | "chaotic" | "late-night";
   avoid: string[];
   recentMoves: CandorSocialMove[];
 };
@@ -117,6 +145,7 @@ export type CandorTurnInput = {
   message: string;
   history: CandorHistoryMessage[];
   memory: CandorMemory;
+  accessTier?: "echo" | "continuity" | "resonance";
   socialState?: CandorSocialState;
   retrievedMemories?: CandorRetrievedMemory[];
 };

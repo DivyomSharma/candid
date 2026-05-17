@@ -17,8 +17,8 @@ export function logCandorInternal(input: CandorLogInput) {
     ...input.context,
   };
 
-  if (isDevelopment && input.error) {
-    payload.error = serializeError(input.error);
+  if (input.error) {
+    payload.error = serializeError(input.error, isDevelopment);
   }
 
   const line = JSON.stringify(payload);
@@ -33,12 +33,12 @@ export function logCandorInternal(input: CandorLogInput) {
   console.info(line);
 }
 
-function serializeError(error: unknown) {
+function serializeError(error: unknown, includeStack: boolean) {
   if (error instanceof Error) {
     return {
       name: error.name,
       message: error.message,
-      stack: error.stack,
+      ...(includeStack ? { stack: error.stack } : {}),
     };
   }
 

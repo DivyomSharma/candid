@@ -1,4 +1,5 @@
 import { interestLevelMap, topInterestTopics } from "@/lib/candor/memory";
+import { ageFromDob, type CandorPersonalProfile } from "@/lib/candor/personal-profile";
 import type { CandorMemory } from "@/lib/candor/types";
 
 export type CandorProfilePresentation = {
@@ -38,11 +39,17 @@ export function buildCandorProfilePresentation(input: {
   username?: string | null;
   handle?: string | null;
   email?: string | null;
+  personalProfile?: CandorPersonalProfile | null;
 }) : CandorProfilePresentation {
-  const { memory, email } = input;
-  const baseName = input.username?.trim() || email?.split("@")[0]?.replace(/[._-]+/g, " ") || "someone";
+  const { memory, email, personalProfile } = input;
+  const baseName =
+    personalProfile?.displayName?.trim() ||
+    input.username?.trim() ||
+    personalProfile?.username?.replace(/[._-]+/g, " ") ||
+    email?.split("@")[0]?.replace(/[._-]+/g, " ") ||
+    "someone";
   const username = titleCase(baseName);
-  const rawHandle = input.handle?.trim() || `@${slugify(baseName)}`;
+  const rawHandle = input.handle?.trim() || (personalProfile?.username ? `@${slugify(personalProfile.username)}` : `@${slugify(baseName)}`);
   const handle = rawHandle.startsWith("@") ? rawHandle : `@${rawHandle}`;
   const safeHandle = handle.replace(/^@/, "");
 
@@ -65,6 +72,7 @@ export function buildCandorProfilePresentation(input: {
   const coreIdentity = buildCoreIdentity({
     username,
     handle,
+    personalProfile,
     values,
     needs,
     interests,
@@ -141,6 +149,7 @@ function buildUnderstandingDepth(memory: CandorMemory | null): CandorProfilePres
 function buildCoreIdentity(input: {
   username: string;
   handle: string;
+  personalProfile?: CandorPersonalProfile | null;
   values: string[];
   needs: string[];
   interests: string[];
@@ -148,16 +157,19 @@ function buildCoreIdentity(input: {
   lifestylePreferences: string[];
   turns: number;
 }) {
+  const age = ageFromDob(input.personalProfile?.dob);
+  const meta = [age ? String(age) : null, input.personalProfile?.city, input.personalProfile?.genderIdentity].filter(Boolean).join(" • ");
   const fragments = dedupe([
     fragmentFromSocial(input.socialPreferences[0]),
     fragmentFromLifestyle(input.lifestylePreferences[0]),
     fragmentFromInterest(input.interests[0]),
     fragmentFromNeed(input.needs[0]),
     fragmentFromValue(input.values[0]),
+    input.personalProfile?.relationshipPreference ? cleanSignalFragment(input.personalProfile.relationshipPreference) : "",
   ]).slice(0, 3);
 
   return {
-    lines: [input.handle, input.username],
+    lines: [input.handle, input.username, meta].filter(Boolean) as string[],
     fragments: fragments.length ? fragments : ["still unfolding in conversation"],
     note:
       input.turns >= 3
@@ -363,6 +375,10 @@ function fragmentFromValue(value?: string) {
   if (text.includes("honest")) return "low tolerance for fake vibes";
   if (text.includes("safe")) return "protective of their peace";
   return "";
+}
+
+function cleanSignalFragment(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 42);
 }
 
 function bannerFrom(seed: string) {

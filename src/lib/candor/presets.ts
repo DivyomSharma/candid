@@ -42,6 +42,10 @@ export async function generateCandorPresets(memory: CandorMemory): Promise<Cando
       }),
       temperature: 0.86,
       maxTokens: 360,
+      modelRoute: "initiative",
+      routeReason: "social spark home hooks and conversational openers",
+      emotionalDepthScore: 4,
+      continuityDepthScore: Math.min(4, 1 + Math.floor(memory.turnCount / 5)),
     });
 
     return normalizePresets(generated, memory);

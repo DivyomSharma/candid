@@ -1,5 +1,6 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getCandorPersonalProfile, handleFromUsername } from "@/lib/candor/personal-profile";
 
 export type PublicCandorIdentity = {
   username: string | null;
@@ -19,6 +20,14 @@ export async function getPublicIdentityForCandorUserId(userId: string): Promise<
   const supabaseAdmin = getSupabaseAdmin();
   const { data } = await supabaseAdmin.from("candor_users").select("clerk_id").eq("id", userId).maybeSingle();
   const authId = data?.clerk_id;
+
+  const profile = await getCandorPersonalProfile(userId).catch(() => null);
+  if (profile?.username || profile?.displayName) {
+    return {
+      username: cleanDisplayName(profile.displayName ?? profile.username),
+      handle: handleFromUsername(profile.username ?? profile.displayName),
+    };
+  }
 
   if (!authId) return { username: null, handle: null };
   return getPublicIdentityFromAuthId(authId);

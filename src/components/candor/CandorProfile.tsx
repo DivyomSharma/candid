@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { ProfileSurface } from "@/components/candor/ProfileSurface";
 import { MemoryControls } from "@/components/candor/MemoryControls";
+import { PersonalProfileEditor } from "@/components/candor/PersonalProfileEditor";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildCandorProfilePresentation } from "@/lib/candor/profile";
+import type { CandorAccessState } from "@/lib/candor/access";
+import type { CandorPersonalProfile } from "@/lib/candor/personal-profile";
 import type { CandorMemory } from "@/lib/candor/types";
 
 type TraitsResponse = {
@@ -16,6 +19,8 @@ type TraitsResponse = {
     username: string | null;
     handle: string | null;
   };
+  personalProfile?: CandorPersonalProfile;
+  access?: CandorAccessState;
 };
 
 export function CandorProfile() {
@@ -23,6 +28,8 @@ export function CandorProfile() {
   const router = useRouter();
   const [memory, setMemory] = useState<CandorMemory | null>(null);
   const [identity, setIdentity] = useState<{ username: string | null; handle: string | null } | null>(null);
+  const [personalProfile, setPersonalProfile] = useState<CandorPersonalProfile | null>(null);
+  const [access, setAccess] = useState<CandorAccessState | null>(null);
   const [hasLoadedMemory, setHasLoadedMemory] = useState(false);
 
   useEffect(() => {
@@ -34,6 +41,8 @@ export function CandorProfile() {
       .then((data: TraitsResponse | null) => {
         setMemory(data?.memory ?? null);
         setIdentity(data?.identity ?? null);
+        setPersonalProfile(data?.personalProfile ?? null);
+        setAccess(data?.access ?? null);
       })
       .finally(() => setHasLoadedMemory(true));
   }, [isSignedIn]);
@@ -45,8 +54,9 @@ export function CandorProfile() {
         email: user?.email ?? null,
         username: identity?.username ?? undefined,
         handle: identity?.handle ?? undefined,
+        personalProfile,
       }),
-    [identity?.handle, identity?.username, memory, user?.email],
+    [identity?.handle, identity?.username, memory, personalProfile, user?.email],
   );
 
   if (isLoaded && !isSignedIn) {
@@ -84,7 +94,7 @@ export function CandorProfile() {
       <ProfileSurface
         profile={profile}
         heading="your candor profile"
-        subheading="small signals up front. the rest should arrive naturally, through time and conversation."
+        subheading={access?.narrative ?? "small signals up front. the rest should arrive naturally, through time and conversation."}
         actionSlot={
           <Button
             type="button"
@@ -100,6 +110,10 @@ export function CandorProfile() {
         }
       />
       <section className="relative z-10 mx-auto -mt-20 max-w-[680px] px-6">
+        <PersonalProfileEditor
+          profile={personalProfile}
+          onSaved={(nextProfile) => setPersonalProfile(nextProfile)}
+        />
         <MemoryControls />
       </section>
     </div>

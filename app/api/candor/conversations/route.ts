@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { runCandorTurn } from "@/lib/candor/engine";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
+import { accessProfileFor, getCandorAccess } from "@/lib/candor/access";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { CANDOR_THREAD_ID } from "@/lib/candor/thread";
@@ -19,7 +20,7 @@ import {
 import { factsAsRetrievedMemory, upsertMemoryFacts } from "@/lib/candor/memory-facts";
 import { logInteractionPattern } from "@/lib/candor/interaction-patterns";
 import { maybeQueueInitiative } from "@/lib/candor/initiatives";
-import { safeCandorFallback, sanitizeCandorReply } from "@/lib/candor/fallback";
+import { candorFailureReply, sanitizeCandorReply } from "@/lib/candor/fallback";
 import { logCandorInternal } from "@/lib/candor/logger";
 
 async function getOrCreateUser(authId: string) {
@@ -39,6 +40,8 @@ export async function POST(request: NextRequest) {
     const opening = body.message?.trim();
 
     const user = await getOrCreateUser(userId);
+    const access = await getCandorAccess(user.id);
+    const accessProfile = accessProfileFor(access.tier);
 
     const { data: traitsRow } = await supabaseAdmin
       .from("candor_traits")
@@ -60,7 +63,7 @@ export async function POST(request: NextRequest) {
           logCandorInternal({ event: "relational_memory_retrieval_skipped", level: "warn", error });
           return [];
         }),
-        factsAsRetrievedMemory(user.id).catch((error) => {
+        factsAsRetrievedMemory(user.id, accessProfile.factualMemoryLimit).catch((error) => {
           logCandorInternal({ event: "memory_fact_retrieval_skipped", level: "warn", error });
           return [];
         }),
@@ -73,8 +76,9 @@ export async function POST(request: NextRequest) {
           message: opening,
           history: [],
           memory,
+          accessTier: access.tier,
           socialState,
-          retrievedMemories: [...retrievedMemories, ...factMemories].slice(0, 8),
+          retrievedMemories: [...retrievedMemories, ...factMemories].slice(0, accessProfile.retrievedMemoryLimit),
         });
         aiContent = turn.reply;
         memory = turn.memory;
@@ -82,6 +86,7 @@ export async function POST(request: NextRequest) {
         await maybeQueueInitiative({
           userId: user.id,
           memory,
+          accessTier: access.tier,
           socialState: turn.socialState,
           lastUserMessage: opening,
         });
@@ -93,7 +98,7 @@ export async function POST(request: NextRequest) {
         });
       } catch (error) {
         logCandorInternal({ event: "conversation_turn_degraded", level: "error", error });
-        aiContent = safeCandorFallback(opening);
+        aiContent = candorFailureReply(error, opening);
       }
 
       aiContent = sanitizeCandorReply(aiContent, opening);

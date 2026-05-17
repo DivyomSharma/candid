@@ -41,7 +41,7 @@ export default function HeroSection() {
           transition={{ delay: 0.4, duration: 0.8 }}
           className="text-foreground-secondary text-lg md:text-xl font-light max-w-lg mx-auto mb-10"
         >
-          A space where you can be understood before you're seen.
+          A social layer built around continuity, chemistry, and emotional rhythm.
         </motion.p>
 
         <motion.div
@@ -57,6 +57,9 @@ export default function HeroSection() {
           >
             Enter Candor
           </Link>
+          <p className="mt-4 text-xs font-light tracking-[0.08em] text-foreground-secondary/60">
+            every new profile begins with seven days of continuity.
+          </p>
         </motion.div>
       </motion.div>
 

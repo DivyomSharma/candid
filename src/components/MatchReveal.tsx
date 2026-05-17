@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 
-const insights = [
-  "You both value emotional honesty",
-  "You approach conflict with care",
-  "You both need space to recharge",
-  "You share a love for deep conversations",
+const alignAtmospheres = [
+  "distant - the first signal. still exploratory, still light.",
+  "familiar - something about the pacing already makes sense.",
+  "natural flow - conversation starts to feel easier than expected.",
+  "magnetic - the social chemistry begins to pull with more confidence.",
+  "candid - openness arrives more naturally between you two.",
 ];
 
 export default function MatchReveal() {
@@ -18,20 +19,20 @@ export default function MatchReveal() {
           transition={{ duration: 0.6 }}
           className="text-center text-foreground-secondary text-sm tracking-widest uppercase mb-12"
         >
-          What you share
+          aligns become clearer over time
         </motion.p>
 
         <div className="grid gap-3">
-          {insights.map((insight, i) => (
+          {alignAtmospheres.map((line, i) => (
             <motion.div
-              key={i}
+              key={line}
               initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
               whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               viewport={{ once: true }}
               transition={{ duration: 0.7, delay: i * 0.15 }}
               className="surface rounded-2xl px-6 py-4 soft-shadow"
             >
-              <p className="text-sm font-light text-foreground/90">{insight}</p>
+              <p className="text-sm font-light text-foreground/90">{line}</p>
             </motion.div>
           ))}
         </div>

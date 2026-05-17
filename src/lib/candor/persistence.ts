@@ -1,4 +1,5 @@
 import type { CandorHistoryMessage } from "@/lib/candor-api";
+import { ensureCandorAccess } from "@/lib/candor/access";
 import { sanitizeCandorReply } from "@/lib/candor/fallback";
 import { normalizeSocialState } from "@/lib/candor/social-state";
 import type { CandorSocialState } from "@/lib/candor/types";
@@ -17,7 +18,10 @@ export async function getOrCreateCandorUser(authId: string) {
     .eq("clerk_id", authId)
     .maybeSingle();
 
-  if (existing) return existing;
+  if (existing) {
+    await ensureCandorAccess(existing.id as string).catch(() => null);
+    return existing;
+  }
 
   const { data: created, error } = await supabaseAdmin
     .from("candor_users")
@@ -26,6 +30,7 @@ export async function getOrCreateCandorUser(authId: string) {
     .single();
 
   if (error) throw error;
+  await ensureCandorAccess(created.id as string).catch(() => null);
   return created!;
 }
 

@@ -3,9 +3,9 @@ export const siteConfig = {
   url: "https://www.candorai.xyz",
   landingPath: "/candor",
   description:
-    "Candor is a social app for honest conversations, alignment, and quieter connection without swipes.",
+    "Candor is a social app built around continuity, chemistry, and honest conversation before connection.",
   socialDescription:
-    "No swipes. Just honest conversations. A space where you can be understood before you're seen.",
+    "No swipes. Just honest conversations. Built for continuity, chemistry, and being understood before you're seen.",
   ogImage: "/og-candor.png",
   keywords: [
     "Candor",

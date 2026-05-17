@@ -23,10 +23,10 @@ export default function WaitlistSection() {
         className="max-w-md mx-auto text-center"
       >
         <h2 className="text-2xl md:text-3xl font-light mb-3">
-          Be part of something more honest
+          enter while the thread is still rare
         </h2>
-        <p className="text-foreground-secondary text-sm font-light mb-10">
-          No rush. We'll reach out when it's time.
+        <p className="text-foreground-secondary text-sm font-light mb-10 leading-7">
+          every new profile begins with seven days of continuity. enough time for candor to feel more perceptive, not just more available.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 items-center">
@@ -34,7 +34,7 @@ export default function WaitlistSection() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your email"
+            placeholder="your email"
             className="flex-1 px-5 py-3.5 rounded-full surface border border-border/50 text-sm font-light
                        placeholder:text-foreground-secondary/50 focus:outline-none focus:ring-1 focus:ring-accent/40
                        transition-all duration-300"

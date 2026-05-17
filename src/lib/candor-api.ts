@@ -1,12 +1,13 @@
 import { sanitizeCandorReply } from "@/lib/candor/fallback";
-import { logCandorInternal } from "@/lib/candor/logger";
+import { orchestrateCandorJson, orchestrateCandorText } from "@/lib/candor/orchestrator";
+import type {
+  CandorAccessTier,
+  CandorHistoryMessage,
+  CandorModelRoute,
+  CandorRole,
+} from "@/lib/candor/transport";
 
-export type CandorRole = "user" | "ai";
-
-export type CandorHistoryMessage = {
-  role: CandorRole;
-  content: string;
-};
+export type { CandorAccessTier, CandorHistoryMessage, CandorModelRoute, CandorRole } from "@/lib/candor/transport";
 
 type ChatPayload = {
   message: string;
@@ -15,21 +16,12 @@ type ChatPayload = {
   system_prompt?: string;
   temperature?: number;
   max_tokens?: number;
-  model_route?: "default" | "banter" | "reflective" | "nuance" | "extraction";
+  model_route?: CandorModelRoute;
+  route_reason?: string;
+  emotional_depth_score?: number;
+  continuity_depth_score?: number;
+  access_tier?: CandorAccessTier;
 };
-
-type ChatResponse = {
-  response?: string;
-  reply?: string;
-  content?: string;
-  message?: string;
-};
-
-const backendUrl = process.env.CANDOR_API_URL ?? process.env.NEXT_PUBLIC_CANDOR_API_URL;
-const groqModel = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
-const openRouterModel = process.env.OPENROUTER_MODEL ?? "anthropic/claude-3.5-haiku";
-const openRouterReflectiveModel = process.env.OPENROUTER_REFLECTIVE_MODEL ?? openRouterModel;
-const openRouterNuanceModel = process.env.OPENROUTER_NUANCE_MODEL ?? openRouterReflectiveModel;
 
 const systemPrompt = `
 you are candor.
@@ -75,175 +67,29 @@ never loop the same reflection.
 never say "that sounds nice", "that sounds hard", "something's on your mind", or "i understand".
 `.trim();
 
-function toGroqRole(role: CandorRole) {
-  return role === "ai" ? "assistant" : "user";
-}
-
 export async function sendCandorMessage(payload: ChatPayload) {
-  try {
-    if (backendUrl) {
-      try {
-        return await sendViaBackend(payload, backendUrl);
-      } catch (error) {
-        logCandorInternal({ event: "backend_chat_route_failed", level: "warn", error });
-      }
-    }
-
-    if (payload.model_route === "reflective" || payload.model_route === "nuance") {
-      if (process.env.OPENROUTER_API_KEY) return sendViaOpenRouter(payload);
-    }
-    return await sendViaGroq(payload);
-  } catch (error) {
-    logCandorInternal({ event: "primary_chat_route_failed", level: "warn", error });
-    if (!process.env.OPENROUTER_API_KEY) throw error;
-    try {
-      return await sendViaOpenRouter(payload);
-    } catch (fallbackError) {
-      logCandorInternal({ event: "secondary_chat_route_failed", level: "error", error: fallbackError });
-      throw fallbackError;
-    }
-  }
-}
-
-async function sendViaBackend(payload: ChatPayload, baseUrl: string) {
-  const response = await fetch(`${baseUrl}/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+  const result = await orchestrateCandorText({
+    message: payload.message,
+    history: payload.history,
+    systemPrompt: payload.system_prompt ?? systemPrompt,
+    temperature: payload.temperature ?? 0.82,
+    maxTokens: payload.max_tokens ?? 105,
+    model_route: payload.model_route,
+    route_reason: payload.route_reason,
+    emotional_depth_score: payload.emotional_depth_score,
+    continuity_depth_score: payload.continuity_depth_score,
+    access_tier: payload.access_tier,
   });
 
-  if (!response.ok) {
-    throw new Error("candor_chat_failed");
-  }
-
-  const data = (await response.json()) as ChatResponse;
-  return sanitizeCandorReply(
-    data.response ?? data.reply ?? data.content ?? data.message ?? "wait yeah... stay with that a little.",
-    payload.message,
-  );
+  return sanitizeCandorReply(result.text || "the reply failed for a second. try me again.", payload.message);
 }
 
-async function sendViaGroq(payload: ChatPayload) {
-  const apiKey = process.env.GROQ_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("missing_groq_api_key");
-  }
-
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
+export async function streamCandorMessage(payload: ChatPayload) {
+  const text = await sendCandorMessage(payload);
+  return new Response(text, {
     headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
+      "Content-Type": "text/plain; charset=utf-8",
     },
-    body: JSON.stringify({
-      model: groqModel,
-      temperature: payload.temperature ?? 0.8,
-      max_tokens: payload.max_tokens ?? 105,
-      messages: [
-        { role: "system", content: payload.system_prompt ?? systemPrompt },
-        ...payload.history.slice(-16).map((message) => ({
-          role: toGroqRole(message.role),
-          content: message.content,
-        })),
-        { role: "user", content: payload.message },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error("groq_chat_failed");
-  }
-
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-
-  return sanitizeCandorReply(data.choices?.[0]?.message?.content ?? "wait yeah... stay with that a little.", payload.message);
-}
-
-async function sendViaOpenRouter(payload: ChatPayload) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("missing_openrouter_api_key");
-  }
-
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-      "X-Title": "Candor",
-    },
-    body: JSON.stringify({
-      model: openRouterModelFor(payload.model_route),
-      temperature: payload.temperature ?? 0.82,
-      max_tokens: payload.max_tokens ?? 105,
-      messages: [
-        { role: "system", content: payload.system_prompt ?? systemPrompt },
-        ...payload.history.slice(-16).map((message) => ({
-          role: toGroqRole(message.role),
-          content: message.content,
-        })),
-        { role: "user", content: payload.message },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error("openrouter_chat_failed");
-  }
-
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-
-  return sanitizeCandorReply(data.choices?.[0]?.message?.content ?? "wait yeah... stay with that a little.", payload.message);
-}
-
-function openRouterModelFor(route?: ChatPayload["model_route"]) {
-  if (route === "nuance") return openRouterNuanceModel;
-  if (route === "reflective") return openRouterReflectiveModel;
-  return openRouterModel;
-}
-
-export function streamCandorMessage(payload: ChatPayload) {
-  if (!backendUrl) {
-    const apiKey = process.env.GROQ_API_KEY;
-
-    if (!apiKey) {
-      throw new Error("missing_groq_api_key");
-    }
-
-    return fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: groqModel,
-        temperature: payload.temperature ?? 0.8,
-        max_tokens: payload.max_tokens ?? 105,
-        stream: true,
-        messages: [
-          { role: "system", content: payload.system_prompt ?? systemPrompt },
-          ...payload.history.slice(-16).map((message) => ({
-            role: toGroqRole(message.role),
-            content: message.content,
-          })),
-          { role: "user", content: payload.message },
-        ],
-      }),
-    });
-  }
-
-  return fetch(`${backendUrl}/chat/stream`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
   });
 }
 
@@ -252,138 +98,33 @@ export async function sendCandorJson<T>({
   message,
   temperature,
   maxTokens,
+  modelRoute,
+  routeReason,
+  emotionalDepthScore,
+  continuityDepthScore,
+  accessTier,
 }: {
   systemPrompt: string;
   message: string;
   temperature: number;
   maxTokens: number;
+  modelRoute?: CandorModelRoute;
+  routeReason?: string;
+  emotionalDepthScore?: number;
+  continuityDepthScore?: number;
+  accessTier?: CandorAccessTier;
 }) {
-  const apiKey = process.env.GROQ_API_KEY;
-  const messages = [
-    { role: "system", content: `${systemPrompt}\n\nreturn valid json only. no markdown fences.` },
-    { role: "user", content: message },
-  ];
-  const errors: string[] = [];
-
-  if (apiKey) {
-    try {
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: groqModel,
-          temperature,
-          max_tokens: maxTokens,
-          response_format: { type: "json_object" },
-          messages,
-        }),
-      });
-
-      if (!response.ok) {
-        errors.push(`groq_json_strict:${response.status}`);
-      } else {
-        const data = (await response.json()) as {
-          choices?: Array<{ message?: { content?: string } }>;
-        };
-        return parseJsonPayload<T>(data.choices?.[0]?.message?.content);
-      }
-    } catch (error) {
-      logCandorInternal({ event: "groq_json_strict_failed", level: "warn", error });
-      errors.push("groq_json_strict:error");
-    }
-
-    try {
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: groqModel,
-          temperature,
-          max_tokens: maxTokens,
-          messages,
-        }),
-      });
-
-      if (!response.ok) {
-        errors.push(`groq_json_loose:${response.status}`);
-      } else {
-        const data = (await response.json()) as {
-          choices?: Array<{ message?: { content?: string } }>;
-        };
-        return parseJsonPayload<T>(data.choices?.[0]?.message?.content);
-      }
-    } catch (error) {
-      logCandorInternal({ event: "groq_json_loose_failed", level: "warn", error });
-      errors.push("groq_json_loose:error");
-    }
-  } else {
-    errors.push("groq_json:missing_key");
-  }
-
-  const openRouterKey = process.env.OPENROUTER_API_KEY;
-  if (openRouterKey) {
-    try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${openRouterKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-          "X-Title": "Candor",
-        },
-        body: JSON.stringify({
-          model: openRouterModelFor("extraction"),
-          temperature,
-          max_tokens: maxTokens,
-          messages,
-        }),
-      });
-
-      if (!response.ok) {
-        errors.push(`openrouter_json:${response.status}`);
-      } else {
-        const data = (await response.json()) as {
-          choices?: Array<{ message?: { content?: string } }>;
-        };
-        return parseJsonPayload<T>(data.choices?.[0]?.message?.content);
-      }
-    } catch (error) {
-      logCandorInternal({ event: "openrouter_json_failed", level: "warn", error });
-      errors.push("openrouter_json:error");
-    }
-  } else {
-    errors.push("openrouter_json:missing_key");
-  }
-
-  throw new Error(`candor_json_failed:${errors.join(",")}`);
-}
-
-function parseJsonPayload<T>(content: string | null | undefined) {
-  const raw = String(content ?? "").trim();
-  if (!raw) throw new Error("empty_json_response");
-
-  try {
-    return JSON.parse(raw) as T;
-  } catch (error) {
-    void error;
-  }
-
-  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1]?.trim();
-  if (fenced) {
-    return JSON.parse(fenced) as T;
-  }
-
-  const firstBrace = raw.indexOf("{");
-  const lastBrace = raw.lastIndexOf("}");
-  if (firstBrace !== -1 && lastBrace > firstBrace) {
-    return JSON.parse(raw.slice(firstBrace, lastBrace + 1)) as T;
-  }
-
-  throw new Error("invalid_json_response");
+  return orchestrateCandorJson<T>({
+    message,
+    history: [],
+    systemPrompt: `${systemPrompt}\n\nreturn valid json only. no markdown fences.`,
+    temperature,
+    maxTokens,
+    model_route: modelRoute ?? "extraction",
+    route_reason: routeReason,
+    emotional_depth_score: emotionalDepthScore,
+    continuity_depth_score: continuityDepthScore,
+    access_tier: accessTier,
+    strictJson: true,
+  });
 }

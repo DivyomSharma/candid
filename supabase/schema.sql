@@ -13,6 +13,30 @@ create table if not exists public.candor_traits (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.candor_profiles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references public.candor_users(id) on delete cascade,
+  username text,
+  display_name text,
+  dob date,
+  gender_identity text,
+  city text,
+  relationship_preference text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.candor_access (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references public.candor_users(id) on delete cascade,
+  base_tier text not null default 'echo' check (base_tier in ('echo', 'continuity', 'resonance')),
+  trial_tier text check (trial_tier in ('continuity', 'resonance')),
+  trial_started_at timestamptz,
+  trial_ends_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.candor_alignments (
   id uuid primary key default gen_random_uuid(),
   user_a_id uuid not null references public.candor_users(id) on delete cascade,
@@ -137,6 +161,8 @@ create index if not exists candor_dm_messages_alignment_created_at_idx
   on public.candor_dm_messages(alignment_id, created_at asc);
 create index if not exists candor_learning_events_trait_cluster_created_at_idx
   on public.candor_learning_events(trait_cluster, created_at desc);
+create index if not exists candor_profiles_user_idx on public.candor_profiles(user_id);
+create index if not exists candor_access_user_idx on public.candor_access(user_id);
 create index if not exists candor_messages_user_created_at_idx
   on public.candor_messages(user_id, created_at desc)
   where deleted_at is null;
@@ -210,8 +236,54 @@ as $$
   limit match_count;
 $$;
 
+-- ─── Subscription System ───────────────────────────────────────────────
+create table if not exists public.candor_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references public.candor_users(id) on delete cascade,
+  tier text not null default 'echo' check (tier in ('echo', 'continuity', 'resonance')),
+  trial_active boolean not null default true,
+  trial_started_at timestamptz not null default now(),
+  trial_ends_at timestamptz not null default (now() + interval '7 days'),
+  subscribed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists candor_subscriptions_user_idx on public.candor_subscriptions(user_id);
+create index if not exists candor_subscriptions_trial_ends_idx
+  on public.candor_subscriptions(trial_ends_at)
+  where trial_active = true;
+
+-- ─── Understanding Depth (Hidden Evolving Model) ──────────────────────
+create table if not exists public.candor_understanding_depth (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references public.candor_users(id) on delete cascade,
+  state text not null default 'spark' check (state in ('spark', 'rhythm', 'patterns', 'nuance', 'continuity', 'resonance')),
+  progress real not null default 0.0,
+  last_surfaced_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists candor_understanding_depth_user_idx on public.candor_understanding_depth(user_id);
+
+-- ─── Add align tier and openness state to alignments ──────────────────
+-- align_tier: distant, familiar, natural_flow, magnetic, candid
+-- openness_state: open_the_door, naturally_unfolding, becoming_easy, emotionally_open, conversation_feels_candid
+do $$
+begin
+  if not exists (select 1 from information_schema.columns where table_name = 'candor_alignments' and column_name = 'align_tier') then
+    alter table public.candor_alignments add column align_tier text not null default 'distant' check (align_tier in ('distant', 'familiar', 'natural_flow', 'magnetic', 'candid'));
+  end if;
+  if not exists (select 1 from information_schema.columns where table_name = 'candor_alignments' and column_name = 'openness_state') then
+    alter table public.candor_alignments add column openness_state text not null default 'open_the_door' check (openness_state in ('open_the_door', 'naturally_unfolding', 'becoming_easy', 'emotionally_open', 'conversation_feels_candid'));
+  end if;
+end $$;
+
 alter table public.candor_users enable row level security;
 alter table public.candor_traits enable row level security;
+alter table public.candor_profiles enable row level security;
+alter table public.candor_access enable row level security;
 alter table public.candor_alignments enable row level security;
 alter table public.candor_dm_messages enable row level security;
 alter table public.candor_learning_events enable row level security;
@@ -222,3 +294,5 @@ alter table public.candor_memory_embeddings enable row level security;
 alter table public.candor_social_state enable row level security;
 alter table public.candor_interaction_patterns enable row level security;
 alter table public.candor_initiatives enable row level security;
+alter table public.candor_subscriptions enable row level security;
+alter table public.candor_understanding_depth enable row level security;

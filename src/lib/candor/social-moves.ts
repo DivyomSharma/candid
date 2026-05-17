@@ -26,21 +26,46 @@ export function chooseSocialMove(input: {
   }
 
   if (decision.mode === "comfort") candidates.push("react", "lighten", "pause");
-  if (decision.mode === "challenge") candidates.push("challenge", "tease");
-  if (decision.mode === "spark") candidates.push("energy_flip", "curiosity_hook", "playful_assumption", "rapid_fire");
-  if (decision.mode === "deepen") candidates.push("deepen", "callback", "react");
+  if (decision.mode === "challenge") candidates.push("challenge", "tease", "dangerous_honesty");
+  if (decision.mode === "spark") {
+    candidates.push("energy_flip", "curiosity_hook", "playful_assumption", "rapid_fire");
+    if (socialState.teasingComfort > 0.4) candidates.push("tease");
+    if (socialState.confessionalComfort > 0.44 || socialState.currentAtmosphere === "late_night_vulnerable") {
+      candidates.push("confessional_nudge");
+    }
+    if (
+      memory.turnCount >= 5 &&
+      socialState.socialBoldness > 0.46 &&
+      socialState.teasingComfort > 0.34 &&
+      socialState.vulnerabilityPacing !== "guarded"
+    ) {
+      candidates.push("dangerous_honesty");
+    }
+  }
+  if (decision.mode === "deepen") candidates.push("deepen", "callback", "react", "confessional_nudge");
   if (decision.mode === "pause") candidates.push("pause", "react");
   if (primaryTopic) candidates.push("callback", "playful_assumption");
   if (words <= 4) candidates.push("energy_flip", "ask_side_pick", "rapid_fire");
   if (/\b(sorry|misread|wrong|confused)\b/.test(text)) candidates.push("repair");
   if (socialState.recentEnergy === "heavy") candidates.push("react", "lighten");
+  if (socialState.currentAtmosphere === "late_night_vulnerable") candidates.push("confessional_nudge", "pause");
+  if (socialState.currentAtmosphere === "debate_energy") candidates.push("challenge", "dangerous_honesty");
+  if (socialState.currentAtmosphere === "teasing" || socialState.currentAtmosphere === "flirt_adjacent") {
+    candidates.push("tease", "playful_assumption");
+  }
   if (socialState.chaosTolerance > 0.62) candidates.push("energy_flip", "tease");
   if (socialState.humorTolerance < 0.28) candidates.push("react", "deepen");
 
-  const fallback: CandorSocialMove[] = ["react", "curiosity_hook", "playful_assumption", "callback", "lighten"];
+  const fallback: CandorSocialMove[] = [
+    "react",
+    "curiosity_hook",
+    "playful_assumption",
+    "callback",
+    "lighten",
+  ];
   const pool = [...candidates, ...fallback].filter((move) => !recent.has(move));
 
-  return pool[stableIndex(`${memory.turnCount}:${message}:${decision.mode}`, pool.length)] ?? "react";
+  return pool[stableIndex(`${memory.turnCount}:${message}:${decision.mode}:${socialState.currentAtmosphere}`, pool.length)] ?? "react";
 }
 
 export function socialMoveInstruction(move: CandorSocialMove) {
@@ -60,6 +85,8 @@ export function socialMoveInstruction(move: CandorSocialMove) {
     curiosity_hook: "introduce a sudden curiosity that feels socially natural.",
     playful_assumption: "make a playful assumption about them and let them correct it.",
     energy_flip: "change the energy briefly so the exchange does not get flat.",
+    dangerous_honesty: "introduce a slightly risky social read or question, but only if it feels earned and human.",
+    confessional_nudge: "invite one small admission or late-night honesty without making it feel like a prompt list.",
   };
 
   return instructions[move];

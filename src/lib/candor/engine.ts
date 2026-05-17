@@ -1,4 +1,5 @@
 import { sendCandorJson, sendCandorMessage } from "@/lib/candor-api";
+import { accessProfileFor } from "@/lib/candor/access";
 import {
   addInterestSignals,
   buildTraitCluster,
@@ -26,6 +27,7 @@ import type {
 } from "@/lib/candor/types";
 import { shapeCandorResponse } from "@/lib/candor-response";
 import { logCandorInternal } from "@/lib/candor/logger";
+import type { CandorModelRoute } from "@/lib/candor/transport";
 
 export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnResult> {
   const lightMemory = mergeMemory(input.memory, extractLightMemory(input.message));
@@ -44,6 +46,13 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
   });
   const scenario = decision.mode === "scenario" ? selectScenario(lightMemory) : undefined;
   const suppressedPhrases = buildSuppressedPhrases(lightMemory);
+  const socialReadState = updateSocialState({
+    current: startingSocialState,
+    message: input.message,
+    memory: lightMemory,
+    move: socialMove,
+    structure: decision.structure,
+  });
   const momentumCue = buildMomentumCue({
     message: input.message,
     memory: lightMemory,
@@ -51,7 +60,7 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     primaryTopic: interestEnergy.primaryTopic,
     learningBias,
     socialMove,
-    socialState: startingSocialState,
+    socialState: socialReadState,
   });
 
   const prompt = buildCandorPrompt({
@@ -61,13 +70,21 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     suppressedPhrases,
     learningBias,
     momentumCue,
-    socialState: startingSocialState,
+    socialState: socialReadState,
     socialMove,
     socialMoveInstruction: socialMoveInstruction(socialMove),
     retrievedMemories: input.retrievedMemories ?? [],
-    understanding: understandingLine(startingSocialState),
+    understanding: understandingLine(socialReadState),
     scenario: scenario?.text,
   });
+  const routeDecision = routeForTurn(
+    decision,
+    socialMove,
+    intuition,
+    socialReadState,
+    input.accessTier,
+    lightMemory.turnCount,
+  );
 
   const firstReply = shapeCandorResponse(
     await sendCandorMessage({
@@ -77,11 +94,12 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
       system_prompt: prompt,
       temperature: temperatureFor(decision),
       max_tokens: maxTokensFor(intuition.presenceState),
-      model_route: routeForTurn(decision, socialMove, intuition),
+      ...routeDecision,
+      access_tier: input.accessTier,
     }),
     {
       socialMove,
-      socialState: startingSocialState,
+      socialState: socialReadState,
       previousReplies: lightMemory.responseHistory,
     },
   );
@@ -99,13 +117,7 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     suppressedPhrases,
   });
 
-  const socialState = updateSocialState({
-    current: startingSocialState,
-    message: input.message,
-    memory: lightMemory,
-    move: socialMove,
-    structure: decision.structure,
-  });
+  const socialState = socialReadState;
 
   let memory = updateTurnMemory(
     mergeMemory(lightMemory, scenario ? { seenScenarios: [scenario.id] } : {}),
@@ -121,8 +133,8 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     memory = addInterestSignals(memory, interestEnergy.topics);
   }
 
-  if (shouldAnalyzeDeeply(memory)) {
-    const deepMemory = await analyzeMemory(input.message, input.history, memory);
+  if (shouldAnalyzeDeeply(memory, input.accessTier)) {
+    const deepMemory = await analyzeMemory(input.message, input.history, memory, input.accessTier);
     memory = mergeMemory(memory, deepMemory);
   }
 
@@ -327,7 +339,15 @@ async function maybeRetryForRepetition(input: {
       system_prompt: retryPrompt,
       temperature: Math.min(temperatureFor(fallbackDecision) + 0.06, 0.94),
       max_tokens: maxTokensFor(input.intuition.presenceState),
-      model_route: routeForTurn(fallbackDecision, input.socialMove, input.intuition),
+      ...routeForTurn(
+        fallbackDecision,
+        input.socialMove,
+        input.intuition,
+        input.socialState,
+        input.input.accessTier,
+        input.memory.turnCount,
+      ),
+      access_tier: input.input.accessTier,
     }),
     {
       socialMove: input.socialMove,
@@ -341,11 +361,66 @@ function routeForTurn(
   decision: CandorDecision,
   socialMove: ReturnType<typeof chooseSocialMove>,
   intuition: CandorIntuitionState,
+  socialState: ReturnType<typeof normalizeSocialState>,
+  accessTier: CandorTurnInput["accessTier"],
+  turnCount: number,
 ) {
-  if (intuition.emotionalSignal === "high" || decision.mode === "comfort") return "reflective";
-  if (socialMove === "rapid_fire" || socialMove === "tease" || socialMove === "energy_flip") return "banter";
-  if (decision.mode === "challenge") return "nuance";
-  return "default";
+  const continuityDepthScore =
+    accessTier === "resonance" ? 5 : accessTier === "continuity" ? 4 : Math.min(3, 1 + Math.floor(turnCount / 6));
+
+  if (
+    intuition.emotionalSignal === "high" ||
+    decision.mode === "comfort" ||
+    socialState.currentAtmosphere === "late_night_vulnerable" ||
+    socialState.currentAtmosphere === "confessional" ||
+    socialState.currentAtmosphere === "emotionally_honest"
+  ) {
+    return {
+      model_route: "reflective" as CandorModelRoute,
+      route_reason: "emotionally meaningful turn with heavier continuity",
+      emotional_depth_score: 7,
+      continuity_depth_score: Math.max(4, continuityDepthScore),
+    };
+  }
+
+  if (socialMove === "dangerous_honesty" || socialMove === "confessional_nudge") {
+    return {
+      model_route: "initiative" as CandorModelRoute,
+      route_reason: "earned chemistry move with playful or confessional initiative",
+      emotional_depth_score: 6,
+      continuity_depth_score: Math.max(4, continuityDepthScore),
+    };
+  }
+
+  if (
+    socialMove === "rapid_fire" ||
+    socialMove === "tease" ||
+    socialMove === "energy_flip" ||
+    socialMove === "ask_side_pick"
+  ) {
+    return {
+      model_route: "banter" as CandorModelRoute,
+      route_reason: "quick social momentum and lightweight chemistry",
+      emotional_depth_score: 3,
+      continuity_depth_score: Math.max(2, continuityDepthScore - 1),
+    };
+  }
+
+  if (decision.mode === "challenge" || socialState.currentAtmosphere === "debate_energy") {
+    return {
+      model_route: "nuance" as CandorModelRoute,
+      route_reason: "subtle pushback, debate energy, or contradiction",
+      emotional_depth_score: 6,
+      continuity_depth_score: Math.max(4, continuityDepthScore),
+    };
+  }
+
+  return {
+    model_route: "default" as CandorModelRoute,
+    route_reason: "ongoing relational continuity",
+    emotional_depth_score: 5,
+    continuity_depth_score: Math.max(3, continuityDepthScore),
+  };
 }
 
 function nextStructure(current: CandorStructure): CandorStructure {
@@ -361,11 +436,17 @@ function nextStructure(current: CandorStructure): CandorStructure {
   return rotation[current];
 }
 
-function shouldAnalyzeDeeply(memory: CandorMemory) {
-  return memory.turnCount > 0 && memory.turnCount % 5 === 0;
+function shouldAnalyzeDeeply(memory: CandorMemory, accessTier: CandorTurnInput["accessTier"]) {
+  const cadence = accessProfileFor(accessTier ?? "echo").deepAnalysisEvery;
+  return memory.turnCount > 0 && memory.turnCount % cadence === 0;
 }
 
-async function analyzeMemory(message: string, history: CandorTurnInput["history"], memory: CandorMemory) {
+async function analyzeMemory(
+  message: string,
+  history: CandorTurnInput["history"],
+  memory: CandorMemory,
+  accessTier?: CandorTurnInput["accessTier"],
+) {
   try {
     return await sendCandorJson<Partial<CandorMemory>>({
       systemPrompt: buildAnalysisPrompt(),
@@ -379,6 +460,11 @@ async function analyzeMemory(message: string, history: CandorTurnInput["history"
           .join("\n"),
       temperature: 0.25,
       maxTokens: 450,
+      modelRoute: "memory",
+      routeReason: "deeper memory synthesis and relational continuity retention",
+      emotionalDepthScore: 4,
+      continuityDepthScore: Math.min(5, 2 + Math.floor(memory.turnCount / 4)),
+      accessTier,
     });
   } catch (error) {
     logCandorInternal({ event: "memory_analysis_skipped", level: "warn", error });
@@ -499,12 +585,20 @@ function buildMomentumCue(input: {
     return `they just gave a strong topic signal around ${primaryTopic}. double down there. make the reply feel like chemistry, not analysis. add a specific take or playful assumption.`;
   }
 
+  if (socialState.currentAtmosphere === "late_night_vulnerable") {
+    return `the atmosphere feels late-night. keep the pacing softer and slightly riskier emotionally. fewer performance lines, more quiet honesty.`;
+  }
+
+  if (socialState.currentAtmosphere === "flirt_adjacent" || socialState.currentAtmosphere === "teasing") {
+    return `there is some social spark here. stay believable. light tension, teasing, and implication are better than polished warmth.`;
+  }
+
   if (memory.turnCount < 4) {
     return `onboarding chemistry mode. context is still thin, so candor should carry more of the energy. use ${socialMove}. keep it low-pressure, socially alive, and useful for reading their vibe. current read: ${socialState.archetypeSignals.join(", ") || "still unclear"}.`;
   }
 
   if (decision.mode === "spark") {
-    return `take social initiative. introduce a mini-debate, sudden curiosity, playful read, or quick left turn. it should feel like a person adding energy, not a prompt asking for disclosure.`;
+    return `take social initiative. introduce a mini-debate, sudden curiosity, playful read, dangerous honesty, or quick left turn. it should feel like a person adding energy, not a prompt asking for disclosure.`;
   }
 
   if (memory.turnCount < 3) {

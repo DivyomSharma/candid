@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { CandorHistoryMessage } from "@/lib/candor-api";
 import { runCandorTurn } from "@/lib/candor/engine";
+import { accessProfileFor, getCandorAccess } from "@/lib/candor/access";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -92,6 +93,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
   const supabaseAdmin = getSupabaseAdmin();
   const saved = await getUserTraits(userId);
+  const access = await getCandorAccess(saved.userId);
+  const accessProfile = accessProfileFor(access.tier);
   const history = body.history ?? [];
   const socialState = await getSocialState(saved.userId);
   const [retrievedMemories, factMemories] = await Promise.all([
@@ -102,7 +105,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       logCandorInternal({ event: "relational_memory_retrieval_skipped", level: "warn", error });
       return [];
     }),
-    factsAsRetrievedMemory(saved.userId).catch((error) => {
+    factsAsRetrievedMemory(saved.userId, accessProfile.factualMemoryLimit).catch((error) => {
       logCandorInternal({ event: "memory_fact_retrieval_skipped", level: "warn", error });
       return [];
     }),
@@ -123,8 +126,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       message: content,
       history,
       memory,
+      accessTier: access.tier,
       socialState,
-      retrievedMemories: [...retrievedMemories, ...factMemories].slice(0, 8),
+      retrievedMemories: [...retrievedMemories, ...factMemories].slice(0, accessProfile.retrievedMemoryLimit),
     });
     aiContent = turn.reply;
     memory = turn.memory;
@@ -150,6 +154,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   await maybeQueueInitiative({
     userId: saved.userId,
     memory,
+    accessTier: access.tier,
     socialState: nextSocialState,
     lastUserMessage: content,
   });

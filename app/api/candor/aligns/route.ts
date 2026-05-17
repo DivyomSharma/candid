@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
+import { accessProfileFor, getCandorAccess } from "@/lib/candor/access";
 import { getAlignmentPreview } from "@/lib/candor/alignment";
 import { alignmentLanguageWithSignals, alignmentScoreWithSignals, buildPublicProfile } from "@/lib/candor/matching";
 import { getPublicIdentitiesForCandorUserIds } from "@/lib/candor/identity";
@@ -75,6 +76,8 @@ export async function GET() {
 
   const supabaseAdmin = getSupabaseAdmin();
   const user = await getOrCreateUser(authId);
+  const access = await getCandorAccess(user.id);
+  const accessProfile = accessProfileFor(access.tier);
   const { data: traits } = await supabaseAdmin
     .from("candor_traits")
     .select("data")
@@ -111,9 +114,9 @@ export async function GET() {
           : 0,
       };
     })
-    .filter((item) => item.score > 0)
+    .filter((item) => item.score >= accessProfile.minAlignScore)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 6);
+    .slice(0, accessProfile.alignCount);
   const identities = await getPublicIdentitiesForCandorUserIds(scored.map((item) => item.userId));
 
   const aligns = await Promise.all(

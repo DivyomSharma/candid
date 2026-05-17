@@ -66,6 +66,10 @@ export async function generateCandorEntry(memory: CandorMemory): Promise<CandorE
       }),
       temperature: 0.9,
       maxTokens: 650,
+      modelRoute: "profile",
+      routeReason: "home-screen profile evolution and social discovery generation",
+      emotionalDepthScore: 5,
+      continuityDepthScore: Math.min(5, 2 + Math.floor(memory.turnCount / 4)),
     });
 
     return normalizeEntry(generated, memory);
