@@ -278,6 +278,9 @@ begin
   if not exists (select 1 from information_schema.columns where table_name = 'candor_alignments' and column_name = 'openness_state') then
     alter table public.candor_alignments add column openness_state text not null default 'open_the_door' check (openness_state in ('open_the_door', 'naturally_unfolding', 'becoming_easy', 'emotionally_open', 'conversation_feels_candid'));
   end if;
+  if not exists (select 1 from information_schema.columns where table_name = 'candor_alignments' and column_name = 'candor_invited') then
+    alter table public.candor_alignments add column candor_invited boolean not null default false;
+  end if;
 end $$;
 
 alter table public.candor_users enable row level security;

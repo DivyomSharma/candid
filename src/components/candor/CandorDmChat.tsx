@@ -20,6 +20,7 @@ type AlignProfile = {
     avatarTone: string;
   };
   canText: boolean;
+  candorInvited?: boolean;
 };
 
 type DmMessage = {
@@ -41,6 +42,7 @@ export function CandorDmChat({ id }: { id: string }) {
   const shouldStickToBottomRef = useRef(true);
   const forceAutoscrollRef = useRef(false);
   const { composerRef, composerClearance, measureComposerClearance } = useCandorComposerClearance<HTMLFormElement>();
+  const [isInviting, setIsInviting] = useState(false);
 
   const sparks = [
     "candor notices they're into obscure cinema... ask about a24?",
@@ -157,6 +159,16 @@ export function CandorDmChat({ id }: { id: string }) {
     setIsSending(false);
   };
 
+  const inviteCandor = async () => {
+    if (!align || align.candorInvited || isInviting) return;
+    setIsInviting(true);
+    const response = await fetch(`/api/candor/aligns/${id}/invite`, { method: "POST" });
+    if (response.ok) {
+      setAlign((prev) => prev ? { ...prev, candorInvited: true } : null);
+    }
+    setIsInviting(false);
+  };
+
   if (isLoaded && !isSignedIn) {
     return (
       <main className="gradient-bg grain relative flex min-h-screen items-center justify-center overflow-hidden px-6">
@@ -175,23 +187,38 @@ export function CandorDmChat({ id }: { id: string }) {
     <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-36 pt-16">
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[600px] flex-col gap-8">
-        <div className="sticky top-0 z-20 -mx-6 flex items-center gap-3 bg-background/45 px-6 py-3 backdrop-blur-md">
-          <button type="button" onClick={() => router.push(`/candor/aligns/${id}`)} className="rounded-full border border-border/50 p-2 text-foreground-secondary transition-colors hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          {align && (
-            <>
-              <Avatar className="h-10 w-10 border border-border/60 bg-background/70">
-                <AvatarFallback className="text-sm font-light text-foreground" style={{ background: align.profile.avatarTone }}>
-                  {align.profile.avatarInitials}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-light text-foreground">{align.profile.username}</p>
-                <p className="text-xs font-light text-foreground-secondary">dm mode</p>
-              </div>
-            </>
-          )}
+        <div className="sticky top-0 z-20 -mx-6 flex items-center justify-between bg-background/45 px-6 py-3 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => router.push(`/candor/aligns/${id}`)} className="rounded-full border border-border/50 p-2 text-foreground-secondary transition-colors hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            {align && (
+              <>
+                <Avatar className="h-10 w-10 border border-border/60 bg-background/70">
+                  <AvatarFallback className="text-sm font-light text-foreground" style={{ background: align.profile.avatarTone }}>
+                    {align.profile.avatarInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-light text-foreground">{align.profile.username}</p>
+                  <p className="text-xs font-light text-foreground-secondary">dm mode</p>
+                </div>
+              </>
+            )}
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={inviteCandor}
+            disabled={align?.candorInvited || isInviting}
+            className={align?.candorInvited 
+              ? "rounded-full text-[11px] uppercase tracking-wider font-light text-foreground-secondary opacity-70 pointer-events-none"
+              : "rounded-full text-[11px] uppercase tracking-wider font-light text-accent/80 hover:bg-accent/10 hover:text-accent"
+            }
+          >
+            <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+            {align?.candorInvited ? "candor is reading" : isInviting ? "inviting..." : "invite candor"}
+          </Button>
         </div>
 
         <div

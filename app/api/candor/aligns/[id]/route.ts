@@ -40,7 +40,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const supabaseAdmin = getSupabaseAdmin();
   const { data } = await supabaseAdmin
     .from("candor_alignments")
-    .select("id, score, user_a_id, user_b_id, user_a_dm_enabled, user_b_dm_enabled")
+    .select("id, score, user_a_id, user_b_id, user_a_dm_enabled, user_b_dm_enabled, candor_invited")
     .eq("id", id)
     .maybeSingle();
 
@@ -75,5 +75,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     myDmOn,
     theirDmOn,
     canText: myDmOn && theirDmOn,
+    candorInvited: alignment.candor_invited ?? false,
   });
 }

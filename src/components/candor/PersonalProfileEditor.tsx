@@ -85,7 +85,7 @@ export function PersonalProfileEditor({
             <Input
               value={draft.username ?? ""}
               onChange={(event) => update("username", event.target.value)}
-              placeholder="sharmadivyom2007"
+              placeholder="username"
               className="rounded-2xl border-border/50 bg-background/40"
             />
           </Field>
@@ -93,7 +93,7 @@ export function PersonalProfileEditor({
             <Input
               value={draft.displayName ?? ""}
               onChange={(event) => update("displayName", event.target.value)}
-              placeholder="Sharmadivyom"
+              placeholder="your name"
               className="rounded-2xl border-border/50 bg-background/40"
             />
           </Field>
@@ -125,7 +125,7 @@ export function PersonalProfileEditor({
             <Input
               value={draft.city ?? ""}
               onChange={(event) => update("city", event.target.value)}
-              placeholder="delhi"
+              placeholder="city, country"
               className="rounded-2xl border-border/50 bg-background/40"
             />
           </Field>
