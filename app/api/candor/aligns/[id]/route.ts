@@ -13,6 +13,7 @@ type AlignmentRow = {
   user_b_id: string;
   user_a_dm_enabled: boolean;
   user_b_dm_enabled: boolean;
+  candor_invited: boolean | null;
 };
 
 async function getUser(authId: string) {
