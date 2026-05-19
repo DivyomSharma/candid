@@ -72,14 +72,14 @@ export default function MatchReveal() {
                 className="w-3 h-3 md:w-4 md:h-4 rounded-full transition-all duration-500 ease-out z-10"
                 style={{ 
                   backgroundColor: i === activeTier ? 'hsl(var(--accent))' : tier.bg,
-                  boxShadow: i === activeTier ? \`0 0 20px 4px \${tier.glow}\` : 'none',
-                  border: \`1px solid \${tier.border}\`
+                  boxShadow: i === activeTier ? `0 0 20px 4px ${tier.glow}` : 'none',
+                  border: `1px solid ${tier.border}`
                 }}
               />
               <div 
-                className={\`absolute top-6 md:top-8 text-xs font-light tracking-wide transition-all duration-500 \${
+                className={`absolute top-6 md:top-8 text-xs font-light tracking-wide transition-all duration-500 ${
                   i === activeTier ? "text-foreground" : "text-foreground-secondary/40"
-                }\`}
+                }`}
               >
                 {tier.name}
               </div>
