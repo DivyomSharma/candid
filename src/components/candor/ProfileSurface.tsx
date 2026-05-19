@@ -18,6 +18,7 @@ export function ProfileSurface({
   subheading,
   showBottomNav = true,
   actionSlot,
+  onEditClick,
   publicMode = false,
 }: {
   profile: CandorProfilePresentation;
@@ -25,6 +26,7 @@ export function ProfileSurface({
   subheading: string;
   showBottomNav?: boolean;
   actionSlot?: React.ReactNode;
+  onEditClick?: () => void;
   publicMode?: boolean;
 }) {
   const router = useRouter();
@@ -64,17 +66,38 @@ export function ProfileSurface({
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="contents">
+          {/* HERO PROFILE CARD */}
           <Card className="surface overflow-hidden border-border/50 bg-card/45 backdrop-blur-sm">
-            <div className="relative h-36" style={{ background: profile.bannerTone }}>
-              <div className="absolute inset-0 bg-background/10" />
-              <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between gap-4">
-                <Avatar className="h-24 w-24 border border-border/60 bg-background/70 shadow-sm">
-                  <AvatarFallback className="bg-background/70 text-2xl font-light text-foreground">
-                    {profile.initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="mb-1 flex items-center gap-2">
-                  {actionSlot}
+            <div className="relative h-48 sm:h-56" style={{ background: profile.bannerTone }}>
+              <div className="absolute inset-0 bg-background/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-5">
+                <div className="flex items-center gap-5">
+                  <Avatar className="h-20 w-20 sm:h-28 sm:w-28 border-2 border-border/60 bg-background/70 shadow-lg shrink-0">
+                    <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]">
+                      {profile.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="mb-1 sm:mb-2">
+                    <h2 className="text-2xl sm:text-4xl font-light tracking-tight">{profile.username}</h2>
+                    <p className="text-xs sm:text-sm font-light uppercase tracking-[0.24em] text-accent/80 mt-1">{profile.handle}</p>
+                    <p className="mt-3 text-xs sm:text-sm font-light text-foreground-secondary flex items-center gap-2">
+                      {[profile.age, profile.city].filter(Boolean).join(" • ")}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 self-start sm:self-end">
+                  {onEditClick && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={onEditClick}
+                      className="rounded-full border-border/50 bg-background/50 px-4 font-light backdrop-blur-md hover:bg-accent/10"
+                    >
+                      edit
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     variant="outline"
@@ -84,50 +107,76 @@ export function ProfileSurface({
                     <Share2 className="mr-2 h-4 w-4" />
                     share
                   </Button>
+                  {actionSlot}
                 </div>
               </div>
             </div>
 
-            <CardContent className="flex flex-col gap-6 p-5 pt-7">
-              <div>
-                <p className="text-xs font-light uppercase tracking-[0.24em] text-accent/70">{profile.handle}</p>
-                <h2 className="mt-2 text-3xl font-light tracking-tight">{profile.username}</h2>
-                <p className="mt-3 text-base font-light leading-7 text-foreground-secondary break-words">{profile.bio}</p>
-              </div>
+            <CardContent className="flex flex-col gap-6 p-6 pt-5">
+              <p className="text-lg sm:text-xl font-light leading-8 text-foreground/90 italic">
+                "{profile.atmosphericLine}"
+              </p>
+            </CardContent>
+          </Card>
 
-              <div className="grid gap-3 md:grid-cols-3">
-                {profile.observations.map((signal) => (
-                  <SignalCard key={signal.label} {...signal} />
+          {/* SOCIAL ATMOSPHERE */}
+          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
+                <Sparkles className="h-4 w-4 text-accent" />
+                social atmosphere
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 pt-3">
+              <div className="flex flex-wrap gap-2.5">
+                {profile.socialAtmosphere.map((chip) => (
+                  <span
+                    key={chip}
+                    className="rounded-full border border-border/40 bg-background/30 px-4 py-2 text-sm font-light text-foreground-secondary shadow-sm"
+                  >
+                    {chip}
+                  </span>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="surface border-accent/25 bg-[linear-gradient(135deg,hsl(var(--accent)/0.08),hsl(var(--card)/0.44))] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04),0_22px_76px_-42px_hsl(var(--accent)/0.36)] backdrop-blur-sm">
-            <CardContent className="grid gap-3 p-5 md:grid-cols-[0.7fr_1.3fr]">
-              <div>
-                <p className="text-xs font-light uppercase tracking-[0.22em] text-accent/75">understanding depth</p>
-                <h3 className="mt-3 text-2xl font-light leading-8">{profile.understandingDepth.phase}</h3>
-              </div>
-              <p className="text-sm font-light leading-6 text-foreground-secondary">{profile.understandingDepth.line}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface border-accent/20 bg-[linear-gradient(160deg,hsl(var(--accent)/0.07),hsl(var(--card)/0.4)_55%,hsl(var(--background)/0.32))] backdrop-blur-sm">
+          {/* CONNECTION STYLE */}
+          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
             <CardHeader className="p-5 pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
-                <Sparkles className="h-4 w-4 text-accent" />
-                candor noticed
+                <UserRound className="h-4 w-4 text-accent" />
+                connection style
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 p-5 pt-3">
-              {profile.whatCandorNotices.map((item, index) => (
+              {profile.connectionStyle.map((style, i) => (
+                <p
+                  key={style}
+                  className="rounded-2xl border border-border/30 bg-background/20 px-4 py-3 text-sm font-light leading-6 text-foreground-secondary"
+                >
+                  {style}
+                </p>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* THINGS THEY LIGHT UP ABOUT */}
+          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
+                <Sparkles className="h-4 w-4 text-accent" />
+                things they light up about
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 p-5 pt-3">
+              {profile.thingsTheyLightUpAbout.map((item, index) => (
                 <p
                   key={item}
                   className={
                     index === 0
-                      ? "rounded-[22px] border border-accent/30 bg-background/28 px-4 py-4 text-base font-light leading-7 text-foreground"
-                      : "rounded-[22px] border border-border/35 bg-background/22 px-4 py-3 text-sm font-light leading-6 text-foreground-secondary"
+                      ? "rounded-[22px] border border-accent/25 bg-background/28 px-5 py-4 text-base font-light leading-7 text-foreground"
+                      : "rounded-2xl border border-border/30 bg-background/20 px-4 py-3 text-sm font-light leading-6 text-foreground-secondary"
                   }
                 >
                   {item}
@@ -136,127 +185,46 @@ export function ProfileSurface({
             </CardContent>
           </Card>
 
+          {/* CONVERSATION ENERGY */}
           <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
             <CardHeader className="p-5 pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
                 <UserRound className="h-4 w-4 text-accent" />
-                confirmed by you
+                conversation energy
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-5 pt-3">
-              <div className="rounded-[24px] border border-border/40 bg-background/24 p-5">
-                <div className="flex flex-col gap-1">
-                  {profile.coreIdentity.lines.map((line, index) => (
-                    <p
-                      key={`${line}-${index}`}
-                      className={
-                        index === 0
-                          ? "text-sm font-light text-accent/78"
-                          : "text-2xl font-light tracking-tight text-foreground"
-                      }
-                    >
-                      {line}
-                    </p>
-                  ))}
+            <CardContent className="grid gap-4 p-5 pt-3 sm:grid-cols-2">
+              {profile.conversationEnergy.map((energy) => (
+                <div key={energy} className="rounded-2xl border border-border/40 bg-background/30 p-4">
+                  <p className="text-sm font-light leading-6 text-foreground-secondary break-words">
+                    {energy}
+                  </p>
                 </div>
-
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {profile.coreIdentity.fragments.map((fragment) => (
-                    <span
-                      key={fragment}
-                      className="rounded-full border border-border/45 bg-background/30 px-3 py-1.5 text-xs font-light text-foreground-secondary"
-                    >
-                      {fragment}
-                    </span>
-                  ))}
-                </div>
-
-                <p className="mt-4 max-w-[38rem] text-sm font-light leading-6 text-foreground-secondary">
-                  {profile.coreIdentity.note}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
-            <CardHeader className="p-5 pb-2">
-              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
-                <Sparkles className="h-4 w-4 text-accent" />
-                relational atmosphere
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-6 p-5 pt-3 sm:grid-cols-2">
-              {profile.relationalSections.map((section) => (
-                <TextBlock key={section.title} title={section.title} items={section.items} />
               ))}
             </CardContent>
           </Card>
 
+          {/* PUBLIC PROFILE LINK (condensed) */}
           <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
-            <CardHeader className="p-5 pb-2">
-              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
-                <UserRound className="h-4 w-4 text-accent" />
-                social read
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-6 p-5 pt-3 sm:grid-cols-2">
-              <TextBlock title="conversation themes" items={profile.conversationalThemes} />
-              <TextBlock title="favorite gravity" items={profile.interests} />
-              <TextBlock title="social tendencies" items={profile.socialPreferences} />
-              <TextBlock title="lifestyle signals" items={profile.lifestylePreferences} />
-            </CardContent>
-          </Card>
-
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
-            <CardContent className="grid gap-6 p-5 md:grid-cols-[1fr_1.1fr]">
-              <div>
-                <p className="text-xs font-light uppercase tracking-[0.22em] text-foreground-secondary">alignment style</p>
-                <h3 className="mt-4 text-2xl font-light leading-8 break-words">{profile.alignmentStyle}</h3>
-                <div className="mt-4 flex flex-col gap-2">
-                  {profile.resonanceIndicators.map((item) => (
-                    <p key={item} className="text-sm font-light leading-6 text-foreground-secondary break-words">
-                      {item}
-                    </p>
-                  ))}
+            <CardContent className="p-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-light uppercase tracking-[0.22em] text-foreground-secondary mb-2">public profile</p>
+                  <Link href={profile.publicPath} className="flex items-center gap-2 text-sm font-light text-foreground transition-colors hover:text-accent">
+                    <span>{profile.publicPath}</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
                 </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={copyLink}
+                  className="h-8 rounded-full px-3 text-xs font-light text-foreground-secondary hover:bg-background/50 hover:text-foreground shrink-0"
+                >
+                  <Copy className="mr-1.5 h-3.5 w-3.5" />
+                  copy link
+                </Button>
               </div>
-              <div className="rounded-2xl border border-border/50 bg-background/35 p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs font-light uppercase tracking-[0.22em] text-foreground-secondary">public profile</p>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={copyLink}
-                    className="h-8 rounded-full px-3 text-xs font-light text-foreground-secondary hover:bg-background/50 hover:text-foreground"
-                  >
-                    <Copy className="mr-1.5 h-3.5 w-3.5" />
-                    copy link
-                  </Button>
-                </div>
-                <Link href={profile.publicPath} className="mt-4 flex items-center gap-2 text-base font-light text-foreground transition-colors hover:text-accent">
-                  <span>{profile.publicPath}</span>
-                  <ExternalLink className="h-4 w-4" />
-                </Link>
-                {publicMode ? (
-                  <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">made to be read, compared, and quietly shared.</p>
-                ) : (
-                  <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">this is the version of you candor can share without saying too much.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
-            <CardHeader className="p-5 pb-2">
-              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
-                <Sparkles className="h-4 w-4 text-accent" />
-                share cards
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 p-5 pt-3 md:grid-cols-2">
-              {profile.shareCards.map((card) => (
-                <ShareCard key={card.kind} title={card.title} lines={card.lines} kind={card.kind} />
-              ))}
             </CardContent>
           </Card>
         </motion.div>
@@ -279,62 +247,3 @@ export function ProfileSurface({
   );
 }
 
-function SignalCard({ label, value, meter }: { label: string; value: string; meter: number }) {
-  return (
-    <div className="min-w-0 rounded-2xl border border-border/45 bg-background/30 p-4">
-      <p className="text-[11px] font-light uppercase tracking-[0.2em] text-foreground-secondary">{label}</p>
-      <p className="mt-2 min-h-10 text-sm font-light leading-5 break-words">{value}</p>
-      <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-border/50">
-        <div className="h-full rounded-full bg-accent/70" style={{ width: `${meter}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function TextBlock({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div>
-      <p className="mb-3 text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary">{title}</p>
-      <div className="flex flex-col gap-2">
-        {items.map((item) => (
-          <p key={item} className="text-sm font-light leading-6 text-foreground-secondary break-words">
-            {item}
-          </p>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ShareCard({
-  kind,
-  title,
-  lines,
-}: {
-  kind: "story" | "post" | "x" | "banner";
-  title: string;
-  lines: string[];
-}) {
-  const sizeClass =
-    kind === "story"
-      ? "min-h-[260px]"
-      : kind === "banner"
-        ? "min-h-[160px] md:col-span-2"
-        : "min-h-[190px]";
-
-  return (
-    <div className={`surface soft-shadow rounded-[20px] border border-border/50 bg-background/35 p-5 ${sizeClass}`}>
-      <p className="text-[11px] font-light uppercase tracking-[0.22em] text-accent/75">{title}</p>
-      <div className="mt-5 flex flex-col gap-3">
-        {lines.map((line, index) => (
-          <p
-            key={`${line}-${index}`}
-            className={index === 0 ? "text-xl font-light leading-8 text-foreground" : "text-sm font-light leading-6 text-foreground-secondary"}
-          >
-            {line}
-          </p>
-        ))}
-      </div>
-    </div>
-  );
-}

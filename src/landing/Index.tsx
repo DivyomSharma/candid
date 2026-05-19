@@ -7,7 +7,6 @@ import UnlockSection from "@/components/UnlockSection";
 import MatchReveal from "@/components/MatchReveal";
 import AIChatPreview from "@/components/AIChatPreview";
 import UnderstandingSection from "@/components/UnderstandingSection";
-import ConversationsEvolveSection from "@/components/ConversationsEvolveSection";
 import ChemistrySection from "@/components/ChemistrySection";
 import AdaptiveSection from "@/components/AdaptiveSection";
 import CandorPhilosophySection from "@/components/CandorPhilosophySection";
@@ -29,7 +28,6 @@ export default function Index() {
       <ChatDemo />
 
       <UnderstandingSection />
-      <ConversationsEvolveSection />
 
       <UnlockSection />
       <MatchReveal />

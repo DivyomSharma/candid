@@ -1,8 +1,8 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, ArrowUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, ArrowUp, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +41,15 @@ export function CandorDmChat({ id }: { id: string }) {
   const shouldStickToBottomRef = useRef(true);
   const forceAutoscrollRef = useRef(false);
   const { composerRef, composerClearance, measureComposerClearance } = useCandorComposerClearance<HTMLFormElement>();
+
+  const sparks = [
+    "candor notices they're into obscure cinema... ask about a24?",
+    "candor noticed they prefer directness... ask a question they're avoiding?",
+    "candor sees they read late... ask about their 2am thoughts?",
+    "candor feels the pacing shifted... ask what they're distracted by?",
+    "candor notices they like slow openers... ask what they secretly hate?",
+  ];
+  const [sparkIndex, setSparkIndex] = useState(0);
 
   const isNearBottom = useCallback(() => {
     if (typeof window === "undefined") return true;
@@ -215,6 +224,32 @@ export function CandorDmChat({ id }: { id: string }) {
             </motion.div>
           ))}
           <div ref={scrollRef} className="h-8" style={{ scrollMarginBottom: `calc(${composerClearance}px + env(safe-area-inset-bottom, 0px))` }} />
+        </div>
+
+        <div 
+          className="fixed inset-x-0 z-20 flex justify-center px-6 transition-all duration-500 ease-in-out"
+          style={{ bottom: "calc(11.5rem + env(safe-area-inset-bottom, 0px))" }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.button
+              key={sparkIndex}
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.4 }}
+              type="button"
+              onClick={() => {
+                const prompt = sparks[sparkIndex];
+                const topic = prompt.split("... ask ")[1]?.replace("?", "") || "that";
+                setDraft(`what's your take on ${topic}?`);
+                setSparkIndex((prev) => (prev + 1) % sparks.length);
+              }}
+              className="flex items-center gap-2 rounded-full border border-accent/20 bg-background/50 px-4 py-2.5 text-xs font-light text-foreground-secondary backdrop-blur-md transition-all hover:border-accent/50 hover:text-foreground shadow-[0_4px_14px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_14px_-4px_hsl(var(--accent)/0.15)]"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-accent/80" />
+              <span>{sparks[sparkIndex]}</span>
+            </motion.button>
+          </AnimatePresence>
         </div>
 
         <form

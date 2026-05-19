@@ -9,6 +9,13 @@ export type CandorProfilePresentation = {
   publicPath: string;
   bannerTone: string;
   bio: string;
+  age: string | null;
+  city: string | null;
+  atmosphericLine: string;
+  socialAtmosphere: string[];
+  connectionStyle: string[];
+  thingsTheyLightUpAbout: string[];
+  conversationEnergy: string[];
   coreIdentity: {
     lines: string[];
     fragments: string[];
@@ -81,6 +88,36 @@ export function buildCandorProfilePresentation(input: {
     turns: memory?.turnCount ?? 0,
   });
 
+  const age = ageFromDob(personalProfile?.dob);
+  const city = personalProfile?.city || null;
+  const atmosphericLine = memory && memory.turnCount >= 3
+    ? `opens slowly, but moves toward ${values[0] || 'honesty'}.`
+    : "open, not seeking.";
+
+  const socialAtmosphere = dedupe([
+    memory?.relationalPatterns[0] ? soften(memory.relationalPatterns[0]) : "emotionally direct",
+    needs[0] ? `prefers ${softPhrase(needs[0])}` : "dry humor",
+    socialPreferences[0] ? soften(socialPreferences[0]) : "socially selective",
+    "night owl",
+    "slow opener"
+  ]).slice(0, 5);
+
+  const connectionStyle = dedupe([
+    "open, not seeking",
+    memory?.socialPreferences[0] ? soften(memory.socialPreferences[0]) : "playful first, deeper later",
+    values[0] ? `values ${values[0]}` : "values consistency",
+    "emotionally available"
+  ]).slice(0, 4);
+
+  const thingsTheyLightUpAbout = interests.length ? interests.map(themeLabel) : ["terrible late-night food", "emotionally destructive cinema", "obscure music"];
+
+  const conversationEnergy = [
+    interests[0] ? `gets analytical when talking about ${themeLabel(interests[0])}` : "gets analytical when engaged",
+    socialPreferences[0] ? soften(socialPreferences[0]) : "avoids shallow texting",
+    "replies faster late at night",
+    needs[0] ? `becomes expressive after ${softPhrase(needs[0])}` : "becomes expressive after comfort"
+  ];
+
   return {
     username,
     handle,
@@ -91,6 +128,13 @@ export function buildCandorProfilePresentation(input: {
       memory && memory.turnCount >= 3
         ? `candor reads a mix of ${values[0]}, ${themeLabel(interests[0] ?? themes[0] ?? "quiet intensity")}, and ${softPhrase(needs[0])}.`
         : "candor is still reading the shape of this person.",
+    age: age ? String(age) : null,
+    city,
+    atmosphericLine,
+    socialAtmosphere,
+    connectionStyle,
+    thingsTheyLightUpAbout,
+    conversationEnergy,
     coreIdentity,
     understandingDepth,
     whatCandorNotices: notices,

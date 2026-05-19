@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { ProfileSurface } from "@/components/candor/ProfileSurface";
-import { MemoryControls } from "@/components/candor/MemoryControls";
 import { PersonalProfileEditor } from "@/components/candor/PersonalProfileEditor";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildCandorProfilePresentation } from "@/lib/candor/profile";
@@ -31,6 +31,7 @@ export function CandorProfile() {
   const [personalProfile, setPersonalProfile] = useState<CandorPersonalProfile | null>(null);
   const [access, setAccess] = useState<CandorAccessState | null>(null);
   const [hasLoadedMemory, setHasLoadedMemory] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -95,6 +96,7 @@ export function CandorProfile() {
         profile={profile}
         heading="your candor profile"
         subheading={access?.narrative ?? "small signals up front. the rest should arrive naturally, through time and conversation."}
+        onEditClick={() => setEditorOpen(true)}
         actionSlot={
           <Button
             type="button"
@@ -109,13 +111,23 @@ export function CandorProfile() {
           </Button>
         }
       />
-      <section className="relative z-10 mx-auto -mt-20 max-w-[680px] px-6">
-        <PersonalProfileEditor
-          profile={personalProfile}
-          onSaved={(nextProfile) => setPersonalProfile(nextProfile)}
-        />
-        <MemoryControls />
-      </section>
+
+      <Sheet open={editorOpen} onOpenChange={setEditorOpen}>
+        <SheetContent side="bottom" className="h-[90vh] sm:h-[85vh] rounded-t-[2rem] border-border/40 surface backdrop-blur-xl p-0">
+          <div className="h-full overflow-y-auto px-6 py-8">
+            <SheetHeader className="mb-6">
+              <SheetTitle className="text-2xl font-light">edit your details</SheetTitle>
+            </SheetHeader>
+            <PersonalProfileEditor
+              profile={personalProfile}
+              onSaved={(nextProfile) => {
+                setPersonalProfile(nextProfile);
+                setEditorOpen(false);
+              }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
