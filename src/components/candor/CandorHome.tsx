@@ -11,6 +11,7 @@ import { BottomNav } from "@/components/candor/BottomNav";
 import { ChoiceTapCard } from "@/components/candor/ChoiceTapCard";
 import { InterestSpotlightCard } from "@/components/candor/InterestSpotlightCard";
 import { InsightSwipeCard } from "@/components/candor/InsightSwipeCard";
+import { RelationalContinuityPanel } from "@/components/candor/RelationalContinuityPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { CANDOR_THREAD_ID, candorThreadPresenceStorageKey, candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorPresets } from "@/lib/candor/presets";
@@ -34,7 +35,7 @@ const defaultEntry: CandorEntryPayload = {
   choices: [
     {
       id: "comfort-vs-chaos",
-      prompt: "pick a side...\ncomfort movie or emotionally devastating masterpiece",
+      prompt: "tonight's side pick\ncomfort movie or emotionally destructive masterpiece",
       optionA: "comfort movie every time",
       optionB: "wreck me a little",
       patternA: "comfort-seeking",
@@ -42,7 +43,7 @@ const defaultEntry: CandorEntryPayload = {
     },
     {
       id: "stories-or-winning",
-      prompt: "pick a side...\nstory games or competitive games",
+      prompt: "chemistry check\nstory games or competitive games",
       optionA: "give me choices that matter",
       optionB: "i want the rush",
       patternA: "story-gravity",
@@ -50,7 +51,7 @@ const defaultEntry: CandorEntryPayload = {
     },
     {
       id: "understood-or-loved",
-      prompt: "hot take or valid...\npeople care more about being understood than being loved",
+      prompt: "hot take or valid\npeople care more about being understood than being liked",
       optionA: "hot take",
       optionB: "honestly true",
       patternA: "pushback-first",
@@ -374,10 +375,10 @@ export function CandorHome() {
           <p className="mb-4 text-sm font-light text-foreground-secondary">
             {isSignedIn
               ? `hey ${user?.email?.split("@")[0]?.toLowerCase() ?? "there"}`
-              : "a place for the unsaid parts"}
+              : "the thread continues quietly"}
           </p>
           <h1 className="max-w-[11ch] text-4xl font-light leading-[0.96] tracking-tight md:text-[4.5rem]">
-            what&apos;s been on your mind lately?
+            what feels alive tonight?
           </h1>
         </motion.div>
 
@@ -484,6 +485,14 @@ export function CandorHome() {
             </motion.div>
           ) : null}
         </AnimatePresence>
+
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.55 }}
+        >
+          <RelationalContinuityPanel isSignedIn={isSignedIn} />
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 14 }}

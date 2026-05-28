@@ -22,12 +22,11 @@ export async function getPublicIdentityForCandorUserId(userId: string): Promise<
   const authId = data?.clerk_id;
 
   const profile = await getCandorPersonalProfile(userId).catch(() => null);
-  if (profile?.username || profile?.displayName) {
-    return {
-      username: cleanDisplayName(profile.displayName ?? profile.username),
-      handle: handleFromUsername(profile.username ?? profile.displayName),
-    };
-  }
+  const profileIdentity = publicIdentityFromProfile({
+    username: profile?.username,
+    display_name: profile?.displayName,
+  });
+  if (profileIdentity) return profileIdentity;
 
   if (!authId) return { username: null, handle: null };
   return getPublicIdentityFromAuthId(authId);
@@ -35,11 +34,25 @@ export async function getPublicIdentityForCandorUserId(userId: string): Promise<
 
 export async function getPublicIdentitiesForCandorUserIds(userIds: string[]) {
   const uniqueIds = [...new Set(userIds)];
+  if (uniqueIds.length === 0) return new Map<string, PublicCandorIdentity>();
+
   const supabaseAdmin = getSupabaseAdmin();
-  const { data } = await supabaseAdmin.from("candor_users").select("id, clerk_id").in("id", uniqueIds);
+  const [{ data: users }, { data: profiles }] = await Promise.all([
+    supabaseAdmin.from("candor_users").select("id, clerk_id").in("id", uniqueIds),
+    supabaseAdmin.from("candor_profiles").select("user_id, username, display_name").in("user_id", uniqueIds),
+  ]);
+
+  const profileMap = new Map(
+    (profiles ?? []).map((row) => [row.user_id as string, publicIdentityFromProfile(row)] as const),
+  );
 
   const entries = await Promise.all(
-    (data ?? []).map(async (row) => [row.id as string, await getPublicIdentityFromAuthId(row.clerk_id as string)] as const),
+    (users ?? []).map(async (row) => {
+      const userId = row.id as string;
+      const profileIdentity = profileMap.get(userId);
+      if (profileIdentity) return [userId, profileIdentity] as const;
+      return [userId, await getPublicIdentityFromAuthId(row.clerk_id as string)] as const;
+    }),
   );
 
   return new Map(entries);
@@ -100,6 +113,18 @@ function firstString(...values: unknown[]) {
 function cleanDisplayName(value: string | null) {
   if (!value) return null;
   return value.replace(/\s+/g, " ").trim().slice(0, 42);
+}
+
+export function publicIdentityFromProfile(profile: { username?: unknown; display_name?: unknown } | null | undefined) {
+  const username = firstString(profile?.username);
+  const displayName = firstString(profile?.display_name, username);
+  const handle = handleFromUsername(username ?? displayName);
+  if (!displayName && !handle) return null;
+
+  return {
+    username: cleanDisplayName(displayName),
+    handle,
+  } satisfies PublicCandorIdentity;
 }
 
 function emailName(email: string | null | undefined) {

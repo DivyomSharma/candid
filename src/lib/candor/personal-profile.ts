@@ -52,11 +52,11 @@ export function normalizeCandorPersonalProfile(value: unknown): CandorPersonalPr
 
   return {
     username: cleanUsername(readString(row.username)) ?? null,
-    displayName: cleanText(readString(row.display_name), 42),
+    displayName: cleanText(readString(row.display_name, row.displayName), 42),
     dob: cleanDate(readString(row.dob)),
-    genderIdentity: cleanText(readString(row.gender_identity), 42),
+    genderIdentity: cleanText(readString(row.gender_identity, row.genderIdentity), 42),
     city: cleanText(readString(row.city), 56),
-    relationshipPreference: cleanText(readString(row.relationship_preference), 56),
+    relationshipPreference: cleanText(readString(row.relationship_preference, row.relationshipPreference), 56),
   };
 }
 
@@ -80,8 +80,8 @@ export function ageFromDob(dob: string | null | undefined) {
   return age >= 0 && age < 130 ? age : null;
 }
 
-function readString(value: unknown) {
-  return typeof value === "string" ? value : null;
+function readString(...values: unknown[]) {
+  return values.find((value): value is string => typeof value === "string") ?? null;
 }
 
 function cleanText(value: string | null | undefined, maxLength: number) {

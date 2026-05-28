@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Copy, ExternalLink, Share2, Sparkles, UserRound } from "lucide-react";
+import { ExternalLink, Share2, Sparkles, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -52,18 +52,16 @@ export function ProfileSurface({
     await navigator.clipboard.writeText(fullUrl);
   };
 
-  const copyLink = async () => {
-    await navigator.clipboard.writeText(fullUrl);
-  };
-
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-hidden px-4 pb-32 pt-16 sm:px-6 sm:pt-20">
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[700px] flex-col gap-6 sm:gap-8">
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-          <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">{heading}</h1>
-          <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">{subheading}</p>
-        </motion.div>
+        {publicMode ? (
+          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+            <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">{heading}</h1>
+            <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">{subheading}</p>
+          </motion.div>
+        ) : null}
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="contents">
           {/* HERO PROFILE CARD */}
@@ -88,6 +86,15 @@ export function ProfileSurface({
                 </div>
                 
                 <div className="flex items-center gap-2 self-start sm:self-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={shareProfile}
+                    className="rounded-full border-border/50 bg-background/50 px-4 font-light backdrop-blur-md hover:bg-accent/10"
+                  >
+                    <Share2 className="mr-2 h-4 w-4" />
+                    share
+                  </Button>
                   {onEditClick && (
                     <Button
                       type="button"
@@ -98,15 +105,6 @@ export function ProfileSurface({
                       edit
                     </Button>
                   )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={shareProfile}
-                    className="rounded-full border-border/50 bg-background/50 px-4 font-light backdrop-blur-md hover:bg-accent/10"
-                  >
-                    <Share2 className="mr-2 h-4 w-4" />
-                    share
-                  </Button>
                   {actionSlot}
                 </div>
               </div>
@@ -116,6 +114,9 @@ export function ProfileSurface({
               <p className="text-lg sm:text-xl font-light leading-8 text-foreground/90 italic">
                 "{profile.atmosphericLine}"
               </p>
+              {!publicMode ? (
+                <p className="text-sm font-light leading-6 text-foreground-secondary">{subheading}</p>
+              ) : null}
             </CardContent>
           </Card>
 
@@ -204,40 +205,34 @@ export function ProfileSurface({
             </CardContent>
           </Card>
 
-          {/* PUBLIC PROFILE LINK (condensed) */}
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
-            <CardContent className="p-5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-light uppercase tracking-[0.22em] text-foreground-secondary mb-2">public profile</p>
-                  <Link href={profile.publicPath} className="flex items-center gap-2 text-sm font-light text-foreground transition-colors hover:text-accent">
-                    <span>{profile.publicPath}</span>
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={copyLink}
-                  className="h-8 rounded-full px-3 text-xs font-light text-foreground-secondary hover:bg-background/50 hover:text-foreground shrink-0"
-                >
-                  <Copy className="mr-1.5 h-3.5 w-3.5" />
-                  copy link
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {!publicMode ? (
+            <Link
+              href="/memory-controls"
+              className="text-right text-xs font-light uppercase tracking-[0.18em] text-foreground-secondary/60 transition hover:text-foreground"
+            >
+              privacy & continuity
+            </Link>
+          ) : null}
         </motion.div>
 
         {!publicMode ? (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
             <Button
               type="button"
               variant="ghost"
               onClick={() => router.push(profile.publicPath)}
               className="rounded-full px-4 font-light text-foreground-secondary hover:bg-background/40 hover:text-foreground"
             >
-              preview public profile
+              <ExternalLink className="mr-2 h-4 w-4" />
+              preview
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => router.push("/memory-controls")}
+              className="rounded-full px-4 font-light text-foreground-secondary hover:bg-background/40 hover:text-foreground"
+            >
+              privacy & continuity
             </Button>
           </div>
         ) : null}

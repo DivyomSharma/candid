@@ -2,20 +2,12 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import InteractivePreview from "@/components/InteractivePreview";
-import ChatDemo from "@/components/ChatDemo";
-import UnlockSection from "@/components/UnlockSection";
 import MatchReveal from "@/components/MatchReveal";
-import AIChatPreview from "@/components/AIChatPreview";
 import UnderstandingSection from "@/components/UnderstandingSection";
 import ChemistrySection from "@/components/ChemistrySection";
-import AdaptiveSection from "@/components/AdaptiveSection";
-import CandorPhilosophySection from "@/components/CandorPhilosophySection";
-import MemoryPhilosophySection from "@/components/MemoryPhilosophySection";
 import PrivacySection from "@/components/PrivacySection";
-import TrustSignalsSection from "@/components/TrustSignalsSection";
 import ContinuityTrialSection from "@/components/ContinuityTrialSection";
 import SubscriptionSection from "@/components/SubscriptionSection";
-import EmotionalSection from "@/components/EmotionalSection";
 import WaitlistSection from "@/components/WaitlistSection";
 
 export default function Index() {
@@ -25,26 +17,12 @@ export default function Index() {
       <HeroSection />
 
       <InteractivePreview />
-      <ChatDemo />
-
       <UnderstandingSection />
-
-      <UnlockSection />
-      <MatchReveal />
-      <AIChatPreview />
-
       <ChemistrySection />
-      <AdaptiveSection />
-      <CandorPhilosophySection />
-
-      <MemoryPhilosophySection />
-      <PrivacySection />
-      <TrustSignalsSection />
-
+      <MatchReveal />
       <ContinuityTrialSection />
       <SubscriptionSection />
-
-      <EmotionalSection />
+      <PrivacySection />
       <WaitlistSection />
 
       <footer className="space-y-4 py-10 text-center text-xs text-foreground-secondary/40 font-light">

@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import TrustPageShell from "@/components/TrustPageShell";
 
 export const metadata: Metadata = {
-  title: "Memory Controls",
-  description: "How continuity and memory should be controlled inside Candor.",
+  title: "Privacy & Continuity",
+  description: "How continuity, memory, and privacy should be controlled inside Candor.",
 };
 
 export default function MemoryControlsPage() {
   return (
     <TrustPageShell
-      eyebrow="memory controls"
-      title="continuity should stay in your control"
-      intro="candor works best when users understand what is being retained, why it matters, and how to reset or soften that continuity if they want to."
+      eyebrow="settings"
+      title="privacy & continuity"
+      intro="candor works best when continuity feels chosen: clear enough to trust, soft enough to revise, and never louder than the connection itself."
     >
       <section className="space-y-3">
         <h2 className="text-lg font-medium text-foreground">core expectations</h2>

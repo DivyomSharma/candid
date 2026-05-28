@@ -94,7 +94,7 @@ export function CandorProfile() {
     <div className="gradient-bg grain relative min-h-screen overflow-hidden pb-28">
       <ProfileSurface
         profile={profile}
-        heading="your candor profile"
+        heading="you, in context"
         subheading={access?.narrative ?? "small signals up front. the rest should arrive naturally, through time and conversation."}
         onEditClick={() => setEditorOpen(true)}
         actionSlot={

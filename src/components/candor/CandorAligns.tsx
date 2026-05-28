@@ -39,6 +39,8 @@ type AlignsResponse = {
   aligns: Align[];
 };
 
+const resonanceProgression = ["distant", "familiar", "natural flow", "magnetic", "candid"] as const;
+
 export function CandorAligns() {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
@@ -123,6 +125,8 @@ export function CandorAligns() {
             </CardContent>
           </Card>
         )}
+
+        {!isSearching && ready ? <AlignTierProgression aligns={data?.aligns ?? []} /> : null}
 
         {!isSearching && !ready && (
           <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
@@ -247,6 +251,61 @@ function opennessLanguage(align: Align) {
   if (align.theirDmOn) return "they opened the door first";
   if (align.myDmOn) return "the door is open on your side";
   return "open the door when it feels easy";
+}
+
+function AlignTierProgression({ aligns }: { aligns: Align[] }) {
+  const highest = aligns.reduce<ReturnType<typeof resonanceLabel>>((current, align) => {
+    const next = resonanceLabel(align.score);
+    return resonanceProgression.indexOf(next) > resonanceProgression.indexOf(current) ? next : current;
+  }, "distant");
+
+  return (
+    <Card className="surface relative overflow-hidden border-border/45 bg-card/40 backdrop-blur-sm">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--background)/0.12),hsl(var(--accent)/0.08),hsl(var(--glow)/0.07))]" />
+      <CardContent className="relative flex flex-col gap-5 p-5">
+        <div>
+          <p className="text-xs font-light uppercase tracking-[0.18em] text-foreground-secondary">align atmosphere</p>
+          <p className="mt-2 text-sm font-light leading-6 text-foreground-secondary">
+            candor lets stronger connections feel warmer over time, without turning them into scores.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-5">
+          {resonanceProgression.map((tier, index) => {
+            const active = resonanceProgression.indexOf(highest) >= index;
+            const current = highest === tier;
+            return (
+              <motion.div
+                key={tier}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: active ? 1 : 0.42, y: 0 }}
+                transition={{ duration: 0.35, delay: index * 0.04 }}
+                className={`rounded-2xl border px-3 py-4 ${
+                  current
+                    ? "border-accent/45 bg-accent/10 shadow-[0_0_34px_-20px_hsl(var(--accent)/0.8)]"
+                    : active
+                      ? "border-accent/25 bg-background/20"
+                      : "border-border/35 bg-background/10"
+                }`}
+              >
+                <p className="text-sm font-light text-foreground">{tier}</p>
+                <p className="mt-3 text-xs font-light leading-5 text-foreground-secondary">
+                  {tierAtmosphere(tier)}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function tierAtmosphere(tier: ReturnType<typeof resonanceLabel>) {
+  if (tier === "candid") return "lived-in, precise, unusually easy";
+  if (tier === "magnetic") return "warmth gathers around the thread";
+  if (tier === "natural flow") return "conversation can move without pushing";
+  if (tier === "familiar") return "a quiet pattern is recognizable";
+  return "a first signal, still at a distance";
 }
 
 function SearchingLine() {

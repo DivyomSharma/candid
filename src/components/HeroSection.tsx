@@ -30,9 +30,9 @@ export default function HeroSection() {
         className="text-center max-w-2xl mx-auto"
       >
         <h1 className="text-4xl md:text-6xl font-light tracking-tight leading-tight mb-6">
-          No swipes.{" "}
+          Understanding before matching.{" "}
           <br className="hidden md:block" />
-          Just honest conversations.
+          A quieter way to meet.
         </h1>
 
         <motion.p
@@ -41,7 +41,7 @@ export default function HeroSection() {
           transition={{ delay: 0.4, duration: 0.8 }}
           className="text-foreground-secondary text-lg md:text-xl font-light max-w-lg mx-auto mb-10"
         >
-          A social layer built around continuity, chemistry, and emotional rhythm.
+          Candor carries social rhythm, chemistry, and context gently, so connection can unfold without performance.
         </motion.p>
 
         <motion.div
@@ -58,7 +58,7 @@ export default function HeroSection() {
             Enter Candor
           </Link>
           <p className="mt-4 text-xs font-light tracking-[0.08em] text-foreground-secondary/60">
-            every new profile begins with seven days of continuity.
+            seven days of full continuity are included.
           </p>
         </motion.div>
       </motion.div>
