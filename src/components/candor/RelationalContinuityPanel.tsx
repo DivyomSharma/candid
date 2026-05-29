@@ -13,6 +13,7 @@ import {
   TONIGHTS_THREADS,
   WEEKLY_REFLECTIONS,
 } from "@/lib/candor/relational-layer";
+import type { CandorContinuity } from "@/lib/candor/continuity";
 
 type RelationalContinuityPanelProps = {
   isSignedIn: boolean;
@@ -27,6 +28,7 @@ export function RelationalContinuityPanel({ isSignedIn }: RelationalContinuityPa
   const [sentSignal, setSentSignal] = useState<string | null>(null);
   const [hour, setHour] = useState<number | null>(null);
   const [activeModule, setActiveModule] = useState<"quiet_signal" | "social_spark" | "small_signal" | null>(null);
+  const [continuity, setContinuity] = useState<CandorContinuity | null>(null);
 
   useEffect(() => {
     const updateHour = () => setHour(new Date().getHours());
@@ -40,13 +42,25 @@ export function RelationalContinuityPanel({ isSignedIn }: RelationalContinuityPa
       ? (["quiet_signal", "social_spark", "small_signal"] as const)
       : (["quiet_signal", "social_spark"] as const);
     setActiveModule(modules[Math.floor(Math.random() * modules.length)]);
+    
+    if (isSignedIn) {
+      fetch("/api/candor/me/continuity")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.continuity) setContinuity(data.continuity);
+        })
+        .catch(console.error);
+    }
   }, [isSignedIn]);
 
   const isLateNight = hour === null ? false : hour >= 21 || hour < 4;
-  const thread = useMemo(() => TONIGHTS_THREADS[new Date().getDate() % TONIGHTS_THREADS.length], []);
-  const game = useMemo(() => CHEMISTRY_GAMES[new Date().getDay() % CHEMISTRY_GAMES.length], []);
+  const fallbackThread = useMemo(() => TONIGHTS_THREADS[new Date().getDate() % TONIGHTS_THREADS.length], []);
+  const fallbackGame = useMemo(() => CHEMISTRY_GAMES[new Date().getDay() % CHEMISTRY_GAMES.length], []);
   const gravitySignals = useMemo(() => SOCIAL_GRAVITY_SIGNALS.slice(0, 3), []);
-  const weeklyReflection = WEEKLY_REFLECTIONS[new Date().getDay() % WEEKLY_REFLECTIONS.length];
+  
+  const thread = continuity?.tonightsThread ?? fallbackThread;
+  const game = continuity?.chemistryGame ?? fallbackGame;
+  const weeklyReflection = continuity?.weeklyReflection ?? WEEKLY_REFLECTIONS[new Date().getDay() % WEEKLY_REFLECTIONS.length];
 
   const submitAnswer = () => {
     if (!answer.trim()) return;
