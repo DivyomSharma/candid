@@ -11,25 +11,10 @@ import { BottomNav } from "@/components/candor/BottomNav";
 import { ChoiceTapCard } from "@/components/candor/ChoiceTapCard";
 import { InterestSpotlightCard } from "@/components/candor/InterestSpotlightCard";
 import { InsightSwipeCard } from "@/components/candor/InsightSwipeCard";
-import { RelationalContinuityPanel } from "@/components/candor/RelationalContinuityPanel";
+import { ScenarioPanel } from "@/components/candor/ScenarioPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { CANDOR_THREAD_ID, candorThreadPresenceStorageKey, candorThreadStorageKey } from "@/lib/candor/thread";
-import type { CandorPresets } from "@/lib/candor/presets";
 import type { CandorEntryPayload } from "@/lib/candor/types";
-
-const defaultPresets: CandorPresets = {
-  chips: [
-    "emotionally devastating films",
-    "games where choices matter",
-    "video essays at 2am",
-    "replaying conversations",
-    "internet rabbit holes",
-  ],
-  scenario: {
-    title: "okay, maybe this",
-    lines: ["a story that wrecked you", "something socially weird lately", "a topic you keep returning to"],
-  },
-};
 
 const defaultEntry: CandorEntryPayload = {
   choices: [
@@ -82,9 +67,7 @@ export function CandorHome() {
   const [message, setMessage] = useState("");
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState("");
-  const [presets, setPresets] = useState<CandorPresets>(defaultPresets);
   const [entry, setEntry] = useState<CandorEntryPayload>(defaultEntry);
-  const [isLoadingPresets, setIsLoadingPresets] = useState(false);
   const [isLoadingEntry, setIsLoadingEntry] = useState(false);
   const [entryPhase, setEntryPhase] = useState<EntryPhase>("choices");
   const [choiceIndex, setChoiceIndex] = useState(0);
@@ -97,24 +80,6 @@ export function CandorHome() {
   const router = useRouter();
   const interactionStartedAt = useRef(Date.now());
 
-  useEffect(() => {
-    let cancelled = false;
-    setIsLoadingPresets(isSignedIn);
-
-    fetch("/api/candor/me/presets", { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((payload: { presets?: CandorPresets } | null) => {
-        if (!cancelled && payload?.presets) setPresets(payload.presets);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setIsLoadingPresets(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isSignedIn]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -488,73 +453,10 @@ export function CandorHome() {
 
         <motion.div
           initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.55 }}
-        >
-          <RelationalContinuityPanel isSignedIn={isSignedIn} />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: showEntryLayer ? 0.34 : 1, y: 0, scale: showEntryLayer ? 0.992 : 1 }}
           transition={{ delay: 0.12, duration: 0.7 }}
-          className="flex flex-wrap gap-2"
         >
-          {isLoadingPresets ? (
-            <PresetChipLoading />
-          ) : (
-            presets.chips.map((chip, index) => (
-              <motion.button
-                type="button"
-                key={`${chip}-${index}`}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.28, delay: index * 0.03 }}
-                onClick={() => selectPrompt(chip)}
-                className="max-w-full rounded-full border border-border/50 px-4 py-2 text-left text-sm font-light text-foreground-secondary transition-colors hover:border-accent/70 hover:text-foreground"
-              >
-                <span className="block max-w-[16rem] break-words">{chip}</span>
-              </motion.button>
-            ))
-          )}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: showEntryLayer ? 0.34 : 1, y: 0, scale: showEntryLayer ? 0.994 : 1 }}
-          transition={{ delay: 0.2, duration: 0.7 }}
-        >
-          <Card className="surface soft-shadow border-border/50 bg-card/60 backdrop-blur-md shadow-[inset_0_1px_0_hsl(var(--foreground)/0.03),0_22px_70px_-34px_hsl(var(--glow)/0.2)]">
-            <CardContent className="flex flex-col gap-4 p-5">
-              <div className="flex items-center gap-2 text-xs font-light text-foreground-secondary">
-                <Sparkles data-icon="inline-start" />
-                or start here
-              </div>
-              {isLoadingPresets ? (
-                <PresetCardLoading />
-              ) : (
-                <motion.div
-                  key={presets.scenario.title}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.32 }}
-                  className="flex flex-col gap-3"
-                >
-                  <h2 className="text-lg font-light leading-7 break-words">{presets.scenario.title}</h2>
-                  {presets.scenario.lines.map((line, index) => (
-                    <button
-                      type="button"
-                      key={`${line}-${index}`}
-                      onClick={() => selectPrompt(line)}
-                      className="text-left text-sm font-light leading-6 text-foreground-secondary transition-colors hover:text-foreground"
-                    >
-                      <span className="block break-words">{line}</span>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
+          <ScenarioPanel isSignedIn={isSignedIn} onScenarioSelect={selectPrompt} />
         </motion.div>
 
         <motion.form
@@ -605,22 +507,6 @@ export function CandorHome() {
   );
 }
 
-function PresetChipLoading() {
-  return (
-    <>
-      {[0, 1, 2, 3, 4].map((item) => (
-        <motion.div
-          key={item}
-          animate={{ opacity: [0.28, 0.58, 0.28] }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut", delay: item * 0.08 }}
-          className="h-9 rounded-full border border-border/35 bg-foreground/10"
-          style={{ width: `${118 + item * 14}px` }}
-        />
-      ))}
-    </>
-  );
-}
-
 function PresetCardLoading() {
   return (
     <div className="flex flex-col gap-3">
@@ -636,3 +522,4 @@ function PresetCardLoading() {
     </div>
   );
 }
+
