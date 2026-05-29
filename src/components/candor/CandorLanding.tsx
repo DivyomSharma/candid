@@ -11,7 +11,7 @@ export default function CandorLanding() {
   }, []);
 
   return (
-    <main className="gradient-bg grain relative isolate min-h-screen overflow-hidden">
+    <main className="gradient-bg relative isolate min-h-screen overflow-hidden">
       <div className="relative z-10">
         <Index />
       </div>
