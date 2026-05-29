@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, MessageSquare, HandHeart } from "lucide-react";
+import { Sparkles, MessageSquare, HandHeart, Shuffle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CandorScenario } from "@/lib/candor/scenarios";
 
@@ -13,6 +13,7 @@ type ScenarioPanelProps = {
 
 export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelProps) {
   const [scenarios, setScenarios] = useState<CandorScenario[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -51,60 +52,67 @@ export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelPro
     onScenarioSelect(message);
   };
 
+  const handleShuffle = () => {
+    setCurrentIndex((prev) => (prev + 1) % scenarios.length);
+  };
+
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="h-32 w-full animate-pulse rounded-2xl bg-card/40 border border-border/20" />
-        ))}
+      <div className="flex flex-col gap-4 w-full">
+        <div className="h-40 w-full animate-pulse rounded-2xl bg-card/40 border border-border/20" />
       </div>
     );
   }
 
   if (scenarios.length === 0) return null;
 
+  const scenario = scenarios[currentIndex];
+  let Icon = Sparkles;
+  if (scenario.type === "would_you_rather") Icon = HandHeart;
+  if (scenario.type === "creative_argument") Icon = MessageSquare;
+
   return (
-    <div className="flex flex-col gap-5">
-      <AnimatePresence>
-        {scenarios.map((scenario, index) => {
-          let Icon = Sparkles;
-          if (scenario.type === "would_you_rather") Icon = HandHeart;
-          if (scenario.type === "creative_argument") Icon = MessageSquare;
-
-          return (
-            <motion.div
-              key={scenario.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.4 }}
+    <div className="flex flex-col gap-5 w-full">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={scenario.id}
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 12 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="surface border-border/45 bg-card/38 backdrop-blur-md transition-colors hover:border-accent/30 relative">
+            <button
+              onClick={handleShuffle}
+              className="absolute right-4 top-4 p-2 text-foreground-secondary hover:text-foreground hover:bg-background/40 rounded-full transition-colors"
+              title="Next scenario"
             >
-              <Card className="surface border-border/45 bg-card/38 backdrop-blur-md transition-colors hover:border-accent/30">
-                <CardContent className="flex flex-col gap-4 p-5">
-                  <div className="flex items-center gap-2 text-xs font-light uppercase tracking-[0.18em] text-accent">
-                    <Icon className="h-3.5 w-3.5" />
-                    {scenario.title}
-                  </div>
-                  
-                  <p className="text-base font-light leading-7 text-foreground">
-                    {scenario.prompt}
-                  </p>
+              <Shuffle className="h-4 w-4" />
+            </button>
+            <CardContent className="flex flex-col gap-4 p-5">
+              <div className="flex items-center gap-2 text-xs font-light uppercase tracking-[0.18em] text-accent">
+                <Icon className="h-3.5 w-3.5" />
+                {scenario.title}
+              </div>
+              
+              <p className="text-base font-light leading-7 text-foreground pr-8">
+                {scenario.prompt}
+              </p>
 
-                  <div className="grid grid-cols-2 gap-3 mt-1">
-                    {scenario.options.map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => handleSelect(scenario, option)}
-                        className="rounded-xl border border-border/45 bg-background/25 px-4 py-3 text-sm font-light text-foreground-secondary transition-all hover:bg-accent/10 hover:border-accent/40 hover:text-foreground active:scale-[0.98]"
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
+              <div className="grid grid-cols-2 gap-3 mt-1">
+                {scenario.options.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleSelect(scenario, option)}
+                    className="rounded-xl border border-border/45 bg-background/25 px-4 py-3 text-sm font-light text-foreground-secondary transition-all hover:bg-accent/10 hover:border-accent/40 hover:text-foreground active:scale-[0.98]"
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </AnimatePresence>
     </div>
   );

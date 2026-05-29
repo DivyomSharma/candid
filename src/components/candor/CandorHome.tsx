@@ -1,125 +1,32 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
-import { ChoiceTapCard } from "@/components/candor/ChoiceTapCard";
-import { InterestSpotlightCard } from "@/components/candor/InterestSpotlightCard";
-import { InsightSwipeCard } from "@/components/candor/InsightSwipeCard";
 import { ScenarioPanel } from "@/components/candor/ScenarioPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { CANDOR_THREAD_ID, candorThreadPresenceStorageKey, candorThreadStorageKey } from "@/lib/candor/thread";
-import type { CandorEntryPayload } from "@/lib/candor/types";
 
-const defaultEntry: CandorEntryPayload = {
-  choices: [
-    {
-      id: "comfort-vs-chaos",
-      prompt: "tonight's side pick\ncomfort movie or emotionally destructive masterpiece",
-      optionA: "comfort movie every time",
-      optionB: "wreck me a little",
-      patternA: "comfort-seeking",
-      patternB: "intensity-seeking",
-    },
-    {
-      id: "stories-or-winning",
-      prompt: "chemistry check\nstory games or competitive games",
-      optionA: "give me choices that matter",
-      optionB: "i want the rush",
-      patternA: "story-gravity",
-      patternB: "competitive-energy",
-    },
-    {
-      id: "understood-or-loved",
-      prompt: "hot take or valid\npeople care more about being understood than being liked",
-      optionA: "hot take",
-      optionB: "honestly true",
-      patternA: "pushback-first",
-      patternB: "recognition-seeking",
-    },
-  ],
-  spotlight: {
-    id: "spotlight-obsession",
-    prompt: "okay serious question\nwhat topic accidentally consumes your entire attention",
-    options: ["movies", "games", "music", "psychology", "philosophy", "internet culture"],
-    interestTags: ["movies", "games", "music", "psychology", "philosophy", "internet culture"],
-  },
-  insights: [
-    { id: "replay", line: "you probably replay conversations later", insightType: "you-probably" },
-    { id: "tone", line: "you notice small tone shifts before most people do", insightType: "social-signal" },
-    { id: "care", line: "you act casual about things that actually stay with you", insightType: "contrast" },
-  ],
-  initiative: {
-    line: "i have a feeling your algorithm knows too much about you already",
-    status: "unread",
-  },
-};
-
-type EntryPhase = "choices" | "spotlight" | "pause" | "insights" | "clearer" | "done";
 type PreviewMessage = { role: "user" | "ai"; content: string };
+
+const defaultInitiativeLine = "i have a feeling your algorithm knows too much about you already";
 
 export function CandorHome() {
   const [message, setMessage] = useState("");
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState("");
-  const [entry, setEntry] = useState<CandorEntryPayload>(defaultEntry);
-  const [isLoadingEntry, setIsLoadingEntry] = useState(false);
-  const [entryPhase, setEntryPhase] = useState<EntryPhase>("choices");
-  const [choiceIndex, setChoiceIndex] = useState(0);
-  const [insightIndex, setInsightIndex] = useState(0);
   const [preview, setPreview] = useState<PreviewMessage | null>(null);
-  const [entrySignals, setEntrySignals] = useState<
-    Array<{ choicePattern: string | null; insightType: string | null; accepted: boolean | null; engagementSignal: string }>
-  >([]);
   const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
-  const interactionStartedAt = useRef(Date.now());
-
-
-  useEffect(() => {
-    if (!isSignedIn) {
-      setIsLoadingEntry(false);
-      return;
-    }
-
-    let cancelled = false;
-    setIsLoadingEntry(true);
-
-    fetch("/api/candor/me/entry", { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((payload: { entry?: CandorEntryPayload } | null) => {
-        if (!cancelled && payload?.entry) setEntry(payload.entry);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setIsLoadingEntry(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isSignedIn]);
-
-  useEffect(() => {
-    if (entryPhase !== "pause") return;
-    const timer = window.setTimeout(() => setEntryPhase("insights"), 400);
-    return () => window.clearTimeout(timer);
-  }, [entryPhase]);
-
-  useEffect(() => {
-    if (entryPhase !== "clearer") return;
-    const timer = window.setTimeout(() => setEntryPhase("done"), 1000);
-    return () => window.clearTimeout(timer);
-  }, [entryPhase]);
 
   useEffect(() => {
     if (!isSignedIn || !user?.id) {
-      setPreview({ role: "ai", content: entry.initiative.line });
+      setPreview({ role: "ai", content: defaultInitiativeLine });
       return;
     }
 
@@ -133,11 +40,11 @@ export function CandorHome() {
       const parsed = JSON.parse(saved) as PreviewMessage[];
       const lastAi = [...parsed].reverse().find((item) => item.role === "ai");
       const lastUser = [...parsed].reverse().find((item) => item.role === "user");
-      setPreview(lastAi ?? lastUser ?? { role: "ai", content: entry.initiative.line });
+      setPreview(lastAi ?? lastUser ?? { role: "ai", content: defaultInitiativeLine });
     } catch {
-      setPreview({ role: "ai", content: entry.initiative.line });
+      setPreview({ role: "ai", content: defaultInitiativeLine });
     }
-  }, [entry.initiative.line, isSignedIn, user?.id]);
+  }, [isSignedIn, user?.id]);
 
   useEffect(() => {
     if (!isSignedIn || !user?.id) return;
@@ -154,46 +61,12 @@ export function CandorHome() {
       .catch(() => {});
   }, [isSignedIn, user?.id]);
 
-  useEffect(() => {
-    interactionStartedAt.current = Date.now();
-  }, [choiceIndex, insightIndex, entryPhase]);
-
-  const logSignal = async (signal: {
-    choicePattern: string | null;
-    insightType: string | null;
-    accepted: boolean | null;
-    engagementSignal: string;
-  }) => {
-    setEntrySignals((current) => [...current, signal]);
-
-    if (!isSignedIn) return;
-
-    try {
-      await fetch("/api/candor/learning", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(signal),
-      });
-    } catch {
-      return;
-    }
-  };
-
   const start = async (content: string) => {
     if (!content.trim() || isStarting) return;
 
     if (!isSignedIn) {
       router.push(`/candor/login?next=${encodeURIComponent("/candor/home")}`);
       return;
-    }
-
-    if (entrySignals.length) {
-      void logSignal({
-        choicePattern: null,
-        insightType: null,
-        accepted: null,
-        engagementSignal: "continued_to_conversation",
-      });
     }
 
     setError("");
@@ -253,273 +126,148 @@ export function CandorHome() {
     void start(message);
   };
 
-  const speedSignal = () => {
-    const elapsed = Date.now() - interactionStartedAt.current;
-    if (elapsed < 2200) return "quick";
-    if (elapsed < 5200) return "steady";
-    return "slow";
-  };
-
-  const handleChoice = (choice: "a" | "b") => {
-    const current = entry.choices[choiceIndex];
-    if (!current) return;
-
-    const choicePattern = choice === "a" ? current.patternA : current.patternB;
-    void logSignal({
-      choicePattern,
-      insightType: null,
-      accepted: null,
-      engagementSignal: `entry_choice_${speedSignal()}`,
-    });
-
-    if (choiceIndex >= Math.min(entry.choices.length, 3) - 1) {
-      setChoiceIndex((value) => value + 1);
-      setEntryPhase("spotlight");
-      return;
-    }
-
-    setChoiceIndex((value) => value + 1);
-  };
-
-  const handleSpotlight = (index: number) => {
-    const topic = entry.spotlight.interestTags[index] ?? entry.spotlight.options[index] ?? null;
-
-    void logSignal({
-      choicePattern: topic ? `topic:${topic}` : null,
-      insightType: null,
-      accepted: null,
-      engagementSignal: `interest_pick_${speedSignal()}`,
-    });
-
-    window.setTimeout(() => setEntryPhase("pause"), 220);
-  };
-
-  const handleInsight = (accepted: boolean) => {
-    const current = entry.insights[insightIndex];
-    if (!current) return;
-
-    void logSignal({
-      choicePattern: null,
-      insightType: current.insightType,
-      accepted,
-      engagementSignal: accepted ? `insight_accept_${speedSignal()}` : `insight_reject_${speedSignal()}`,
-    });
-
-    if (insightIndex >= Math.min(entry.insights.length, 3) - 1) {
-      setInsightIndex((value) => value + 1);
-      setEntryPhase("clearer");
-      return;
-    }
-
-    setInsightIndex((value) => value + 1);
-  };
-
-  const currentChoice = entry.choices[choiceIndex];
-  const currentInsight = entry.insights[insightIndex];
-  const currentSpotlight = entry.spotlight;
-  const showEntryLayer = isSignedIn && entryPhase !== "done";
-  const isInitiativePreview = preview?.content === entry.initiative.line;
-  const understandingLine =
-    entrySignals.length >= 5
-      ? "your continuity feels stronger lately"
-      : entrySignals.length >= 3
-        ? "patterns are becoming clearer"
-        : entrySignals.length >= 1
-          ? "candor is beginning to understand your rhythm"
-          : "the thread is still learning your rhythm";
+  const isInitiativePreview = preview?.content === defaultInitiativeLine;
 
   return (
-    <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-20">
-      <AmbientGlow />
-      <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute left-[12%] top-24 h-48 w-48 rounded-full bg-[hsl(var(--glow)/0.08)] blur-3xl" />
-        <div className="absolute bottom-28 right-[10%] h-56 w-56 rounded-full bg-[hsl(var(--accent)/0.07)] blur-3xl" />
-      </div>
-      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-10rem)] max-w-[600px] flex-col justify-center gap-10">
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="relative">
-          <p className="mb-4 text-sm font-light text-foreground-secondary">
-            {isSignedIn
-              ? `hey ${user?.email?.split("@")[0]?.toLowerCase() ?? "there"}`
-              : "the thread continues quietly"}
-          </p>
-          <h1 className="max-w-[11ch] text-4xl font-light leading-[0.96] tracking-tight md:text-[4.5rem]">
-            what feels alive tonight?
-          </h1>
-        </motion.div>
-
-        {preview ? (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06, duration: 0.5 }}>
-            <Card className="surface soft-shadow relative overflow-hidden border-accent/30 bg-[linear-gradient(135deg,hsl(var(--accent)/0.13),hsl(var(--card)/0.48)_42%,hsl(var(--background)/0.34))] backdrop-blur-md shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),inset_0_0_34px_hsl(var(--accent)/0.045),0_22px_80px_-36px_hsl(var(--accent)/0.55)]">
-              <div className="pointer-events-none absolute -left-20 -top-20 h-40 w-40 rounded-full bg-[hsl(var(--accent)/0.13)] blur-3xl" />
-              <div className="pointer-events-none absolute bottom-0 right-8 h-16 w-32 rounded-full bg-[hsl(var(--glow)/0.08)] blur-2xl" />
-              <CardContent className="flex flex-col gap-3 p-5">
-                <div className="flex items-center justify-between gap-4 text-xs font-light text-foreground-secondary">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-accent/80 shadow-[0_0_14px_hsl(var(--accent)/0.65)] animate-[candor-breathe_3.2s_ease-in-out_infinite]" />
-                    {isInitiativePreview ? "unread from candor" : "still open between you two"}
-                  </span>
-                  {isSignedIn ? (
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/candor/session/${CANDOR_THREAD_ID}`)}
-                      className="text-foreground transition-colors hover:text-accent"
-                    >
-                      continue
-                    </button>
-                  ) : null}
-                </div>
-                <p className="max-w-[34rem] text-base font-light leading-7 text-foreground break-words">
-                  {preview.content}
-                </p>
-                <p className="text-xs font-light leading-5 text-foreground-secondary">{understandingLine}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ) : null}
-
-        <AnimatePresence mode="wait">
-          {showEntryLayer ? (
-            <motion.div
-              key={entryPhase}
-              initial={{ opacity: 0, y: 12 }}
+    <>
+      <AnimatePresence>
+        {isStarting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-md"
+          >
+            <div className="relative flex items-center justify-center h-32 w-full">
+              {/* Pulsing glow behind the text */}
+              <motion.div
+                animate={{ opacity: [0.1, 0.4, 0.1], scale: [0.95, 1.1, 0.95] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute h-32 w-64 rounded-full bg-[hsl(var(--accent)/0.25)] blur-3xl"
+              />
+              
+              {/* Text glow animation */}
+              <motion.div
+                animate={{ opacity: [0.5, 1, 0.5], textShadow: ["0 0 10px hsl(var(--accent)/0.1)", "0 0 35px hsl(var(--accent)/0.8)", "0 0 10px hsl(var(--accent)/0.1)"] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                className="text-5xl font-light tracking-widest text-accent relative z-10"
+              >
+                candor
+              </motion.div>
+            </div>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
-              className="flex flex-col gap-5"
+              transition={{ delay: 0.5 }}
+              className="mt-6 text-sm font-light text-foreground-secondary tracking-wide"
             >
-              {isLoadingEntry ? (
-                <PresetCardLoading />
-              ) : null}
+              connecting...
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              {!isLoadingEntry && entryPhase === "choices" ? (
-                <AnimatePresence mode="wait" initial={false}>
-                  {currentChoice ? (
-                    <ChoiceTapCard
-                      key={currentChoice.id}
-                      prompt={currentChoice.prompt}
-                      optionA={currentChoice.optionA}
-                      optionB={currentChoice.optionB}
-                      onChoose={handleChoice}
-                    />
-                  ) : null}
-                </AnimatePresence>
-              ) : null}
+      <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-20">
+        <AmbientGlow />
+        <div className="pointer-events-none absolute inset-0 opacity-70">
+          <div className="absolute left-[12%] top-24 h-48 w-48 rounded-full bg-[hsl(var(--glow)/0.08)] blur-3xl" />
+          <div className="absolute bottom-28 right-[10%] h-56 w-56 rounded-full bg-[hsl(var(--accent)/0.07)] blur-3xl" />
+        </div>
+        <section className="relative z-10 mx-auto flex min-h-[calc(100vh-10rem)] max-w-[600px] flex-col justify-center gap-10">
+          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="relative">
+            <p className="mb-4 text-sm font-light text-foreground-secondary">
+              {isSignedIn
+                ? `hey ${user?.email?.split("@")[0]?.toLowerCase() ?? "there"}`
+                : "the thread continues quietly"}
+            </p>
+            <h1 className="max-w-[11ch] text-4xl font-light leading-[0.96] tracking-tight md:text-[4.5rem]">
+              what feels alive tonight?
+            </h1>
+          </motion.div>
 
-              {!isLoadingEntry && entryPhase === "spotlight" ? (
-                <AnimatePresence mode="wait" initial={false}>
-                  <InterestSpotlightCard
-                    key={currentSpotlight.id}
-                    prompt={currentSpotlight.prompt}
-                    options={currentSpotlight.options}
-                    onChoose={handleSpotlight}
-                  />
-                </AnimatePresence>
-              ) : null}
-
-              {!isLoadingEntry && entryPhase === "pause" ? (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.7 }}
-                  className="text-sm font-light text-foreground-secondary"
-                >
-                  this is getting more interesting...
-                </motion.p>
-              ) : null}
-
-              {!isLoadingEntry && entryPhase === "insights" ? (
-                <AnimatePresence mode="wait" initial={false}>
-                  {currentInsight ? (
-                    <InsightSwipeCard
-                      key={currentInsight.id}
-                      line={currentInsight.line}
-                      onDecide={handleInsight}
-                    />
-                  ) : null}
-                </AnimatePresence>
-              ) : null}
-
-              {!isLoadingEntry && entryPhase === "clearer" ? (
-                <motion.p
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 0.8, y: 0 }}
-                  className="text-sm font-light text-foreground-secondary"
-                >
-                  this is getting clearer...
-                </motion.p>
-              ) : null}
+          {preview ? (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06, duration: 0.5 }}>
+              <Card className="surface soft-shadow relative overflow-hidden border-accent/30 bg-[linear-gradient(135deg,hsl(var(--accent)/0.13),hsl(var(--card)/0.48)_42%,hsl(var(--background)/0.34))] backdrop-blur-md shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),inset_0_0_34px_hsl(var(--accent)/0.045),0_22px_80px_-36px_hsl(var(--accent)/0.55)]">
+                <div className="pointer-events-none absolute -left-20 -top-20 h-40 w-40 rounded-full bg-[hsl(var(--accent)/0.13)] blur-3xl" />
+                <div className="pointer-events-none absolute bottom-0 right-8 h-16 w-32 rounded-full bg-[hsl(var(--glow)/0.08)] blur-2xl" />
+                <CardContent className="flex flex-col gap-3 p-5">
+                  <div className="flex items-center justify-between gap-4 text-xs font-light text-foreground-secondary">
+                    <span className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-accent/80 shadow-[0_0_14px_hsl(var(--accent)/0.65)] animate-[candor-breathe_3.2s_ease-in-out_infinite]" />
+                      {isInitiativePreview ? "unread from candor" : "still open between you two"}
+                    </span>
+                    {isSignedIn ? (
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/candor/session/${CANDOR_THREAD_ID}`)}
+                        className="text-foreground transition-colors hover:text-accent"
+                      >
+                        continue
+                      </button>
+                    ) : null}
+                  </div>
+                  <p className="max-w-[34rem] text-base font-light leading-7 text-foreground break-words">
+                    {preview.content}
+                  </p>
+                </CardContent>
+              </Card>
             </motion.div>
           ) : null}
-        </AnimatePresence>
 
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: showEntryLayer ? 0.34 : 1, y: 0, scale: showEntryLayer ? 0.992 : 1 }}
-          transition={{ delay: 0.12, duration: 0.7 }}
-        >
-          <ScenarioPanel isSignedIn={isSignedIn} onScenarioSelect={selectPrompt} />
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12, duration: 0.7 }}
+          >
+            <ScenarioPanel isSignedIn={isSignedIn} onScenarioSelect={selectPrompt} />
+          </motion.div>
 
-        <motion.form
-          onSubmit={submit}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: showEntryLayer ? 0.42 : 1, y: 0 }}
-          transition={{ delay: 0.28, duration: 0.7 }}
-          className="flex flex-col gap-3"
-        >
-          <div className="relative flex w-full items-center">
-            <div className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,hsl(var(--foreground)/0.03),transparent)]" />
-            <input
-              type="text"
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder="start with the thing you actually care about"
-              className="h-14 w-full rounded-full border border-border/50 bg-background/45 pl-6 pr-32 text-base font-light text-foreground placeholder:text-muted-foreground outline-none transition-shadow focus:border-accent/40 focus:ring-1 focus:ring-accent/40"
-            />
+          <motion.form
+            onSubmit={submit}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.28, duration: 0.7 }}
+            className="flex flex-col gap-3"
+          >
+            <div className="relative flex w-full items-center">
+              <div className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,hsl(var(--foreground)/0.03),transparent)]" />
+              <input
+                type="text"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder="start with the thing you actually care about"
+                className="h-14 w-full rounded-full border border-border/50 bg-background/45 pl-6 pr-32 text-base font-light text-foreground placeholder:text-muted-foreground outline-none transition-shadow focus:border-accent/40 focus:ring-1 focus:ring-accent/40"
+              />
 
-            <div className="absolute right-1.5 flex items-center">
-              {isLoaded && isSignedIn ? (
-                <Button
-                  type="submit"
-                  disabled={!message.trim() || isStarting}
-                  className="h-11 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground hover:bg-accent/90"
-                >
-                  {isStarting ? "opening..." : preview ? "keep it going" : "open the thread"}
-                  <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  disabled={!isLoaded}
-                  onClick={() => router.push(`/candor/login?next=${encodeURIComponent("/candor/home")}`)}
-                  className="h-11 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground hover:bg-accent/90"
-                >
-                  sign in
-                  <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
-                </Button>
-              )}
+              <div className="absolute right-1.5 flex items-center">
+                {isLoaded && isSignedIn ? (
+                  <Button
+                    type="submit"
+                    disabled={!message.trim() || isStarting}
+                    className="h-11 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground hover:bg-accent/90"
+                  >
+                    {isStarting ? "opening..." : preview ? "keep it going" : "open the thread"}
+                    <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    disabled={!isLoaded}
+                    onClick={() => router.push(`/candor/login?next=${encodeURIComponent("/candor/home")}`)}
+                    className="h-11 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground hover:bg-accent/90"
+                  >
+                    sign in
+                    <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-          {error && <p className="text-right text-xs font-light leading-5 text-foreground-secondary">{error}</p>}
-        </motion.form>
-      </section>
-      <BottomNav />
-    </main>
+            {error && <p className="text-right text-xs font-light leading-5 text-foreground-secondary">{error}</p>}
+          </motion.form>
+        </section>
+        <BottomNav />
+      </main>
+    </>
   );
 }
-
-function PresetCardLoading() {
-  return (
-    <div className="flex flex-col gap-3">
-      {[0, 1, 2, 3].map((item) => (
-        <motion.div
-          key={item}
-          animate={{ opacity: [0.22, 0.52, 0.22] }}
-          transition={{ duration: 1.7, repeat: Infinity, ease: "easeInOut", delay: item * 0.09 }}
-          className="h-3 rounded-full bg-foreground/10"
-          style={{ width: `${88 - item * 12}%` }}
-        />
-      ))}
-    </div>
-  );
-}
-
