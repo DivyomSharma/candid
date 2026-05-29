@@ -481,9 +481,9 @@ function temperatureFor(decision: CandorDecision) {
 }
 
 function maxTokensFor(presenceState: PresenceState) {
-  if (presenceState.resonance === "high") return 120;
-  if (presenceState.clarity === "low") return 90;
-  return 112;
+  if (presenceState.resonance === "high") return 350;
+  if (presenceState.clarity === "low") return 250;
+  return 300;
 }
 
 function isTooSimilar(reply: string, history: string[]) {

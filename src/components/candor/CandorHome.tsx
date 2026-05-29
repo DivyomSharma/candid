@@ -137,7 +137,7 @@ export function CandorHome() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
           >
             <div className="relative flex items-center justify-center h-32 w-full">
               {/* Pulsing glow behind the text */}
@@ -156,14 +156,6 @@ export function CandorHome() {
                 candor
               </motion.div>
             </div>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="mt-6 text-sm font-light text-foreground-secondary tracking-wide"
-            >
-              connecting...
-            </motion.p>
           </motion.div>
         )}
       </AnimatePresence>
