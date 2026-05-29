@@ -122,22 +122,35 @@ function fallbackPresets(memory: CandorMemory): CandorPresets {
   const mapped = interests.map((topic) => topicLines[topic] ?? topic);
 
   return {
-    chips: [
+    chips: shuffle([
       mapped[0] ?? "emotionally devastating films",
       mapped[1] ?? "games where choices matter",
       mapped[2] ?? "video essays at 2am",
       "noticing small tone shifts",
       "pretending not to care",
-    ].slice(0, 5),
+      "internet rabbit holes",
+      "replaying conversations",
+    ]).slice(0, 5),
     scenario: {
       title: "start here maybe",
-      lines: [
+      lines: shuffle([
         mapped[0] ?? "what actually has your attention",
         "something socially weird lately",
         "a topic you keep returning to",
-      ],
+        "a story that quietly wrecked you",
+        "something you keep overthinking",
+      ]).slice(0, 3),
     },
   };
+}
+
+function shuffle<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
 function cleanList(value: unknown, max: number, maxWords: number) {
