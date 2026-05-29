@@ -15,23 +15,6 @@ export default function HeroSection() {
         <div
           className="absolute inset-0 animate-breathe"
           style={{
-import { motion } from "framer-motion";
-import Link from "next/link";
-
-export default function HeroSection() {
-  return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
-      {/* Breathing gradient background */}
-      <div className="absolute inset-0 -z-10">
-        <div
-          className="absolute inset-0 animate-breathe"
-          style={{
-            background: `radial-gradient(ellipse 80% 60% at 50% 40%, hsl(var(--glow) / 0.12), transparent)`,
-          }}
-        />
-        <div
-          className="absolute inset-0 animate-breathe"
-          style={{
             animationDelay: "3s",
             background: `radial-gradient(ellipse 60% 50% at 60% 60%, hsl(var(--glow) / 0.06), transparent)`,
           }}
