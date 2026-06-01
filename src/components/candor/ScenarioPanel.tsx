@@ -59,19 +59,23 @@ export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelPro
   if (isLoading) {
     return (
       <div className="flex flex-col gap-5 w-full">
-        <Card className="surface border-border/20 bg-card/10 backdrop-blur-md animate-pulse">
-          <CardContent className="flex flex-col gap-5 p-5">
-            <div className="h-3 w-20 rounded-full bg-foreground/10" />
-            <div className="space-y-2">
-              <div className="h-4 w-full rounded-full bg-foreground/10" />
-              <div className="h-4 w-3/4 rounded-full bg-foreground/10" />
-            </div>
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <div className="h-12 w-full rounded-xl bg-foreground/10" />
-              <div className="h-12 w-full rounded-xl bg-foreground/10" />
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          animate={{ opacity: [0.3, 0.7, 0.3], filter: ["blur(2px)", "blur(6px)", "blur(2px)"] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <Card className="surface border-border/10 bg-card/5 backdrop-blur-md overflow-hidden relative min-h-[200px]">
+            {/* A soft, organic glowing orb moving slowly inside the card, representing a forming thought */}
+            <motion.div
+              animate={{ 
+                x: ["-30%", "30%", "-30%"],
+                y: ["-10%", "10%", "-10%"],
+                scale: [1, 1.3, 1] 
+              }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 m-auto h-[140px] w-[140px] rounded-full bg-accent/25 blur-[50px]"
+            />
+          </Card>
+        </motion.div>
       </div>
     );
   }
