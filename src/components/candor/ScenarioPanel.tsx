@@ -38,18 +38,18 @@ export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelPro
   }, [isSignedIn]);
 
   const handleSelect = (scenario: CandorScenario, option: string) => {
-    let message = "";
+    let context = "";
     if (scenario.type === "would_you_rather") {
-      message = `(Scenario: Would you rather ${scenario.prompt}) I choose: ${option}. What do you think about that choice?`;
+      context = `[System: The user is answering the "would you rather" scenario: "${scenario.prompt}"]\n\n`;
     } else if (scenario.type === "have_you_ever") {
-      message = `(Scenario: Have you ever ${scenario.prompt}) My answer is: ${option}. Let's talk about it.`;
+      context = `[System: The user is answering the "have you ever" scenario: "${scenario.prompt}"]\n\n`;
     } else if (scenario.type === "creative_argument") {
-      message = `(Roleplay Argument: ${scenario.prompt}) I will take the side: "${option}". You take the opposing side and challenge me. Start the argument.`;
+      context = `[System: The user wants to playfully argue about: "${scenario.prompt}". You take the opposing side and challenge them immediately.]\n\n`;
     } else {
-      message = `(Scenario: ${scenario.prompt}) I choose: ${option}.`;
+      context = `[System: The user is responding to the scenario: "${scenario.prompt}"]\n\n`;
     }
     
-    onScenarioSelect(message);
+    onScenarioSelect(`${context}${option}`);
   };
 
   const handleShuffle = () => {

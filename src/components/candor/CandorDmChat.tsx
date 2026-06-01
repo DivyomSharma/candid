@@ -246,7 +246,7 @@ export function CandorDmChat({ id }: { id: string }) {
                     : "max-w-[500px] whitespace-pre-wrap text-xl font-light leading-9 text-foreground-secondary"
                 }
               >
-                {message.content}
+                {message.role === "user" ? message.content.replace(/^\[System:.*?\]\n\n/s, "") : message.content}
               </p>
             </motion.div>
           ))}
