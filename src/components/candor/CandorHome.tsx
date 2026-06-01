@@ -174,7 +174,7 @@ export function CandorHome() {
           <div className="absolute bottom-28 right-[10%] h-56 w-56 rounded-full bg-[hsl(var(--accent)/0.07)] blur-3xl" />
         </div>
         <section className="relative z-10 mx-auto flex min-h-[calc(100vh-10rem)] max-w-[600px] flex-col justify-center gap-10">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }} className="relative">
+          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="relative">
             <p className="mb-4 text-sm font-light text-foreground-secondary">
               {isSignedIn
                 ? `hey ${user?.email?.split("@")[0]?.toLowerCase() ?? "there"}`
@@ -186,7 +186,7 @@ export function CandorHome() {
           </motion.div>
 
           {preview ? (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
               <Card className="surface soft-shadow relative overflow-hidden border-accent/30 bg-[linear-gradient(135deg,hsl(var(--accent)/0.13),hsl(var(--card)/0.48)_42%,hsl(var(--background)/0.34))] backdrop-blur-md shadow-[inset_0_1px_0_hsl(var(--foreground)/0.08),inset_0_0_34px_hsl(var(--accent)/0.045),0_22px_80px_-36px_hsl(var(--accent)/0.55)]">
                 <div className="pointer-events-none absolute -left-20 -top-20 h-40 w-40 rounded-full bg-[hsl(var(--accent)/0.13)] blur-3xl" />
                 <div className="pointer-events-none absolute bottom-0 right-8 h-16 w-32 rounded-full bg-[hsl(var(--glow)/0.08)] blur-2xl" />
@@ -217,7 +217,7 @@ export function CandorHome() {
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ delay: 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             <ScenarioPanel isSignedIn={isSignedIn} onScenarioSelect={selectPrompt} />
           </motion.div>
@@ -226,7 +226,7 @@ export function CandorHome() {
             onSubmit={submit}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.18, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ delay: 0.15, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col gap-3"
           >
             <div className="relative flex w-full items-center">

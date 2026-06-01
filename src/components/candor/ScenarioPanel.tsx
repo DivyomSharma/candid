@@ -91,7 +91,7 @@ export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelPro
           initial={{ opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 12 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
           <Card className="surface border-border/45 bg-card/38 backdrop-blur-md transition-colors hover:border-accent/30 relative">
             <button

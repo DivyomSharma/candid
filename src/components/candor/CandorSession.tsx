@@ -220,9 +220,9 @@ export function CandorSession({ id }: { id: string }) {
               initial={{ opacity: 0, y: message.role === "ai" ? 16 : 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
-                duration: message.role === "ai" ? 1.4 : 0.8,
-                delay: message.role === "ai" ? 0.1 : 0,
-                ease: [0.16, 1, 0.3, 1]
+                duration: 0.5,
+                delay: message.role === "ai" ? 0.05 : 0,
+                ease: [0.22, 1, 0.36, 1]
               }}
               className={message.role === "user" ? "self-end text-right" : "self-start"}
             >

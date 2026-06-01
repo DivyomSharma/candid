@@ -237,9 +237,9 @@ export function CandorDmChat({ id }: { id: string }) {
               initial={{ opacity: 0, y: message.mine ? 8 : 16 }}
               animate={{ opacity: message.pending ? 0.55 : 1, y: 0 }}
               transition={{
-                duration: message.role === "ai" ? 1.4 : 0.8,
-                delay: message.role === "ai" ? 0.1 : 0,
-                ease: [0.16, 1, 0.3, 1]
+                duration: 0.5,
+                delay: message.role === "ai" ? 0.05 : 0,
+                ease: [0.22, 1, 0.36, 1]
               }}
               className={message.mine ? "self-end text-right" : "self-start"}
             >
