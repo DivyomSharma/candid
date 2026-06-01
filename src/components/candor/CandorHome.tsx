@@ -136,22 +136,29 @@ export function CandorHome() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
           >
-            <div className="relative flex items-center justify-center h-32 w-full">
-              {/* Pulsing glow behind the text */}
+            <div className="relative flex items-center justify-center">
+              {/* Silky, highly diffused breathing orb */}
               <motion.div
-                animate={{ opacity: [0.1, 0.4, 0.1], scale: [0.95, 1.1, 0.95] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute h-32 w-64 rounded-full bg-[hsl(var(--accent)/0.25)] blur-3xl"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.1, 0.25, 0.1],
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute h-[250px] w-[250px] rounded-full bg-accent blur-[80px]"
               />
               
-              {/* Text glow animation */}
+              {/* Cinematic text breathing with blur */}
               <motion.div
-                animate={{ opacity: [0.5, 1, 0.5], textShadow: ["0 0 10px hsl(var(--accent)/0.1)", "0 0 35px hsl(var(--accent)/0.8)", "0 0 10px hsl(var(--accent)/0.1)"] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                className="text-5xl font-light tracking-widest text-accent relative z-10"
+                animate={{ 
+                  filter: ["blur(4px)", "blur(0px)", "blur(4px)"],
+                  opacity: [0.4, 1, 0.4],
+                  scale: [0.97, 1, 0.97]
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="relative z-10 text-4xl font-light tracking-[0.25em] text-foreground"
               >
                 candor
               </motion.div>
