@@ -81,7 +81,7 @@ export async function sendCandorMessage(payload: ChatPayload) {
     access_tier: payload.access_tier,
   });
 
-  return sanitizeCandorReply(result.text || "the reply failed for a second. try me again.", payload.message);
+  return sanitizeCandorReply(result.text || "wait. i lost my train of thought for a second.", payload.message);
 }
 
 export async function streamCandorMessage(payload: ChatPayload) {

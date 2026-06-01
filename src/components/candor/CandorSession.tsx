@@ -219,7 +219,11 @@ export function CandorSession({ id }: { id: string }) {
               key={message.id}
               initial={{ opacity: 0, y: message.role === "ai" ? 16 : 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: message.role === "ai" ? 0.7 : 0.25, delay: message.role === "ai" ? 0.08 : 0 }}
+              transition={{
+                duration: message.role === "ai" ? 1.4 : 0.8,
+                delay: message.role === "ai" ? 0.1 : 0,
+                ease: [0.16, 1, 0.3, 1]
+              }}
               className={message.role === "user" ? "self-end text-right" : "self-start"}
             >
               <p
