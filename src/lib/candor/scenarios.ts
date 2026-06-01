@@ -99,9 +99,13 @@ export async function generateCandorScenarios(memory: CandorMemory): Promise<Can
 }
 
 function buildScenariosPrompt(memory: CandorMemory) {
+  const seed = Math.random().toString(36).substring(2, 9);
   return `
 you are candor.
-generate 3 personalized interactive scenarios to hook the user into a conversation based on their memory.
+generate 3 completely unique, personalized interactive scenarios to hook the user into a conversation based on their memory.
+if their memory is mostly empty, generate highly creative, unpredictable, and completely random scenarios.
+do NOT use standard examples or cliches. be incredibly specific.
+randomness seed: ${seed}
 
 return only valid json:
 {
@@ -120,9 +124,9 @@ rules:
 - exactly 3 scenarios.
 - scenario types must be: one "would_you_rather", one "have_you_ever", and one "creative_argument".
 - lowercase only.
-- "would_you_rather": a tough, personalized choice based on their interests or habits. provide exactly 2 options.
-- "have_you_ever": a very specific, slightly exposing question (e.g. "have you ever lied to get out of a social event?"). provide exactly 2 options like ["yes, absolutely", "no, i'd feel guilty"].
-- "creative_argument": set up a playful debate on a work, relationship, or family topic (e.g. "let's argue about whether remote work is ruining social skills."). provide exactly 2 options representing stances.
+- "would_you_rather": a tough, highly specific choice. do not use the example. provide exactly 2 options.
+- "have_you_ever": a very specific, slightly exposing question. provide exactly 2 options representing honest answers.
+- "creative_argument": set up a playful debate on a specific, non-cliche topic. provide exactly 2 options representing stances.
 - no assistant tone, no therapy speak. be direct and engaging.
 `.trim();
 }
@@ -172,7 +176,7 @@ function fallbackScenarios(): CandorScenariosPayload {
   };
 }
 
-function cleanText(value: unknown, maxWords = 10) {
+function cleanText(value: unknown, maxWords = 40) {
   if (typeof value !== "string") return "";
   return value
     .trim()
@@ -181,5 +185,5 @@ function cleanText(value: unknown, maxWords = 10) {
     .split(" ")
     .slice(0, maxWords)
     .join(" ")
-    .slice(0, 150);
+    .slice(0, 250);
 }

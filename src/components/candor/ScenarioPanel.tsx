@@ -58,15 +58,20 @@ export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelPro
 
   if (isLoading) {
     return (
-      <div className="flex w-full items-center justify-center py-10">
-        <motion.div
-          animate={{ opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="flex items-center gap-3 text-sm font-light tracking-widest text-accent"
-        >
-          <Sparkles className="h-4 w-4" />
-          <span>finding a thread</span>
-        </motion.div>
+      <div className="flex flex-col gap-5 w-full">
+        <Card className="surface border-border/20 bg-card/10 backdrop-blur-md animate-pulse">
+          <CardContent className="flex flex-col gap-5 p-5">
+            <div className="h-3 w-20 rounded-full bg-foreground/10" />
+            <div className="space-y-2">
+              <div className="h-4 w-full rounded-full bg-foreground/10" />
+              <div className="h-4 w-3/4 rounded-full bg-foreground/10" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <div className="h-12 w-full rounded-xl bg-foreground/10" />
+              <div className="h-12 w-full rounded-xl bg-foreground/10" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
