@@ -233,7 +233,7 @@ export function CandorSession({ id }: { id: string }) {
                     : "max-w-[500px] text-xl font-light leading-9 text-foreground-secondary"
                 }
               >
-                {message.role === "user" ? message.content.replace(/^\[System:.*?\]\n\n/s, "") : message.content}
+                {message.role === "user" ? message.content.replace(/^\[System:[\s\S]*?\]\n\n/, "") : message.content}
               </p>
             </motion.div>
           ))}

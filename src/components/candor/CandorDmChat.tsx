@@ -250,7 +250,7 @@ export function CandorDmChat({ id }: { id: string }) {
                     : "max-w-[500px] whitespace-pre-wrap text-xl font-light leading-9 text-foreground-secondary"
                 }
               >
-                {message.mine ? message.content.replace(/^\[System:.*?\]\n\n/s, "") : message.content}
+                {message.mine ? message.content.replace(/^\[System:[\s\S]*?\]\n\n/, "") : message.content}
               </p>
             </motion.div>
           ))}
