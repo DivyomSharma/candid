@@ -48,12 +48,9 @@ function depolishLine(value: string) {
 }
 
 function trimOvercomplete(value: string, move?: CandorSocialMove) {
-  if (move === "pause") return value.split(/[.!?]/)[0]?.trim() || value;
-  if (value.length < 130) return value;
-
-  const parts = value.split(/(?<=[.!?])\s+/).filter(Boolean);
-  if (parts.length > 1) return parts.slice(0, 2).join(" ");
-  return value.slice(0, 128).trimEnd() + "...";
+  // Let the LLM handle its own response length and pauses based on the prompt.
+  // Artificial truncation causes broken sentences and missing punctuation.
+  return value;
 }
 
 function avoidRepeatedOpening(lines: string[], previousReplies: string[]) {
