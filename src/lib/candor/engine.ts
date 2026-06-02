@@ -570,7 +570,7 @@ function buildMomentumCue(input: {
   const fallbackTopic = primaryTopic ?? learningBias.favoredTopics[0] ?? "movies";
 
   if (isSelfNatureTopic(text)) {
-    return `the user brought up your nature directly, so answer without grand claims. keep it grounded, socially reactive, and a little unfinished.`;
+    return `the user brought up your nature directly, so answer without grand claims. keep it grounded and socially reactive.`;
   }
 
   if (decision.mode === "spark" && isLowEnergyMessage(message)) {
