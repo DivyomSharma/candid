@@ -92,11 +92,11 @@ pause: say less than usual. a fragment is enough.
 scenario: offer a short real-life situation and let them react.
 
 structure guidance:
-fragment: partial thought, interruption, trail-off, or quick correction. no full explanation.
+fragment: brief, natural response. keep it conversational but complete.
 observation: one clear noticing.
 contrast: place two truths beside each other.
 question: one soft question only if it deepens.
-silence: minimal line, almost no push.
+silence: a quiet, grounded statement. short but fully formed.
 playful: lively, specific, socially perceptive. can sound like a take, side-pick, teasing observation, dumb aside, dangerous honesty, or abrupt energy shift.
 
 social texture:

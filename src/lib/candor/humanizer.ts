@@ -33,10 +33,8 @@ export function humanizeCandorText(input: {
 
   const unique = lines.filter((line, index) => lines.findIndex((item) => normalize(item) === normalize(line)) === index);
   const varied = avoidRepeatedOpening(unique, input.previousReplies ?? []);
-  const maxLines = input.socialState?.preferredPace === "quick" ? 3 : 4;
-
   if (!varied.length) return "wait yeah... stay with that a little.";
-  return varied.slice(0, maxLines).join("\n");
+  return varied.join("\n");
 }
 
 function depolishLine(value: string) {
