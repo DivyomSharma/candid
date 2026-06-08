@@ -63,6 +63,8 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     socialState: socialReadState,
   });
 
+  const classification = await classifyMessage(input.message, socialReadState, lightMemory);
+
   const prompt = buildCandorPrompt({
     memory: lightMemory,
     decision,
@@ -84,6 +86,7 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     socialReadState,
     input.accessTier,
     lightMemory.turnCount,
+    classification
   );
 
   const firstReply = shapeCandorResponse(
@@ -364,9 +367,37 @@ function routeForTurn(
   socialState: ReturnType<typeof normalizeSocialState>,
   accessTier: CandorTurnInput["accessTier"],
   turnCount: number,
+  classification?: FastRouterClassification
 ) {
   const continuityDepthScore =
     accessTier === "resonance" ? 5 : accessTier === "continuity" ? 4 : Math.min(3, 1 + Math.floor(turnCount / 6));
+
+  if (classification) {
+    if (classification.depth > 0.8 && classification.importance > 0.7 && continuityDepthScore >= 3) {
+      return {
+        model_route: "reflective" as CandorModelRoute,
+        route_reason: "fast-router elevated to reflective due to high depth and importance",
+        emotional_depth_score: 7,
+        continuity_depth_score: Math.max(4, continuityDepthScore),
+      };
+    }
+    if (classification.route === "emotional" || classification.route === "exploratory" || classification.route === "alignment" || classification.route === "resonance") {
+       return {
+        model_route: "nuance" as CandorModelRoute,
+        route_reason: `fast-router designated as ${classification.route}`,
+        emotional_depth_score: 6,
+        continuity_depth_score: Math.max(4, continuityDepthScore),
+      };
+    }
+    if (classification.route === "spark" || classification.route === "casual" || classification.route === "recommendation") {
+      return {
+        model_route: "default" as CandorModelRoute,
+        route_reason: `fast-router designated as ${classification.route}`,
+        emotional_depth_score: 3,
+        continuity_depth_score: Math.max(2, continuityDepthScore),
+      };
+    }
+  }
 
   if (
     (intuition.emotionalSignal === "high" && continuityDepthScore >= 3 && turnCount > 10) ||
@@ -419,6 +450,30 @@ function routeForTurn(
     emotional_depth_score: 5,
     continuity_depth_score: Math.max(3, continuityDepthScore),
   };
+}
+
+type FastRouterClassification = {
+  route: "spark" | "casual" | "recommendation" | "exploratory" | "reflective" | "alignment" | "emotional" | "resonance";
+  depth: number;
+  importance: number;
+};
+
+async function classifyMessage(message: string, socialState: CandorSocialState, memory: CandorMemory): Promise<FastRouterClassification | undefined> {
+  try {
+    return await sendCandorJson<FastRouterClassification>({
+      systemPrompt: "You are the Candor Fast Router. Classify the user's incoming message. Return ONLY valid JSON with no markdown formatting. Identify the route, a depth score (0.0 to 1.0), and an importance score (0.0 to 1.0).",
+      message: `Social Atmosphere: ${socialState.currentAtmosphere}\nTrust Stage: ${socialState.trustStage}\nMessage: ${message}`,
+      temperature: 0.1,
+      maxTokens: 50,
+      modelRoute: "extraction",
+      routeReason: "fast message classification",
+      emotionalDepthScore: 2,
+      continuityDepthScore: 2,
+    });
+  } catch (error) {
+    logCandorInternal({ event: "fast_router_failed", level: "warn", error });
+    return undefined;
+  }
 }
 
 function nextStructure(current: CandorStructure): CandorStructure {
@@ -478,10 +533,11 @@ function temperatureFor(decision: CandorDecision) {
   return 0.84;
 }
 
-function maxTokensFor(presenceState: PresenceState) {
-  if (presenceState.resonance === "high") return 150;
-  if (presenceState.clarity === "low") return 80;
-  return 100;
+function maxTokensFor(presenceState: PresenceState, classification?: FastRouterClassification) {
+  if (classification && classification.route === "casual") return 80;
+  if (presenceState.resonance === "high" || classification?.route === "reflective") return 150;
+  if (presenceState.clarity === "low") return 60;
+  return 80;
 }
 
 function isTooSimilar(reply: string, history: string[]) {

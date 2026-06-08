@@ -16,17 +16,13 @@ export type CandorRoutePlan = {
   attempts: RouteCandidate[];
 };
 
-const geminiRelationalModel = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
-const geminiDeepModel = process.env.GEMINI_DEEP_MODEL ?? process.env.GEMINI_MODEL ?? "gemini-2.5-pro";
-const geminiSpeedModel = process.env.GEMINI_SPEED_MODEL ?? process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
-const groqFastModel = process.env.GROQ_FAST_MODEL ?? "llama-3.1-8b-instant";
-const groqGeneralModel = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
-const openRouterFastModel = process.env.OPENROUTER_FAST_MODEL ?? process.env.OPENROUTER_MODEL ?? "anthropic/claude-3.5-haiku";
-const openRouterDeepModel =
-  process.env.OPENROUTER_DEEP_MODEL ??
-  process.env.OPENROUTER_REFLECTIVE_MODEL ??
-  process.env.OPENROUTER_MODEL ??
-  "anthropic/claude-3.5-haiku";
+export const MODEL_REGISTRY = {
+  router: process.env.ROUTER_MODEL ?? "llama-3.1-8b-instant",
+  chat: process.env.CHAT_MODEL ?? "qwen/qwen-32b",
+  deep: process.env.DEEP_MODEL ?? "openai/gpt-oss-120b",
+  resonance: process.env.RESONANCE_MODEL ?? "llama-3.3-70b-versatile",
+  async: process.env.ASYNC_MODEL ?? "groq/compound",
+};
 
 function baseContinuityForTier(tier: CandorAccessTier | undefined) {
   if (tier === "resonance") return 5;
@@ -83,81 +79,35 @@ export function resolveCandorRoutePlan(input: {
 
   switch (input.route) {
     case "banter":
+    case "extraction":
       reason = input.routeReason ?? "rapid-fire social momentum";
       emotionalDepthScore = input.emotionalDepthScore ?? 3;
       continuityDepthScore = input.continuityDepthScore ?? Math.max(2, continuityBase - 1);
       attempts = [
-        { provider: "groq", model: groqFastModel },
-        { provider: "gemini", model: geminiSpeedModel },
-      ];
-      break;
-    case "extraction":
-      reason = input.routeReason ?? "lightweight extraction and classification";
-      emotionalDepthScore = input.emotionalDepthScore ?? 2;
-      continuityDepthScore = input.continuityDepthScore ?? Math.max(1, continuityBase - 1);
-      attempts = [
-        { provider: "groq", model: groqFastModel },
-        { provider: "gemini", model: geminiSpeedModel },
+        { provider: "openrouter", model: MODEL_REGISTRY.chat },
+        { provider: "groq", model: MODEL_REGISTRY.router },
       ];
       break;
     case "initiative":
-      reason = input.routeReason ?? "initiative generation and social spark";
+    case "nuance":
+    case "profile":
+    case "memory":
+      reason = input.routeReason ?? "deeper conversational routing";
       emotionalDepthScore = input.emotionalDepthScore ?? 6;
       continuityDepthScore = input.continuityDepthScore ?? Math.max(4, continuityBase);
       attempts = [
-        { provider: "gemini", model: geminiDeepModel },
-        { provider: "openrouter", model: openRouterDeepModel },
-        { provider: "groq", model: groqGeneralModel, degraded: true },
+        { provider: "openrouter", model: MODEL_REGISTRY.deep },
+        { provider: "openrouter", model: MODEL_REGISTRY.chat, degraded: true },
       ];
       break;
     case "alignment":
+    case "reflective":
       reason = input.routeReason ?? "compatibility and chemistry synthesis";
       emotionalDepthScore = input.emotionalDepthScore ?? 7;
       continuityDepthScore = input.continuityDepthScore ?? Math.max(5, continuityBase);
       attempts = [
-        { provider: "gemini", model: geminiDeepModel },
-        { provider: "openrouter", model: openRouterDeepModel },
-        { provider: "groq", model: groqGeneralModel, degraded: true },
-      ];
-      break;
-    case "profile":
-      reason = input.routeReason ?? "profile evolution and identity synthesis";
-      emotionalDepthScore = input.emotionalDepthScore ?? 5;
-      continuityDepthScore = input.continuityDepthScore ?? Math.max(4, continuityBase);
-      attempts = [
-        { provider: "gemini", model: geminiRelationalModel },
-        { provider: "openrouter", model: openRouterDeepModel },
-        { provider: "groq", model: groqGeneralModel, degraded: true },
-      ];
-      break;
-    case "memory":
-      reason = input.routeReason ?? "memory synthesis and continuity retention";
-      emotionalDepthScore = input.emotionalDepthScore ?? 5;
-      continuityDepthScore = input.continuityDepthScore ?? Math.max(4, continuityBase);
-      attempts = [
-        { provider: "gemini", model: geminiDeepModel },
-        { provider: "groq", model: groqGeneralModel },
-        { provider: "openrouter", model: openRouterDeepModel },
-      ];
-      break;
-    case "reflective":
-      reason = input.routeReason ?? "emotionally meaningful turn";
-      emotionalDepthScore = input.emotionalDepthScore ?? 7;
-      continuityDepthScore = input.continuityDepthScore ?? Math.max(4, continuityBase);
-      attempts = [
-        { provider: "gemini", model: geminiDeepModel },
-        { provider: "openrouter", model: openRouterDeepModel },
-        { provider: "groq", model: groqGeneralModel, degraded: true },
-      ];
-      break;
-    case "nuance":
-      reason = input.routeReason ?? "social tension, contradiction, or subtle pushback";
-      emotionalDepthScore = input.emotionalDepthScore ?? 6;
-      continuityDepthScore = input.continuityDepthScore ?? Math.max(4, continuityBase);
-      attempts = [
-        { provider: "gemini", model: geminiDeepModel },
-        { provider: "openrouter", model: openRouterDeepModel },
-        { provider: "groq", model: groqGeneralModel, degraded: true },
+        { provider: "groq", model: MODEL_REGISTRY.resonance },
+        { provider: "openrouter", model: MODEL_REGISTRY.deep },
       ];
       break;
     default:
@@ -165,9 +115,8 @@ export function resolveCandorRoutePlan(input: {
       emotionalDepthScore = input.emotionalDepthScore ?? 5;
       continuityDepthScore = input.continuityDepthScore ?? Math.max(3, continuityBase);
       attempts = [
-        { provider: "gemini", model: geminiRelationalModel },
-        { provider: "groq", model: groqFastModel, degraded: true },
-        { provider: "openrouter", model: openRouterDeepModel },
+        { provider: "openrouter", model: MODEL_REGISTRY.chat },
+        { provider: "groq", model: MODEL_REGISTRY.router, degraded: true },
       ];
       break;
   }

@@ -96,6 +96,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const access = await getCandorAccess(saved.userId);
   const accessProfile = accessProfileFor(access.tier);
   const history = body.history ?? [];
+  const compressedHistory = history.slice(-8);
   const socialState = await getSocialState(saved.userId);
   const [retrievedMemories, factMemories] = await Promise.all([
     retrieveRelationalMemories({
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const turn = await runCandorTurn({
       userId,
       message: content,
-      history,
+      history: compressedHistory,
       memory,
       accessTier: access.tier,
       socialState,
