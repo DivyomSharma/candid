@@ -73,17 +73,6 @@ export function ProfileSurface({
                 <div className="flex items-center gap-5">
                   <Avatar className="h-20 w-20 sm:h-28 sm:w-28 border-2 border-border/60 bg-background/70 shadow-lg shrink-0">
                     <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]">
-
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="contents">
-          {/* HERO PROFILE CARD */}
-          <Card className="surface overflow-hidden border-border/50 bg-card/45 backdrop-blur-sm">
-            <div className="relative h-48 sm:h-56" style={{ background: profile.bannerTone }}>
-              <div className="absolute inset-0 bg-background/20" />
-              <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-5">
-                <div className="flex items-center gap-5">
-                  <Avatar className="h-20 w-20 sm:h-28 sm:w-28 border-2 border-border/60 bg-background/70 shadow-lg shrink-0">
-                    <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]">
                       {profile.initials}
                     </AvatarFallback>
                   </Avatar>

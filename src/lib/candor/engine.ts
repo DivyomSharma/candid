@@ -458,7 +458,7 @@ type FastRouterClassification = {
   importance: number;
 };
 
-async function classifyMessage(message: string, socialState: CandorSocialState, memory: CandorMemory): Promise<FastRouterClassification | undefined> {
+async function classifyMessage(message: string, socialState: ReturnType<typeof normalizeSocialState>, memory: CandorMemory): Promise<FastRouterClassification | undefined> {
   try {
     return await sendCandorJson<FastRouterClassification>({
       systemPrompt: "You are the Candor Fast Router. Classify the user's incoming message. Return ONLY valid JSON with no markdown formatting. Identify the route, a depth score (0.0 to 1.0), and an importance score (0.0 to 1.0).",
