@@ -111,7 +111,7 @@ export function CandorSession({ id }: { id: string }) {
   }, [messages, isResponding, measureComposerClearance, scrollToConversationEnd]);
 
   const history = useMemo(
-    () => messages.filter((message) => !message.pending).map(({ role, content }) => ({ role, content })),
+    () => messages.filter((message) => !message.pending).map(({ role, content }) => ({ role, content })).slice(-10),
     [messages],
   );
 

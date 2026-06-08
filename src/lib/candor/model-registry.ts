@@ -39,9 +39,9 @@ function baseHistoryWindow(route: CandorModelRoute, tier: CandorAccessTier | und
 
   switch (route) {
     case "banter":
-      return 8 + Math.min(2, tierBonus);
+      return 6 + Math.min(2, tierBonus);
     case "extraction":
-      return 6;
+      return 4;
     case "initiative":
       return 16 + tierBonus;
     case "alignment":
@@ -89,7 +89,6 @@ export function resolveCandorRoutePlan(input: {
       attempts = [
         { provider: "groq", model: groqFastModel },
         { provider: "gemini", model: geminiSpeedModel },
-        { provider: "openrouter", model: openRouterFastModel, degraded: true },
       ];
       break;
     case "extraction":
@@ -99,7 +98,6 @@ export function resolveCandorRoutePlan(input: {
       attempts = [
         { provider: "groq", model: groqFastModel },
         { provider: "gemini", model: geminiSpeedModel },
-        { provider: "openrouter", model: openRouterFastModel },
       ];
       break;
     case "initiative":
