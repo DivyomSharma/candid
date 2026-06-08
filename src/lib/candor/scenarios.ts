@@ -84,7 +84,7 @@ export async function generateCandorScenarios(memory: CandorMemory): Promise<Can
         interests: topInterestTopics(memory),
       }),
       temperature: 0.9,
-      maxTokens: 500,
+      maxTokens: 1500,
       modelRoute: "initiative",
       routeReason: "generating highly interactive dynamic scenarios",
       emotionalDepthScore: 4,
@@ -102,9 +102,9 @@ function buildScenariosPrompt(memory: CandorMemory) {
   const seed = Math.random().toString(36).substring(2, 9);
   return `
 you are candor.
-generate 3 completely unique, personalized interactive scenarios to hook the user into a conversation based on their memory.
-if their memory is mostly empty, generate highly creative, unpredictable, and completely random scenarios.
-do NOT use standard examples or cliches. be incredibly specific.
+generate 3 completely unique, unpredictable, and diverse interactive scenarios to hook the user into a conversation.
+use their memory for tone and vibe, but DO NOT restrict the topics to their known interests. if they like movies, do NOT generate 3 movie scenarios. force extreme topic diversity (e.g. one about psychology, one about daily life, one completely absurd).
+do NOT use standard examples or cliches.
 randomness seed: ${seed}
 
 return only valid json:
