@@ -195,7 +195,7 @@ export function buildCandorProfilePresentation(input: {
   };
 }
 
-function buildUnderstandingDepth(memory: CandorMemory | null): CandorProfilePresentation["understandingDepth"] {
+function buildUnderstandingDepth(memory: CandorMemory | null): { phase: "spark" | "rhythm" | "patterns" | "nuance" | "continuity" | "resonance"; line: string } {
   const turns = memory?.turnCount ?? 0;
   const signalCount =
     (memory?.values.length ?? 0) +
