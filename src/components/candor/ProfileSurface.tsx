@@ -73,6 +73,17 @@ export function ProfileSurface({
                 <div className="flex items-center gap-5">
                   <Avatar className="h-20 w-20 sm:h-28 sm:w-28 border-2 border-border/60 bg-background/70 shadow-lg shrink-0">
                     <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]">
+
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="contents">
+          {/* HERO PROFILE CARD */}
+          <Card className="surface overflow-hidden border-border/50 bg-card/45 backdrop-blur-sm">
+            <div className="relative h-48 sm:h-56" style={{ background: profile.bannerTone }}>
+              <div className="absolute inset-0 bg-background/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-5">
+                <div className="flex items-center gap-5">
+                  <Avatar className="h-20 w-20 sm:h-28 sm:w-28 border-2 border-border/60 bg-background/70 shadow-lg shrink-0">
+                    <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]">
                       {profile.initials}
                     </AvatarFallback>
                   </Avatar>
@@ -81,6 +92,12 @@ export function ProfileSurface({
                     <p className="text-xs sm:text-sm font-light uppercase tracking-[0.24em] text-accent/80 mt-1">{profile.handle}</p>
                     <p className="mt-3 text-xs sm:text-sm font-light text-foreground-secondary flex items-center gap-2">
                       {[profile.age, profile.city].filter(Boolean).join(" • ")}
+                    </p>
+                    <p className="mt-1 text-xs sm:text-sm font-light text-foreground-secondary flex items-center gap-2">
+                      {[profile.occupation, profile.education].filter(Boolean).join(" • ")}
+                    </p>
+                    <p className="mt-1 text-xs sm:text-sm font-light text-accent/80 flex items-center gap-2">
+                      {profile.relationshipIntention || "Open, Not Seeking"}
                     </p>
                   </div>
                 </div>
@@ -112,7 +129,7 @@ export function ProfileSurface({
 
             <CardContent className="flex flex-col gap-6 p-6 pt-5">
               <p className="text-lg sm:text-xl font-light leading-8 text-foreground/90 italic">
-                "{profile.atmosphericLine}"
+                "{profile.bio}"
               </p>
               {!publicMode ? (
                 <p className="text-sm font-light leading-6 text-foreground-secondary">{subheading}</p>
@@ -120,17 +137,17 @@ export function ProfileSurface({
             </CardContent>
           </Card>
 
-          {/* SOCIAL ATMOSPHERE */}
+          {/* A FEW THINGS ABOUT ME */}
           <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
             <CardHeader className="p-5 pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
-                <Sparkles className="h-4 w-4 text-accent" />
-                social atmosphere
+                <UserRound className="h-4 w-4 text-accent" />
+                a few things about me
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5 pt-3">
               <div className="flex flex-wrap gap-2.5">
-                {profile.socialAtmosphere.map((chip) => (
+                {profile.aFewThingsAboutMe.map((chip) => (
                   <span
                     key={chip}
                     className="rounded-full border border-border/40 bg-background/30 px-4 py-2 text-sm font-light text-foreground-secondary shadow-sm"
@@ -142,36 +159,16 @@ export function ProfileSurface({
             </CardContent>
           </Card>
 
-          {/* CONNECTION STYLE */}
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
-            <CardHeader className="p-5 pb-2">
-              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
-                <UserRound className="h-4 w-4 text-accent" />
-                connection style
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 p-5 pt-3">
-              {profile.connectionStyle.map((style, i) => (
-                <p
-                  key={style}
-                  className="rounded-2xl border border-border/30 bg-background/20 px-4 py-3 text-sm font-light leading-6 text-foreground-secondary"
-                >
-                  {style}
-                </p>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* THINGS THEY LIGHT UP ABOUT */}
+          {/* LOOKING FOR */}
           <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
             <CardHeader className="p-5 pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
                 <Sparkles className="h-4 w-4 text-accent" />
-                things they light up about
+                looking for
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 p-5 pt-3">
-              {profile.thingsTheyLightUpAbout.map((item, index) => (
+              {profile.lookingFor.map((item, index) => (
                 <p
                   key={item}
                   className={
@@ -186,33 +183,80 @@ export function ProfileSurface({
             </CardContent>
           </Card>
 
-          {/* CONVERSATION ENERGY */}
+          {/* WHAT CANDOR HAS LEARNED */}
           <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
             <CardHeader className="p-5 pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
-                <UserRound className="h-4 w-4 text-accent" />
-                conversation energy
+                <Sparkles className="h-4 w-4 text-accent" />
+                what candor has learned
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 p-5 pt-3 sm:grid-cols-2">
-              {profile.conversationEnergy.map((energy) => (
-                <div key={energy} className="rounded-2xl border border-border/40 bg-background/30 p-4">
+              {profile.whatCandorHasLearned.map((item) => (
+                <div key={item} className="rounded-2xl border border-border/40 bg-background/30 p-4">
                   <p className="text-sm font-light leading-6 text-foreground-secondary break-words">
-                    {energy}
+                    {item}
                   </p>
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          {!publicMode ? (
-            <Link
-              href="/memory-controls"
-              className="text-right text-xs font-light uppercase tracking-[0.18em] text-foreground-secondary/60 transition hover:text-foreground"
-            >
-              privacy & continuity
-            </Link>
-          ) : null}
+          {/* RECENT SIGNALS */}
+          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
+                <UserRound className="h-4 w-4 text-accent" />
+                recent signals
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 p-5 pt-3">
+              {profile.recentSignals.map((signal) => (
+                <div key={signal.label} className="flex flex-col gap-1">
+                  <span className="text-xs font-light uppercase tracking-[0.18em] text-foreground-secondary/60">{signal.label}</span>
+                  <p className="text-sm font-light text-foreground">{signal.value}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* ALIGNMENT & DEPTH */}
+          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-light tracking-wide">
+                <Sparkles className="h-4 w-4 text-accent" />
+                alignment & depth
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 p-5 pt-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-light uppercase tracking-[0.18em] text-foreground-secondary/60">candor depth</span>
+                <p className="text-sm font-light text-foreground">{profile.alignmentAndDepth.phase}</p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-light uppercase tracking-[0.18em] text-foreground-secondary/60">meaningful conversations</span>
+                <p className="text-sm font-light text-foreground">{profile.alignmentAndDepth.meaningfulConversations}</p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-light uppercase tracking-[0.18em] text-foreground-secondary/60">patterns confirmed</span>
+                <p className="text-sm font-light text-foreground">{profile.alignmentAndDepth.patternsConfirmed}</p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-light uppercase tracking-[0.18em] text-foreground-secondary/60">memory confidence</span>
+                <p className="text-sm font-light text-foreground">{profile.alignmentAndDepth.memoryConfidence}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* OPEN DOOR STATUS */}
+          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+            <CardContent className="p-4 flex items-center justify-between">
+              <span className="text-sm font-light text-foreground-secondary">current status</span>
+              <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
+                {profile.openDoorStatus}
+              </span>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {!publicMode ? (
@@ -225,14 +269,6 @@ export function ProfileSurface({
             >
               <ExternalLink className="mr-2 h-4 w-4" />
               preview
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => router.push("/memory-controls")}
-              className="rounded-full px-4 font-light text-foreground-secondary hover:bg-background/40 hover:text-foreground"
-            >
-              privacy & continuity
             </Button>
           </div>
         ) : null}

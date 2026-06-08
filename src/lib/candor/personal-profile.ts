@@ -7,6 +7,9 @@ export type CandorPersonalProfile = {
   genderIdentity: string | null;
   city: string | null;
   relationshipPreference: string | null;
+  shortBio: string | null;
+  occupation: string | null;
+  education: string | null;
 };
 
 export const emptyCandorPersonalProfile: CandorPersonalProfile = {
@@ -16,13 +19,16 @@ export const emptyCandorPersonalProfile: CandorPersonalProfile = {
   genderIdentity: null,
   city: null,
   relationshipPreference: null,
+  shortBio: null,
+  occupation: null,
+  education: null,
 };
 
 export async function getCandorPersonalProfile(userId: string): Promise<CandorPersonalProfile> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data } = await supabaseAdmin
     .from("candor_profiles")
-    .select("username, display_name, dob, gender_identity, city, relationship_preference")
+    .select("username, display_name, dob, gender_identity, city, relationship_preference, short_bio, occupation, education")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -40,6 +46,9 @@ export async function upsertCandorPersonalProfile(userId: string, profile: Cando
       gender_identity: cleanText(profile.genderIdentity, 42),
       city: cleanText(profile.city, 56),
       relationship_preference: cleanText(profile.relationshipPreference, 56),
+      short_bio: cleanText(profile.shortBio, 120),
+      occupation: cleanText(profile.occupation, 56),
+      education: cleanText(profile.education, 56),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
@@ -57,6 +66,9 @@ export function normalizeCandorPersonalProfile(value: unknown): CandorPersonalPr
     genderIdentity: cleanText(readString(row.gender_identity, row.genderIdentity), 42),
     city: cleanText(readString(row.city), 56),
     relationshipPreference: cleanText(readString(row.relationship_preference, row.relationshipPreference), 56),
+    shortBio: cleanText(readString(row.short_bio, row.shortBio), 120),
+    occupation: cleanText(readString(row.occupation), 56),
+    education: cleanText(readString(row.education), 56),
   };
 }
 

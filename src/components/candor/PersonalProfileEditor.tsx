@@ -22,6 +22,9 @@ const emptyProfile: CandorPersonalProfile = {
   genderIdentity: null,
   city: null,
   relationshipPreference: null,
+  shortBio: null,
+  occupation: null,
+  education: null,
 };
 
 export function PersonalProfileEditor({
@@ -129,12 +132,36 @@ export function PersonalProfileEditor({
               className="rounded-2xl border-border/50 bg-background/40"
             />
           </Field>
-          <Field label="relationship preference">
+          <Field label="relationship intention">
             <Input
               value={draft.relationshipPreference ?? ""}
               onChange={(event) => update("relationshipPreference", event.target.value)}
-              placeholder="optional"
+              placeholder="e.g. Friendship, Open Not Seeking"
               className="rounded-2xl border-border/50 bg-background/40"
+            />
+          </Field>
+          <Field label="occupation">
+            <Input
+              value={draft.occupation ?? ""}
+              onChange={(event) => update("occupation", event.target.value)}
+              placeholder="e.g. Founder, Student, Designer"
+              className="rounded-2xl border-border/50 bg-background/40"
+            />
+          </Field>
+          <Field label="education">
+            <Input
+              value={draft.education ?? ""}
+              onChange={(event) => update("education", event.target.value)}
+              placeholder="e.g. IITM BS Data Science, Self-taught"
+              className="rounded-2xl border-border/50 bg-background/40"
+            />
+          </Field>
+          <Field label="profile statement">
+            <Input
+              value={draft.shortBio ?? ""}
+              onChange={(event) => update("shortBio", event.target.value)}
+              placeholder="e.g. building things, watching films..."
+              className="rounded-2xl border-border/50 bg-background/40 sm:col-span-2"
             />
           </Field>
         </div>

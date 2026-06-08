@@ -11,19 +11,24 @@ export type CandorProfilePresentation = {
   bio: string;
   age: string | null;
   city: string | null;
-  atmosphericLine: string;
-  socialAtmosphere: string[];
-  connectionStyle: string[];
-  thingsTheyLightUpAbout: string[];
-  conversationEnergy: string[];
+  occupation: string | null;
+  education: string | null;
+  relationshipIntention: string | null;
+  aFewThingsAboutMe: string[];
+  lookingFor: string[];
+  whatCandorHasLearned: string[];
+  recentSignals: Array<{ label: string; value: string }>;
+  alignmentAndDepth: {
+    phase: string;
+    meaningfulConversations: number;
+    patternsConfirmed: number;
+    memoryConfidence: string;
+  };
+  openDoorStatus: string;
   coreIdentity: {
     lines: string[];
     fragments: string[];
     note: string;
-  };
-  understandingDepth: {
-    phase: "spark" | "rhythm" | "patterns" | "nuance" | "continuity" | "resonance";
-    line: string;
   };
   whatCandorNotices: string[];
   relationalSections: Array<{ title: string; items: string[] }>;
@@ -90,33 +95,49 @@ export function buildCandorProfilePresentation(input: {
 
   const age = ageFromDob(personalProfile?.dob);
   const city = personalProfile?.city || null;
-  const atmosphericLine = memory && memory.turnCount >= 3
-    ? `opens slowly, but moves toward ${values[0] || 'honesty'}.`
-    : "open, not seeking.";
+  const occupation = personalProfile?.occupation || null;
+  const education = personalProfile?.education || null;
+  const relationshipIntention = personalProfile?.relationshipPreference || null;
+  const bio = personalProfile?.shortBio || (memory && memory.turnCount >= 3
+    ? `building things, watching films, thinking too much.` // Fallback example if no short bio
+    : "trying to make meaningful things with meaningful people.");
 
-  const socialAtmosphere = dedupe([
-    memory?.relationalPatterns[0] ? soften(memory.relationalPatterns[0]) : "emotionally direct",
-    needs[0] ? `prefers ${softPhrase(needs[0])}` : "dry humor",
-    socialPreferences[0] ? soften(socialPreferences[0]) : "socially selective",
-    "night owl",
-    "slow opener"
+  const aFewThingsAboutMe = dedupe([
+    memory?.socialPreferences[0] ? soften(memory.socialPreferences[0]) : "Night Owl",
+    interests[0] ? titleCase(themeLabel(interests[0])) : "Indie Films",
+    lifestylePreferences[0] ? titleCase(lifestylePreferences[0]) : "Long Walks",
+    interests[1] ? titleCase(themeLabel(interests[1])) : "Startups",
+    "One-on-One Conversations",
   ]).slice(0, 5);
 
-  const connectionStyle = dedupe([
-    "open, not seeking",
-    memory?.socialPreferences[0] ? soften(memory.socialPreferences[0]) : "playful first, deeper later",
-    values[0] ? `values ${values[0]}` : "values consistency",
-    "emotionally available"
+  const lookingFor = dedupe([
+    relationshipIntention ? titleCase(relationshipIntention) : "Deep Conversations",
+    "Friendship",
+    "Conversation First",
+    "Open, Not Seeking",
   ]).slice(0, 4);
 
-  const thingsTheyLightUpAbout = interests.length ? interests.map(themeLabel) : ["terrible late-night food", "emotionally destructive cinema", "obscure music"];
-
-  const conversationEnergy = [
-    interests[0] ? `gets analytical when talking about ${themeLabel(interests[0])}` : "gets analytical when engaged",
-    socialPreferences[0] ? soften(socialPreferences[0]) : "avoids shallow texting",
-    "replies faster late at night",
-    needs[0] ? `becomes expressive after ${softPhrase(needs[0])}` : "becomes expressive after comfort"
+  const whatCandorHasLearned = [
+    needs[0] ? `Usually opens through ${softPhrase(needs[0])}` : "Usually opens through humor",
+    interests[0] ? `Talks longest about ${themeLabel(interests[0])}` : "Thinks out loud when excited",
+    socialPreferences[0] ? soften(socialPreferences[0]) : "More expressive late at night",
+    values[0] ? `Values ${values[0]} over surface smoothness` : "Values recognition over attention",
   ];
+
+  const recentSignals = [
+    { label: "Thinking About", value: memory?.lifeThemes[0] ? soften(memory.lifeThemes[0]) : "Building Candor" },
+    { label: "Recently Exploring", value: interests[0] ? themeLabel(interests[0]) : "Films that linger" },
+    { label: "Currently Curious About", value: interests[1] ? themeLabel(interests[1]) : "Creative communities" },
+  ];
+
+  const alignmentAndDepth = {
+    phase: understandingDepth.phase === "spark" ? "Surface" : understandingDepth.phase === "rhythm" ? "Familiar" : understandingDepth.phase === "patterns" ? "Understood" : understandingDepth.phase === "nuance" ? "Understood" : understandingDepth.phase === "continuity" ? "Deeply Understood" : "Resonant",
+    meaningfulConversations: memory?.turnCount ?? 0,
+    patternsConfirmed: (memory?.values.length ?? 0) + (memory?.communicationNeeds.length ?? 0) + (memory?.socialPreferences.length ?? 0),
+    memoryConfidence: (memory?.turnCount ?? 0) > 10 ? "high continuity confidence" : "building confidence",
+  };
+
+  const openDoorStatus = "Open to conversation";
 
   return {
     username,
@@ -124,19 +145,19 @@ export function buildCandorProfilePresentation(input: {
     initials: initialsFrom(username),
     publicPath: `/u/${safeHandle}`,
     bannerTone: bannerFrom(values[0]),
-    bio:
-      memory && memory.turnCount >= 3
-        ? `candor reads a mix of ${values[0]}, ${themeLabel(interests[0] ?? themes[0] ?? "quiet intensity")}, and ${softPhrase(needs[0])}.`
-        : "candor is still reading the shape of this person.",
+    bio,
     age: age ? String(age) : null,
     city,
-    atmosphericLine,
-    socialAtmosphere,
-    connectionStyle,
-    thingsTheyLightUpAbout,
-    conversationEnergy,
+    occupation,
+    education,
+    relationshipIntention,
+    aFewThingsAboutMe,
+    lookingFor,
+    whatCandorHasLearned,
+    recentSignals,
+    alignmentAndDepth,
+    openDoorStatus,
     coreIdentity,
-    understandingDepth,
     whatCandorNotices: notices,
     relationalSections: buildRelationalSections({
       memory,
