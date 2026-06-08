@@ -369,11 +369,9 @@ function routeForTurn(
     accessTier === "resonance" ? 5 : accessTier === "continuity" ? 4 : Math.min(3, 1 + Math.floor(turnCount / 6));
 
   if (
-    intuition.emotionalSignal === "high" ||
+    (intuition.emotionalSignal === "high" && continuityDepthScore >= 3 && turnCount > 10) ||
     decision.mode === "comfort" ||
-    socialState.currentAtmosphere === "late_night_vulnerable" ||
-    socialState.currentAtmosphere === "confessional" ||
-    socialState.currentAtmosphere === "emotionally_honest"
+    socialState.currentAtmosphere === "confessional"
   ) {
     return {
       model_route: "reflective" as CandorModelRoute,
