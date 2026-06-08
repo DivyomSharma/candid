@@ -137,7 +137,7 @@ export function CandorHome() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background"
           >
             <div className="relative flex items-center justify-center">
               {/* Silky, highly diffused breathing orb */}
@@ -167,7 +167,7 @@ export function CandorHome() {
         )}
       </AnimatePresence>
 
-      <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-20">
+      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-40 pt-20">
         <AmbientGlow />
         <div className="pointer-events-none absolute inset-0 opacity-70">
           <div className="absolute left-[12%] top-24 h-48 w-48 rounded-full bg-[hsl(var(--glow)/0.08)] blur-3xl" />

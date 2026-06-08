@@ -184,7 +184,7 @@ export function CandorDmChat({ id }: { id: string }) {
   }
 
   return (
-    <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-36 pt-16">
+    <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-48 pt-16">
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[600px] flex-col gap-8">
         <div className="sticky top-0 z-20 -mx-6 flex items-center justify-between bg-background/45 px-6 py-3 backdrop-blur-md">

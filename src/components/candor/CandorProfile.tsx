@@ -91,7 +91,7 @@ export function CandorProfile() {
   }
 
   return (
-    <div className="gradient-bg grain relative min-h-screen overflow-hidden pb-28">
+    <div className="gradient-bg grain relative min-h-screen overflow-x-hidden pb-40">
       <ProfileSurface
         profile={profile}
         heading="you, in context"

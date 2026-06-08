@@ -53,7 +53,7 @@ export function ProfileSurface({
   };
 
   return (
-    <main className="gradient-bg grain relative min-h-screen overflow-hidden px-4 pb-32 pt-16 sm:px-6 sm:pt-20">
+    <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-40 pt-16 sm:px-6 sm:pt-20">
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[700px] flex-col gap-6 sm:gap-8">
         {publicMode ? (

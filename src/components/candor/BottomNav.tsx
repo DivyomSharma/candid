@@ -163,8 +163,10 @@ export function BottomNav() {
   }, [isSignedIn, user?.id]);
 
   return (
-    <nav className="fixed inset-x-0 bottom-4 z-40 flex justify-center gap-2 px-3 pointer-events-none sm:bottom-5 sm:gap-3 sm:px-6">
-      <div className="pointer-events-auto surface soft-shadow flex max-w-[calc(100vw-4.5rem)] items-center gap-0.5 rounded-full border border-border/50 px-1.5 py-1.5 backdrop-blur-md sm:max-w-none sm:gap-1 sm:px-2 sm:py-2">
+    <>
+      <div className="fixed inset-x-0 bottom-0 z-[90] h-28 pointer-events-none bg-gradient-to-t from-background via-background/95 to-transparent" aria-hidden="true" />
+      <nav className="fixed inset-x-0 bottom-4 z-[100] flex justify-center gap-2 px-3 pointer-events-none sm:bottom-5 sm:gap-3 sm:px-6">
+        <div className="pointer-events-auto surface soft-shadow flex max-w-[calc(100vw-4.5rem)] items-center gap-0.5 rounded-full border border-border/50 px-1.5 py-1.5 backdrop-blur-md sm:max-w-none sm:gap-1 sm:px-2 sm:py-2">
         <Link
           href="/candor"
           className="flex h-9 items-center rounded-full px-3 text-sm font-light tracking-tight text-foreground transition-colors active:scale-95 sm:h-10 sm:px-4"
@@ -199,7 +201,8 @@ export function BottomNav() {
       <div className="pointer-events-auto flex items-center">
          <ThemeIsland />
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }
 

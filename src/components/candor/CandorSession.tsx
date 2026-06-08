@@ -192,7 +192,7 @@ export function CandorSession({ id }: { id: string }) {
   }
 
   return (
-    <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-36 pt-16">
+    <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-48 pt-16">
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[600px] flex-col gap-12">
         <div className="pt-8">

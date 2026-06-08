@@ -85,7 +85,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
   }
 
   return (
-    <main className="gradient-bg grain relative min-h-screen overflow-hidden px-6 pb-32 pt-16">
+    <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-40 pt-16">
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[680px] flex-col gap-7">
         <button type="button" onClick={() => router.push("/candor/aligns")} className="flex w-fit items-center gap-2 text-sm font-light text-foreground-secondary transition-colors hover:text-foreground">
