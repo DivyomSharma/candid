@@ -40,7 +40,7 @@ export async function GET() {
     const memory = normalizeMemory(traits?.data ?? createEmptyMemory());
     
     // Fallback immediately if memory is empty
-    if (!memory.values.length && !memory.softSpots.length && !memory.relationalPatterns.length && !memory.communicationNeeds.length && !memory.interests.length) {
+    if (!memory.values.length && !memory.softSpots.length && !memory.relationalPatterns.length && !memory.communicationNeeds.length && !memory.lifeThemes.length) {
       return NextResponse.json(
         { scenarios: fallbackScenarios().scenarios },
         { headers: { "Cache-Control": "no-store" } },
