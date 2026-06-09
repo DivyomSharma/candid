@@ -47,18 +47,7 @@ export function CandorHome() {
   }, [isSignedIn, user?.id]);
 
   useEffect(() => {
-    if (!isSignedIn || !user?.id) return;
-
-    fetch("/api/candor/initiatives")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: { message?: PreviewMessage | null } | null) => {
-        if (data?.message) {
-          setPreview({ role: "ai", content: data.message.content });
-          window.localStorage.setItem(candorThreadPresenceStorageKey(user.id), "initiative");
-          window.dispatchEvent(new Event("candor-thread-presence"));
-        }
-      })
-      .catch(() => {});
+    // Initiatives (random uninitiated messages) are disabled based on feedback
   }, [isSignedIn, user?.id]);
 
   const start = async (content: string) => {

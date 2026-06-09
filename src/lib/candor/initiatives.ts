@@ -10,57 +10,13 @@ export async function maybeQueueInitiative(input: {
   lastUserMessage: string;
   accessTier?: CandorTier;
 }) {
-  const accessProfile = accessProfileFor(input.accessTier ?? "echo");
-  const minimumTurns = input.accessTier === "resonance" ? 2 : input.accessTier === "continuity" ? 3 : 5;
-  if (input.memory.turnCount < minimumTurns) return;
-  if (input.socialState.recentEnergy === "heavy") return;
-
-  try {
-    const supabaseAdmin = getSupabaseAdmin();
-    const { count } = await supabaseAdmin
-      .from("candor_initiatives")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", input.userId)
-      .in("status", ["pending", "paused"]);
-
-    if ((count ?? 0) >= accessProfile.initiativeQueueCap) return;
-
-    const content = initiativeLine(input.memory, input.socialState);
-    const scheduledFor = new Date(Date.now() + 1000 * 60 * 60 * accessProfile.initiativeBufferHours).toISOString();
-
-    await supabaseAdmin.from("candor_initiatives").insert({
-      user_id: input.userId,
-      kind: "curiosity",
-      content,
-      scheduled_for: scheduledFor,
-    });
-  } catch (error) {
-    console.error("Candor initiative queue skipped:", error);
-  }
+  // Initiatives (random thoughts) are currently disabled based on feedback.
+  return;
 }
 
 export async function fetchDueInitiative(userId: string) {
-  try {
-    const supabaseAdmin = getSupabaseAdmin();
-    const { data, error } = await supabaseAdmin
-      .from("candor_initiatives")
-      .select("id, content")
-      .eq("user_id", userId)
-      .eq("status", "pending")
-      .lte("scheduled_for", new Date().toISOString())
-      .order("scheduled_for", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (error || !data) return null;
-    await supabaseAdmin
-      .from("candor_initiatives")
-      .update({ status: "sent", sent_at: new Date().toISOString() })
-      .eq("id", data.id);
-    return data.content as string;
-  } catch {
-    return null;
-  }
+  // Initiatives are disabled
+  return null;
 }
 
 function initiativeLine(memory: CandorMemory, socialState: CandorSocialState) {
