@@ -1,4 +1,4 @@
-import { createEmptyProfileV4, interestLevelMap, topInterestTopics } from "@/lib/candor/memory";
+import { createEmptyProfileV4, interestLevelMap, topInterestTopics, createEmptyMemory } from "@/lib/candor/memory";
 import { ageFromDob, type CandorPersonalProfile } from "@/lib/candor/personal-profile";
 import type { CandorMemory, CandorProfileV4 } from "@/lib/candor/types";
 
@@ -69,7 +69,8 @@ export function buildCandorProfilePresentation(input: {
   const values = fallback(memory?.values, ["honesty"]);
   const needs = fallback(memory?.communicationNeeds, ["gentle directness"]);
   const softSpots = fallback(memory?.softSpots, ["feeling unseen"]);
-  const interests = topInterestTopics(memory ?? emptyMemoryStub(), 5);
+  const mem = memory || createEmptyMemory();
+  const interests = topInterestTopics(mem, 5);
   const socialPreferences = fallback(memory?.socialPreferences, derivedSocialPreferences(memory));
   const lifestylePreferences = fallback(memory?.lifestylePreferences, derivedLifestylePreferences(memory, interests));
   const themes = dedupe([
@@ -79,7 +80,7 @@ export function buildCandorProfilePresentation(input: {
   ]).slice(0, 5);
   const notices = buildNotices(memory, values, needs, interests);
   const resonanceIndicators = buildResonance(memory, socialPreferences, interests);
-  const interestLevels = interestLevelMap(memory ?? emptyMemoryStub());
+  const interestLevels = interestLevelMap(mem);
   const alignmentStyle = buildAlignmentStyle(values[0], needs[0], socialPreferences[0], interests[0]);
   const understandingDepth = buildUnderstandingDepth(memory);
   const coreIdentity = buildCoreIdentity({
@@ -491,31 +492,3 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function emptyMemoryStub(): CandorMemory {
-  return {
-    turnCount: 0,
-    lastModes: [],
-    values: [],
-    softSpots: [],
-    lifeThemes: [],
-    relationalPatterns: [],
-    communicationNeeds: [],
-    appreciatesInPeople: [],
-    socialPreferences: [],
-    lifestylePreferences: [],
-    seenScenarios: [],
-    alignmentReady: false,
-    notes: [],
-    presenceState: { clarity: "low", curiosity: "medium", resonance: "low" },
-    responseHistory: [],
-    recentStructures: [],
-    suppressedPhrases: [],
-    interactionProfile: {
-      choicePatterns: [],
-      acceptedInsightTypes: [],
-      rejectedInsightTypes: [],
-      engagementSignals: [],
-      interestSignals: {},
-    },
-  };
-}

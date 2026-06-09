@@ -92,10 +92,11 @@ function CardContentInner({
   onShuffle: () => void;
 }) {
   let Icon = Sparkles;
-  if (scenario.type === "frame") Icon = ImageIcon;
-  if (scenario.type === "mirror") Icon = Eye;
-  if (scenario.type === "finish_the_sentence") Icon = PenLine;
-  if (scenario.type === "tiny_preference") Icon = Coffee;
+  if (scenario.type === "hear_me_out") Icon = Coffee;
+  if (scenario.type === "hot_take") Icon = PenLine;
+  if (scenario.type === "red_flag") Icon = ImageIcon;
+  if (scenario.type === "green_flag") Icon = Sparkles;
+  if (scenario.type === "delusion_check") Icon = Eye;
   
   const hasOptions = scenario.options && scenario.options.length > 0;
 
@@ -195,14 +196,7 @@ export function ScenarioPanel({ isSignedIn, onScenarioSelect, onScenarioPrefill 
   const showLoader = isFetching || !minLoadingDone;
 
   const handleSelect = (scenario: CandorScenario, option: string) => {
-    let context = "";
-    if (scenario.type === "frame") {
-      context = `[System: The user is choosing a frame: "${scenario.prompt}"]\n\n`;
-    } else if (scenario.type === "tiny_preference") {
-      context = `[System: The user is selecting a tiny preference: "${scenario.prompt}"]\n\n`;
-    } else {
-      context = `[System: The user is responding to the scenario: "${scenario.prompt}"]\n\n`;
-    }
+    const context = `[System: The user is responding to the scenario: "${scenario.prompt}"]\n\n`;
     onScenarioSelect(`${context}${option}`);
   };
 

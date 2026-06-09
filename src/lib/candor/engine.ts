@@ -77,7 +77,7 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     socialMoveInstruction: socialMoveInstruction(socialMove),
     retrievedMemories: input.retrievedMemories ?? [],
     understanding: understandingLine(socialReadState),
-    scenario: scenario?.text,
+    scenario: scenario?.prompt,
     isImproveMode: input.isImproveMode,
   });
   const routeDecision = routeForTurn(
@@ -117,7 +117,7 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     learningBias,
     socialState: startingSocialState,
     socialMove,
-    scenario: scenario?.text,
+    scenario: scenario?.prompt,
     suppressedPhrases,
   });
 

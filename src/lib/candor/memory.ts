@@ -456,8 +456,8 @@ function normalizeProfileV4(value: unknown): CandorProfileV4 {
   if (!value || typeof value !== "object") return empty;
   const val = value as Partial<CandorProfileV4>;
   
-  const cur = val.currently || {};
-  const loops = val.openLoops || {};
+  const cur = (val.currently || {}) as Record<string, string>;
+  const loops = (val.openLoops || {}) as Record<string, string>;
 
   return {
     currently: {

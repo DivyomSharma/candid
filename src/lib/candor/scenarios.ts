@@ -1,4 +1,5 @@
 import type { CandorMemory } from "@/lib/candor/types";
+import { createEmptyMemory } from "@/lib/candor/memory";
 
 export type SignalType =
   | "hear_me_out"
@@ -439,27 +440,7 @@ export function selectSignals(memory: CandorMemory, limit = 15): CandorSignal[] 
 
 // Retro-compatibility functions
 export function fallbackScenarios() {
-  const dummyMemory = {
-    turnCount: 0,
-    lastModes: [],
-    values: [],
-    softSpots: [],
-    lifeThemes: [],
-    relationalPatterns: [],
-    communicationNeeds: [],
-    appreciatesInPeople: [],
-    socialPreferences: [],
-    lifestylePreferences: [],
-    seenScenarios: [],
-    answeredSignals: {},
-    alignmentReady: false,
-    notes: [],
-    presenceState: { clarity: "low", curiosity: "medium", resonance: "low" },
-    responseHistory: [],
-    recentStructures: [],
-    suppressedPhrases: [],
-    interactionProfile: { choicePatterns: [], acceptedInsightTypes: [], rejectedInsightTypes: [], engagementSignals: [], interestSignals: {} }
-  } as CandorMemory;
+  const dummyMemory = createEmptyMemory();
   
   return {
     scenarios: selectSignals(dummyMemory, 3)

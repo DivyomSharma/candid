@@ -30,6 +30,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import type { CandorProfilePresentation } from "@/lib/candor/profile";
+import type { CandorMemory } from "@/lib/candor/types";
 
 // Custom premium brand SVG icons
 const SpotifyIcon = () => (
@@ -74,7 +75,7 @@ export function ProfileSurface({
   publicMode?: boolean;
 }) {
   const router = useRouter();
-  const [viewerTraits, setViewerTraits] = useState<Record<string, unknown> | null>(null);
+  const [viewerTraits, setViewerTraits] = useState<CandorMemory | null>(null);
 
   const fullUrl = useMemo(() => {
     if (typeof window === "undefined") return profile.publicPath;
