@@ -57,7 +57,28 @@ export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelPro
   };
 
   if (isLoading) {
-    return null;
+    return (
+      <div className="flex flex-col gap-5 w-full">
+        <Card className="surface border-border/20 bg-card/10 backdrop-blur-md relative overflow-hidden">
+          <motion.div
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            className="flex flex-col gap-4 p-5"
+          >
+            <div className="h-3 w-32 rounded-full bg-foreground-secondary/20" />
+            <div className="flex flex-col gap-2 mt-1">
+              <div className="h-4 w-full rounded-full bg-foreground-secondary/30" />
+              <div className="h-4 w-[80%] rounded-full bg-foreground-secondary/30" />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <div className="h-11 rounded-xl bg-foreground-secondary/20" />
+              <div className="h-11 rounded-xl bg-foreground-secondary/20" />
+            </div>
+          </motion.div>
+        </Card>
+      </div>
+    );
   }
 
   if (scenarios.length === 0) return null;

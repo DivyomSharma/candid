@@ -15,6 +15,7 @@ import { createSupabaseBrowser } from "@/lib/supabase-browser";
 export type CandorAuthUser = {
   id: string;
   email: string | null;
+  firstName: string | null;
   provider: "supabase" | "clerk";
 };
 
@@ -72,12 +73,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ? {
         id: supabaseUser.id,
         email: supabaseUser.email ?? null,
+        firstName: supabaseUser.user_metadata?.first_name ?? supabaseUser.user_metadata?.name?.split(" ")[0] ?? null,
         provider: "supabase",
       }
     : clerkUser
       ? {
           id: clerkUser.id,
           email: clerkUser.primaryEmailAddress?.emailAddress ?? null,
+          firstName: clerkUser.firstName ?? null,
           provider: "clerk",
         }
       : null;

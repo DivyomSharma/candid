@@ -171,17 +171,17 @@ export function CandorHome() {
         )}
       </AnimatePresence>
 
-      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-52 pt-20">
+      <main className="gradient-bg grain relative flex min-h-screen flex-col overflow-x-hidden px-6 pb-44 pt-20">
         <AmbientGlow />
         <div className="pointer-events-none absolute inset-0 opacity-70">
           <div className="absolute left-[12%] top-24 h-48 w-48 rounded-full bg-[hsl(var(--glow)/0.08)] blur-3xl" />
           <div className="absolute bottom-28 right-[10%] h-56 w-56 rounded-full bg-[hsl(var(--accent)/0.07)] blur-3xl" />
         </div>
-        <section className="relative z-10 mx-auto flex min-h-[calc(100vh-10rem)] max-w-[600px] flex-col justify-center gap-10">
+        <section className="relative z-10 mx-auto flex w-full max-w-[600px] flex-1 flex-col justify-center gap-10">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="relative">
             <p className="mb-4 text-sm font-light text-foreground-secondary">
               {isSignedIn
-                ? `hey ${user?.email?.split("@")[0]?.toLowerCase() ?? "there"}`
+                ? `hey ${user?.firstName?.toLowerCase() || user?.email?.split("@")[0]?.toLowerCase() || "there"}`
                 : "the thread continues quietly"}
             </p>
             <h1 className="max-w-[11ch] text-4xl font-light leading-[0.96] tracking-tight md:text-[4.5rem]">
