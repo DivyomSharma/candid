@@ -232,25 +232,72 @@ export function CandorHome() {
           >
             <div className="relative flex w-full items-center">
               <div className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,hsl(var(--foreground)/0.03),transparent)]" />
-              <input
+              <motion.input
                 id="candor-home-input"
                 type="text"
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
                 placeholder="start with the thing you actually care about"
-                className="h-14 w-full rounded-full border border-border/50 bg-background/45 pl-6 pr-[150px] sm:pr-40 text-base font-light text-foreground placeholder:text-muted-foreground outline-none transition-shadow focus:border-accent/40 focus:ring-1 focus:ring-accent/40 text-ellipsis overflow-hidden whitespace-nowrap"
+                animate={{ paddingRight: message.length > 0 || isStarting ? 60 : 160 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                className="h-14 w-full rounded-full border border-border/50 bg-background/45 pl-6 text-base font-light text-foreground placeholder:text-muted-foreground outline-none transition-shadow focus:border-accent/40 focus:ring-1 focus:ring-accent/40 text-ellipsis overflow-hidden whitespace-nowrap"
               />
 
               <div className="absolute right-1.5 flex items-center">
                 {isLoaded && isSignedIn ? (
-                  <Button
+                  <motion.button
                     type="submit"
                     disabled={!message.trim() || isStarting}
-                    className="h-11 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground hover:bg-accent/90"
+                    animate={{ 
+                      width: message.length > 0 || isStarting ? 44 : "auto",
+                      paddingLeft: message.length > 0 || isStarting ? 0 : 20,
+                      paddingRight: message.length > 0 || isStarting ? 0 : 20,
+                    }}
+                    whileHover={(!message.trim() || isStarting) ? {} : { scale: 1.03 }}
+                    whileTap={(!message.trim() || isStarting) ? {} : { scale: 0.97 }}
+                    transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                    className="h-11 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-primary-foreground transition-colors hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
                   >
-                    {isStarting ? "opening..." : preview ? "keep it going" : "open the thread"}
-                    <ArrowRight data-icon="inline-end" className="ml-1.5 h-4 w-4" />
-                  </Button>
+                    <AnimatePresence mode="wait" initial={false}>
+                      {isStarting ? (
+                        <motion.div
+                          key="dots"
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.15 }}
+                          className="flex items-center gap-1"
+                        >
+                          <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, delay: 0 }} className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
+                          <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, delay: 0.2 }} className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
+                          <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, delay: 0.4 }} className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
+                        </motion.div>
+                      ) : message.length > 0 ? (
+                        <motion.div
+                          key="arrow"
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.15 }}
+                          className="flex items-center justify-center"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="text"
+                          initial={{ opacity: 0, x: -5 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 5 }}
+                          transition={{ duration: 0.15 }}
+                          className="flex items-center whitespace-nowrap"
+                        >
+                          {preview ? "keep it going" : "open the thread"}
+                          <ArrowRight className="ml-1.5 h-4 w-4" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
                 ) : (
                   <Button
                     type="button"
