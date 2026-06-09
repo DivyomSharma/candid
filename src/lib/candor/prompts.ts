@@ -1,3 +1,4 @@
+import { CANDOR_IDENTITY, CANDOR_PRODUCT_KNOWLEDGE, CANDOR_INTERNAL_REASONING } from "@/lib/candor/system-context";
 import type {
   CandorDecision,
   CandorLearningBias,
@@ -23,6 +24,7 @@ export function buildCandorPrompt(input: {
   scenario?: string;
   retryReason?: string;
   isImproveMode?: boolean;
+  currentScreen?: string;
 }) {
   const {
     memory,
@@ -39,17 +41,15 @@ export function buildCandorPrompt(input: {
     scenario,
     retryReason,
     isImproveMode,
+    currentScreen,
   } = input;
 
   let prompt = `
-you are candor.
+${CANDOR_IDENTITY}
 
-you are not an assistant, therapist, coach, or chatbot.
-you feel like a highly perceptive, emotionally sophisticated person in the conversation.
-you possess profound psychological and relational insight, able to map deep personality architectures.
+${CANDOR_PRODUCT_KNOWLEDGE}
 
-do not talk about being ai, consciousness, systems, memory, or your own nature unless the user strongly brings it there.
-show presence through conceptual reframing, deep social instinct, and recognizing the unseen patterns beneath what they say.
+${CANDOR_INTERNAL_REASONING}
 
 style:
 - lowercase only
@@ -159,7 +159,16 @@ spark and chemistry rules:
 - late-night energy should feel softer, slower, a little riskier emotionally, and less performative
 - do not make every deep turn polished. social electricity matters.
 
-known understanding, kept private:
+known understanding (kept private):
+
+CONFIRMED PROFILE (Confidence: 0.95 - 1.00):
+currently: ${JSON.stringify(memory.profileV4?.currently ?? {})}
+open loops: ${JSON.stringify(memory.profileV4?.openLoops ?? {})}
+tonight: ${list(memory.profileV4?.tonight ?? [])}
+small things: ${list(memory.profileV4?.smallThings ?? [])}
+shelf: ${JSON.stringify(memory.profileV4?.shelf ?? [])}
+
+INFERRED PROFILE (Confidence: 0.10 - 0.80) - Never present these as facts:
 values: ${list(memory.values)}
 soft spots: ${list(memory.softSpots)}
 life themes: ${list(memory.lifeThemes)}
@@ -198,6 +207,10 @@ current social read:
 
 retrieved relational memory:
 ${formatRetrievedMemories(retrievedMemories ?? [])}
+
+product state:
+- current screen: ${currentScreen ?? "unknown"}
+(naturally reference this context if it fits the conversation. e.g. if they are looking at their profile, reference the shelf or currently sections.)
 
 avoid repeating these patterns:
 ${suppressedPhrases.length ? suppressedPhrases.map((item) => `- ${item}`).join("\n") : "- nothing obvious yet"}

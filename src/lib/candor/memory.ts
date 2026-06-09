@@ -111,7 +111,7 @@ export function updateTurnMemory(
     presenceState: PresenceState;
   },
 ) {
-  return {
+  const updated = {
     ...memory,
     turnCount: memory.turnCount + 1,
     lastModes: [...memory.lastModes, input.mode].slice(-6),
@@ -120,6 +120,12 @@ export function updateTurnMemory(
     suppressedPhrases: buildSuppressedPhrases([...memory.responseHistory, input.reply]),
     presenceState: input.presenceState,
   };
+
+  if (updated.profileV4) {
+    updated.profileV4.badges = calculateBadgeConfidences(updated);
+  }
+
+  return updated;
 }
 
 export function recordInteractionSignals(
@@ -415,7 +421,271 @@ function mergeInterestSignals(current: Record<string, number>, incoming: unknown
   );
 }
 
-import type { CandorProfileV4 } from "@/lib/candor/types";
+import type { CandorProfileV4, CandorBadge } from "@/lib/candor/types";
+
+export const BEHAVIORAL_BADGES = [
+  { label: "💻 Builder", keywords: ["founder", "startup", "developer", "programmer", "coding", "engineer", "build", "builder"] },
+  { label: "🎬 Film Brain", keywords: ["movie", "movies", "film", "films", "cinema", "director", "letterboxd"] },
+  { label: "🎵 Playlist Sharer", keywords: ["music", "album", "song", "songs", "playlist", "spotify"] },
+  { label: "📚 Reader", keywords: ["book", "books", "reading", "read", "novel", "literature", "author"] },
+  { label: "☁ Daydreamer", keywords: ["dreamer", "daydreaming", "daydream", "zoning out", "wandering mind", "lost in thought"] },
+  { label: "🏔 Explorer", keywords: ["travel", "exploring", "hike", "hiking", "outdoors", "mountains", "adventure"] },
+  { label: "🎨 Designer", keywords: ["designer", "design", "artist", "ui", "ux", "typeface", "typography", "branding"] },
+  { label: "📸 Observer", keywords: ["photography", "observer", "taking photos", "noticing details", "people watching"] },
+  { label: "✍ Writer", keywords: ["writer", "writing", "write", "poetry", "poet", "journal", "journaling"] },
+  { label: "🌙 Night Owl", keywords: ["night owl", "late night", "3am", "nocturnal", "sleep schedule", "insomnia"] },
+  { label: "🗺 Wanderer", keywords: ["wanderer", "wandering", "wanderlust", "traveling", "exploring cities"] },
+  { label: "🎮 Gamer", keywords: ["gamer", "gaming", "games", "playstation", "xbox", "nintendo", "rpg"] },
+  { label: "🎧 Album Listener", keywords: ["vinyl", "record", "listening to albums", "full album", "album listener"] },
+  { label: "🌧 Rain Person", keywords: ["rain", "rainy days", "pluviophile", "thunderstorms", "rain person"] },
+  { label: "🍜 Midnight Snacker", keywords: ["midnight snack", "midnight snacker", "midnight food", "late night eating"] },
+  { label: "☕ Café Hopper", keywords: ["café", "cafe", "cafés", "coffee shop", "coffee shops", "café hopper"] },
+  { label: "🧠 Curious Mind", keywords: ["curious", "curiosity", "learning", "rabbit holes", "research spirals", "obsessed with"] },
+  { label: "🎭 Theater Kid", keywords: ["theater", "broadway", "acting", "drama", "musical", "plays"] },
+  { label: "🏃 Runner", keywords: ["runner", "running", "jogging", "marathon", "movement"] },
+  { label: "🌱 Plant Parent", keywords: ["plants", "plant parent", "gardening", "monstera", "houseplants"] }
+];
+
+export function calculateBadgeConfidences(memory: CandorMemory): CandorBadge[] {
+  const textSource: string[] = [];
+
+  if (memory.profileV4?.currently) {
+    const cur = memory.profileV4.currently;
+    if (cur.building) textSource.push("building: " + cur.building);
+    if (cur.watching) textSource.push("watching: " + cur.watching);
+    if (cur.reading) textSource.push("reading: " + cur.reading);
+    if (cur.listening) textSource.push("listening: " + cur.listening);
+    if (cur.thinking) textSource.push("thinking: " + cur.thinking);
+  }
+
+  if (memory.profileV4?.shelf) {
+    memory.profileV4.shelf.forEach(item => {
+      textSource.push(`${item.key}: ${item.value}`);
+    });
+  }
+
+  if (memory.profileV4?.smallThings) {
+    textSource.push(...memory.profileV4.smallThings);
+  }
+
+  if (memory.profileV4?.tonight) {
+    textSource.push(...memory.profileV4.tonight);
+  }
+
+  textSource.push(...(memory.values || []));
+  textSource.push(...(memory.softSpots || []));
+  textSource.push(...(memory.lifeThemes || []));
+  textSource.push(...(memory.relationalPatterns || []));
+  textSource.push(...(memory.communicationNeeds || []));
+  textSource.push(...(memory.appreciatesInPeople || []));
+  textSource.push(...(memory.socialPreferences || []));
+  textSource.push(...(memory.lifestylePreferences || []));
+  textSource.push(...(memory.notes || []));
+
+  if (memory.profileV4?.socialLinks) {
+    Object.keys(memory.profileV4.socialLinks).forEach(key => {
+      textSource.push(`sociallink: ${key}`);
+    });
+  }
+
+  const interestSignals = memory.interactionProfile?.interestSignals || {};
+  const fullText = textSource.join(" ").toLowerCase();
+
+  const existingBadgesMap = new Map<string, CandorBadge>();
+  if (memory.profileV4?.badges) {
+    memory.profileV4.badges.forEach((b: CandorBadge | string) => {
+      const label = (typeof b === "string" ? b : b.label).trim();
+      const normLabel = label.replace(/[^\w\s]/g, "").trim().toLowerCase();
+      
+      const badgeObj = typeof b === "string" ? {
+        label,
+        confidence: 0.95,
+        source: "confirmed" as const
+      } : {
+        label: b.label,
+        confidence: typeof b.confidence === "number" ? b.confidence : 0.95,
+        source: (b.source === "confirmed" ? "confirmed" : "inferred") as "confirmed" | "inferred"
+      };
+      
+      existingBadgesMap.set(normLabel, badgeObj);
+    });
+  }
+
+  const result: CandorBadge[] = [];
+
+  for (const bInfo of BEHAVIORAL_BADGES) {
+    const label = bInfo.label;
+    const cleanLabel = label.replace(/[^\w\s]/g, "").trim().toLowerCase();
+    
+    const existing = existingBadgesMap.get(cleanLabel);
+    if (existing && existing.source === "confirmed") {
+      result.push({
+        label: existing.label,
+        confidence: 1.0,
+        source: "confirmed"
+      });
+      continue;
+    }
+
+    let score = 0.0;
+    let keywordMatches = 0;
+    for (const kw of bInfo.keywords) {
+      if (fullText.includes(kw)) {
+        keywordMatches += 1;
+      }
+    }
+    
+    if (keywordMatches > 0) {
+      score += Math.min(0.5, keywordMatches * 0.15);
+    }
+
+    if (cleanLabel === "builder") {
+      if (memory.profileV4?.currently?.building) score += 0.45;
+      if (fullText.includes("founder") || fullText.includes("developer")) score += 0.35;
+      if (interestSignals["startups"] >= 3) score += 0.25;
+    } else if (cleanLabel === "film brain") {
+      if (memory.profileV4?.currently?.watching) score += 0.45;
+      if (fullText.includes("letterboxd") || fullText.includes("favorite movie") || fullText.includes("before sunrise")) score += 0.35;
+      if (interestSignals["movies"] >= 3) score += 0.25;
+    } else if (cleanLabel === "playlist sharer") {
+      if (memory.profileV4?.socialLinks?.spotify) score += 0.55;
+      if (fullText.includes("playlist") || fullText.includes("spotify") || fullText.includes("favorite album")) score += 0.25;
+      if (interestSignals["music"] >= 3) score += 0.25;
+    } else if (cleanLabel === "reader") {
+      if (memory.profileV4?.currently?.reading) score += 0.45;
+      if (fullText.includes("favorite book") || fullText.includes("reading") || fullText.includes("norwegian wood")) score += 0.35;
+      if (interestSignals["philosophy"] >= 2 || interestSignals["psychology"] >= 2) score += 0.15;
+    } else if (cleanLabel === "explorer") {
+      if (fullText.includes("travel") || fullText.includes("mountains") || fullText.includes("exploring")) score += 0.45;
+    } else if (cleanLabel === "designer") {
+      if (fullText.includes("designer") || fullText.includes("typefaces") || fullText.includes("branding")) score += 0.55;
+      if (interestSignals["design"] >= 3) score += 0.35;
+    } else if (cleanLabel === "night owl") {
+      if (fullText.includes("night owl") || fullText.includes("late night") || fullText.includes("3am")) score += 0.55;
+      if (memory.profileV4?.tonight?.includes("awake") || memory.profileV4?.tonight?.includes("night")) score += 0.35;
+    } else if (cleanLabel === "gamer") {
+      if (interestSignals["games"] >= 3) score += 0.55;
+      if (fullText.includes("gamer") || fullText.includes("gaming") || fullText.includes("playstation") || fullText.includes("nintendo")) score += 0.35;
+    } else if (cleanLabel === "caf hopper") {
+      if (fullText.includes("café") || fullText.includes("cafe") || fullText.includes("coffee shop")) score += 0.55;
+    } else if (cleanLabel === "curious mind") {
+      if (fullText.includes("curiosity") || fullText.includes("rabbit hole") || fullText.includes("research spiral")) score += 0.55;
+    }
+
+    let finalConfidence = score;
+    if (finalConfidence >= 0.85) {
+      finalConfidence = 0.92;
+    } else {
+      finalConfidence = Math.max(0.10, Math.min(0.89, finalConfidence));
+    }
+
+    result.push({
+      label: bInfo.label,
+      confidence: parseFloat(finalConfidence.toFixed(2)),
+      source: "inferred"
+    });
+  }
+
+  for (const [normLabel, existing] of existingBadgesMap.entries()) {
+    const isBehavioral = BEHAVIORAL_BADGES.some(b => b.label.replace(/[^\w\s]/g, "").trim().toLowerCase() === normLabel);
+    if (!isBehavioral && existing.source === "confirmed") {
+      result.push(existing);
+    }
+  }
+
+  return result;
+}
+
+export function applyUserCorrections(message: string, memory: CandorMemory): CandorMemory {
+  const text = message.toLowerCase().trim();
+  const negations = [
+    /\b(don't|dont|do not|never|no|not|hate|dislike)\b/,
+    /\b(remove|delete|clear)\b/
+  ];
+
+  const hasNegation = negations.some(pattern => pattern.test(text));
+  if (!hasNegation) return memory;
+
+  const updated = { ...memory };
+  if (updated.profileV4) {
+    updated.profileV4 = {
+      ...updated.profileV4,
+      currently: { ...updated.profileV4.currently },
+      openLoops: { ...updated.profileV4.openLoops },
+      shelf: [...updated.profileV4.shelf],
+      smallThings: [...updated.profileV4.smallThings],
+      tonight: [...updated.profileV4.tonight],
+      badges: [...updated.profileV4.badges],
+    };
+  }
+
+  const originalBadges = updated.profileV4?.badges || [];
+  const keptBadges: CandorBadge[] = [];
+
+  for (const badge of originalBadges) {
+    const label = badge.label.toLowerCase();
+    const badgeWords = label.split(" ");
+    let isNegated = false;
+
+    if (text.includes(label)) {
+      isNegated = true;
+    } else if (badgeWords.some(w => w.length > 3 && text.includes(w))) {
+      isNegated = true;
+    }
+
+    if (isNegated) {
+      continue;
+    }
+    keptBadges.push(badge);
+  }
+
+  const cleanedBadges = keptBadges.filter(badge => {
+    const label = badge.label.toLowerCase();
+    if (text.includes("chai") && label.includes("chai")) return false;
+    if (text.includes("coffee") && label.includes("coffee")) return false;
+    if (text.includes("pizza") && label.includes("pizza")) return false;
+    return true;
+  });
+
+  if (updated.profileV4) {
+    updated.profileV4.badges = cleanedBadges;
+  }
+
+  const keywordsToClean: string[] = [];
+  if (text.includes("chai")) keywordsToClean.push("chai");
+  if (text.includes("coffee")) keywordsToClean.push("coffee");
+  if (text.includes("pizza")) keywordsToClean.push("pizza");
+
+  const removedLabels = originalBadges
+    .filter(b => !cleanedBadges.includes(b))
+    .map(b => b.label.toLowerCase());
+
+  for (const label of removedLabels) {
+    keywordsToClean.push(label);
+    label.split(" ").forEach(w => {
+      if (w.length > 3) keywordsToClean.push(w);
+    });
+  }
+
+  if (keywordsToClean.length > 0) {
+    const filterFn = (item: string) => {
+      const lowerItem = item.toLowerCase();
+      return !keywordsToClean.some(kw => lowerItem.includes(kw));
+    };
+
+    updated.values = updated.values.filter(filterFn);
+    updated.softSpots = updated.softSpots.filter(filterFn);
+    updated.lifeThemes = updated.lifeThemes.filter(filterFn);
+    updated.relationalPatterns = updated.relationalPatterns.filter(filterFn);
+    updated.communicationNeeds = updated.communicationNeeds.filter(filterFn);
+    updated.appreciatesInPeople = updated.appreciatesInPeople.filter(filterFn);
+    updated.socialPreferences = updated.socialPreferences.filter(filterFn);
+    updated.lifestylePreferences = updated.lifestylePreferences.filter(filterFn);
+    updated.notes = updated.notes.filter(filterFn);
+  }
+
+  return updated;
+}
 
 export function createEmptyProfileV4(): CandorProfileV4 {
   return {
@@ -426,7 +696,7 @@ export function createEmptyProfileV4(): CandorProfileV4 {
       listening: "bon iver",
       thinking: "moving cities"
     },
-    tonight: ["awake", "chai", "rain", "coding", "indie"],
+    tonight: ["awake", "rain", "coding", "indie"],
     shelf: [
       { key: "favorite movie", value: "before sunrise" },
       { key: "favorite album", value: "for emma, forever ago" },
@@ -447,8 +717,39 @@ export function createEmptyProfileV4(): CandorProfileV4 {
       "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=600",
       "https://images.unsplash.com/photo-1507133750040-4a8f57021571?q=80&w=600"
     ],
-    badges: ["night owl", "builder", "chai lover"]
+    badges: [
+      { label: "🌙 Night Owl", confidence: 0.91, source: "inferred" },
+      { label: "💻 Builder", confidence: 0.98, source: "confirmed" }
+    ]
   };
+}
+
+export function normalizeBadge(badge: unknown): CandorBadge | null {
+  if (!badge) return null;
+  if (typeof badge === "string") {
+    const label = badge.trim();
+    const cleanLabel = label.toLowerCase();
+    if (cleanLabel === "chai lover" || cleanLabel === "coffee addict" || cleanLabel === "pizza lover") {
+      return { label, confidence: 0.31, source: "inferred" };
+    }
+    const isBehavioral = BEHAVIORAL_BADGES.some(b => b.label.replace(/[^\w\s]/g, "").trim().toLowerCase() === cleanLabel.replace(/[^\w\s]/g, "").trim().toLowerCase());
+    return {
+      label,
+      confidence: 0.95,
+      source: isBehavioral ? "inferred" : "confirmed"
+    };
+  }
+  if (typeof badge === "object" && badge !== null && "label" in badge) {
+    const b = badge as { label: unknown; confidence?: unknown; source?: unknown };
+    if (typeof b.label === "string") {
+      return {
+        label: b.label,
+        confidence: typeof b.confidence === "number" ? b.confidence : 0.5,
+        source: b.source === "confirmed" ? "confirmed" : "inferred"
+      };
+    }
+  }
+  return null;
 }
 
 function normalizeProfileV4(value: unknown): CandorProfileV4 {
@@ -481,7 +782,7 @@ function normalizeProfileV4(value: unknown): CandorProfileV4 {
       ? Object.fromEntries(Object.entries(val.socialLinks).map(([k, v]) => [String(k).trim().toLowerCase(), String(v).trim()]).filter(([k, v]) => k && v))
       : empty.socialLinks,
     photos: Array.isArray(val.photos) ? val.photos.map(x => String(x).trim()).filter(Boolean) : empty.photos,
-    badges: Array.isArray(val.badges) ? val.badges.map(x => String(x).trim()).filter(Boolean) : empty.badges,
+    badges: Array.isArray(val.badges) ? val.badges.map(normalizeBadge).filter((x): x is CandorBadge => !!x) : empty.badges,
   };
 }
 
@@ -495,6 +796,10 @@ function mergeProfileV4(existing: CandorProfileV4, incoming?: Partial<CandorProf
   if (incoming.smallThings) merged.smallThings = incoming.smallThings;
   if (incoming.socialLinks) merged.socialLinks = { ...existing.socialLinks, ...incoming.socialLinks };
   if (incoming.photos) merged.photos = incoming.photos;
-  if (incoming.badges) merged.badges = incoming.badges;
+  if (incoming.badges) {
+    merged.badges = Array.isArray(incoming.badges) 
+      ? incoming.badges.map(normalizeBadge).filter((x): x is CandorBadge => !!x)
+      : existing.badges;
+  }
   return merged;
 }

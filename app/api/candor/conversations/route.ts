@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabaseAdmin = getSupabaseAdmin();
-    const body = (await request.json().catch(() => ({}))) as { message?: string };
+    const body = (await request.json().catch(() => ({}))) as { message?: string; currentScreen?: string };
     const opening = body.message?.trim();
 
     const user = await getOrCreateUser(userId);
@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
           accessTier: access.tier,
           socialState,
           retrievedMemories: [...retrievedMemories, ...factMemories].slice(0, accessProfile.retrievedMemoryLimit),
+          currentScreen: body.currentScreen,
         });
         aiContent = turn.reply;
         memory = turn.memory;

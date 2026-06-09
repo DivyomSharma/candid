@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUp, Sparkles, Check, ArrowLeft } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
@@ -55,6 +55,7 @@ export function CandorSession({ id }: { id: string }) {
   const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const isImproveMode = searchParams.get("mode") === "improve";
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -176,7 +177,7 @@ export function CandorSession({ id }: { id: string }) {
       fetch(`/api/candor/conversations/${id}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: systemText, history: history.slice(-8), isImproveMode: true }),
+        body: JSON.stringify({ message: systemText, history: history.slice(-8), isImproveMode: true, currentScreen: pathname }),
       })
         .then((response) => (response.ok ? response.json() : null))
         .then((data: { message: Message } | null) => {
@@ -192,7 +193,7 @@ export function CandorSession({ id }: { id: string }) {
           setIsResponding(false);
         });
     }
-  }, [hasLoadedHistory, isImproveMode, messages, hasTriggeredImproveInit, isResponding, history, id]);
+  }, [hasLoadedHistory, isImproveMode, messages, hasTriggeredImproveInit, isResponding, history, id, pathname]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -210,7 +211,7 @@ export function CandorSession({ id }: { id: string }) {
     const response = await fetch(`/api/candor/conversations/${id}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: content, history, isImproveMode }),
+      body: JSON.stringify({ message: content, history, isImproveMode, currentScreen: pathname }),
     });
 
     if (response.ok) {

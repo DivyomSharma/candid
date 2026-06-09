@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Compass, RefreshCw, Sparkles, Brain, Check, MessageSquare } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
@@ -37,6 +37,7 @@ export function CandorHome() {
 
   const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   // Load preview message
   useEffect(() => {
@@ -147,7 +148,7 @@ export function CandorHome() {
       const response = await fetch("/api/candor/conversations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: content.trim() }),
+        body: JSON.stringify({ message: content.trim(), currentScreen: pathname }),
       });
 
       if (response.ok) {

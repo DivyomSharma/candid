@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Sparkles, Compass, RefreshCw, Check, ArrowRight, Brain, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
@@ -14,6 +14,7 @@ import type { CandorSignal } from "@/lib/candor/scenarios";
 export function CandorSignals() {
   const { isSignedIn, isLoaded, user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [signals, setSignals] = useState<CandorSignal[]>([]);
   const [loading, setLoading] = useState(false);
@@ -129,7 +130,7 @@ export function CandorSignals() {
       const response = await fetch("/api/candor/conversations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: context }),
+        body: JSON.stringify({ message: context, currentScreen: pathname }),
       });
 
       if (response.ok) {

@@ -20,7 +20,8 @@ import {
   HelpCircle,
   Instagram,
   Github,
-  Twitter
+  Twitter,
+  Settings
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,7 +31,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import type { CandorProfilePresentation } from "@/lib/candor/profile";
-import type { CandorMemory } from "@/lib/candor/types";
+import type { CandorMemory, CandorBadge } from "@/lib/candor/types";
 
 // Custom premium brand SVG icons
 const SpotifyIcon = () => (
@@ -77,6 +78,8 @@ export function ProfileSurface({
   const router = useRouter();
   const [viewerTraits, setViewerTraits] = useState<CandorMemory | null>(null);
 
+
+
   const fullUrl = useMemo(() => {
     if (typeof window === "undefined") return profile.publicPath;
     return `${window.location.origin}${profile.publicPath}`;
@@ -121,6 +124,37 @@ export function ProfileSurface({
     photos: [],
     badges: [],
   }, [profile.profileV4]);
+
+  const statuses = useMemo(() => {
+    const list: Array<{ label: string; value: string }> = [];
+    if (v4.currently?.building) list.push({ label: "Building", value: v4.currently.building });
+    if (v4.currently?.watching) list.push({ label: "Watching", value: v4.currently.watching });
+    if (v4.currently?.listening) list.push({ label: "Listening", value: v4.currently.listening });
+    if (v4.currently?.thinking) list.push({ label: "Thinking about", value: v4.currently.thinking });
+    if (v4.currently?.reading) list.push({ label: "Reading", value: v4.currently.reading });
+    return list;
+  }, [v4.currently]);
+
+  const [statusIndex, setStatusIndex] = useState(0);
+
+  useEffect(() => {
+    if (statuses.length <= 1) return;
+    const interval = setInterval(() => {
+      setStatusIndex((prev) => (prev + 1) % statuses.length);
+    }, 9000);
+    return () => clearInterval(interval);
+  }, [statuses.length]);
+
+  const visibleBadges = useMemo(() => {
+    if (!v4.badges) return [];
+    return v4.badges
+      .filter((b: CandorBadge | string) => {
+        const confidence = typeof b === "string" ? 0.95 : (b.confidence ?? 0.5);
+        return confidence > 0.90;
+      })
+      .map((b: CandorBadge | string) => typeof b === "string" ? b : b.label)
+      .slice(0, 3);
+  }, [v4.badges]);
 
   const overlaps = useMemo(() => {
     if (!viewerTraits || !v4) return null;
@@ -178,17 +212,7 @@ export function ProfileSurface({
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[900px] flex-col gap-8">
         
-        {publicMode && (
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.6 }}
-            className="text-center md:text-left mb-2"
-          >
-            <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">{heading}</h1>
-            <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary">{subheading}</p>
-          </motion.div>
-        )}
+
 
         <motion.div 
           initial={{ opacity: 0, y: 10 }} 
@@ -225,7 +249,7 @@ export function ProfileSurface({
                 <div className="space-y-2">
                   <div className="flex items-center flex-wrap justify-center md:justify-start gap-3">
                     <h2 className="text-3xl font-light tracking-tight">{profile.username}</h2>
-                    {v4.badges && v4.badges.map((b) => (
+                    {visibleBadges.map((b) => (
                       <span key={b} className="rounded-full bg-accent/10 border border-accent/20 px-2.5 py-0.5 text-[10px] font-medium text-accent tracking-wide uppercase">
                         {b}
                       </span>
@@ -239,43 +263,78 @@ export function ProfileSurface({
                     <span>{[profile.occupation, profile.education].filter(Boolean).join(" • ")}</span>
                   </div>
 
-                  <p className="text-sm font-light text-foreground/80 italic max-w-md mt-2">
-                    "{profile.bio}"
-                  </p>
+                  <div className="h-6 mt-2 overflow-hidden flex items-center justify-center md:justify-start">
+                    <AnimatePresence mode="wait">
+                      {statuses.length > 0 ? (
+                        <motion.p
+                          key={statusIndex}
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          transition={{ duration: 0.3 }}
+                          className="text-sm font-light text-foreground/80 italic max-w-md"
+                        >
+                          <span className="text-accent not-italic font-normal mr-1.5">{statuses[statusIndex].label}:</span>
+                          "{statuses[statusIndex].value}"
+                        </motion.p>
+                      ) : (
+                        <motion.p
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="text-sm font-light text-foreground/80 italic max-w-md"
+                        >
+                          "{profile.bio}"
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={shareProfile}
-                  className="rounded-full border-border/50 bg-background/50 px-4 font-light backdrop-blur-md hover:bg-accent/10 h-10 transition-all hover:scale-105"
-                >
-                  <Share2 className="mr-2 h-4 w-4" />
-                  share
-                </Button>
-                
-                {onEditClick && !publicMode && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={onEditClick}
-                    className="rounded-full border-border/50 bg-background/50 px-5 font-light backdrop-blur-md hover:bg-accent/10 h-10 transition-all hover:scale-105"
-                  >
-                    edit
-                  </Button>
-                )}
+                {!publicMode ? (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => router.push("/candor/session/ongoing?mode=improve")}
+                      className="rounded-full bg-accent text-accent-foreground px-6 font-medium hover:bg-accent/90 h-10 transition-all hover:scale-105 shadow-lg flex items-center gap-2"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Improve with Candor
+                    </Button>
 
-                {!publicMode && (
-                  <Button
-                    type="button"
-                    onClick={() => router.push("/candor/session/ongoing?mode=improve")}
-                    className="rounded-full bg-accent px-5 font-light hover:bg-accent/90 h-10 transition-all hover:scale-105 shadow-md flex items-center gap-2"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    Improve with Candor
-                  </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={shareProfile}
+                      className="rounded-full border-border/50 bg-background/50 px-4 font-light backdrop-blur-md hover:bg-accent/10 h-10 transition-all hover:scale-105 flex items-center gap-2"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      share
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => router.push("/memory-controls")}
+                      className="rounded-full border-border/50 bg-background/50 px-4 font-light backdrop-blur-md hover:bg-accent/10 h-10 transition-all hover:scale-105 flex items-center gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      settings
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={shareProfile}
+                      className="rounded-full border-border/50 bg-background/50 px-4 font-light backdrop-blur-md hover:bg-accent/10 h-10 transition-all hover:scale-105 flex items-center gap-2"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      share
+                    </Button>
+                  </>
                 )}
                 {actionSlot}
               </div>

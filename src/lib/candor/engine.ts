@@ -2,6 +2,7 @@ import { sendCandorJson, sendCandorMessage } from "@/lib/candor-api";
 import { accessProfileFor } from "@/lib/candor/access";
 import {
   addInterestSignals,
+  applyUserCorrections,
   buildTraitCluster,
   createEmptyMemory,
   extractLightMemory,
@@ -30,7 +31,8 @@ import { logCandorInternal } from "@/lib/candor/logger";
 import type { CandorModelRoute } from "@/lib/candor/transport";
 
 export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnResult> {
-  const lightMemory = mergeMemory(input.memory, extractLightMemory(input.message));
+  const correctedMemory = applyUserCorrections(input.message, input.memory);
+  const lightMemory = mergeMemory(correctedMemory, extractLightMemory(input.message));
   const startingSocialState = normalizeSocialState(input.socialState);
   const intuition = buildIntuitionState(input.message, lightMemory);
   const learningBias = await getLearningBias(lightMemory);
@@ -79,6 +81,7 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     understanding: understandingLine(socialReadState),
     scenario: scenario?.prompt,
     isImproveMode: input.isImproveMode,
+    currentScreen: input.currentScreen,
   });
   const routeDecision = routeForTurn(
     decision,
@@ -333,6 +336,7 @@ async function maybeRetryForRepetition(input: {
     }),
     scenario: input.scenario,
     retryReason: "the previous draft sounded too close to something already said. change the rhythm and angle.",
+    currentScreen: input.input.currentScreen,
   });
 
   return shapeCandorResponse(

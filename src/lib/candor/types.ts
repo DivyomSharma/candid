@@ -151,6 +151,7 @@ export type CandorTurnInput = {
   socialState?: CandorSocialState;
   retrievedMemories?: CandorRetrievedMemory[];
   isImproveMode?: boolean;
+  currentScreen?: string;
 };
 
 export type CandorTurnResult = {
@@ -218,6 +219,12 @@ export type OpenLoopsV4 = {
   defending: string;
 };
 
+export type CandorBadge = {
+  label: string;
+  confidence: number;
+  source: "confirmed" | "inferred";
+};
+
 export type CandorProfileV4 = {
   currently: CurrentlyV4;
   tonight: string[];
@@ -226,5 +233,5 @@ export type CandorProfileV4 = {
   smallThings: string[];
   socialLinks: Record<string, string>;
   photos: string[];
-  badges: string[];
+  badges: CandorBadge[];
 };

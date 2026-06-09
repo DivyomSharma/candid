@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getOrCreateCandorUser } from "@/lib/candor/persistence";
-import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
-import type { CandorProfileV4 } from "@/lib/candor/types";
+import { createEmptyMemory, normalizeMemory, calculateBadgeConfidences, normalizeBadge } from "@/lib/candor/memory";
+import type { CandorProfileV4, CandorBadge } from "@/lib/candor/types";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         smallThings?: string[];
         socialLinks?: Record<string, string>;
         photos?: string[];
-        badges?: string[];
+        badges?: unknown[];
       };
     };
 
@@ -50,7 +50,9 @@ export async function POST(request: NextRequest) {
       if (body.profileV4.smallThings) updatedProfile.smallThings = body.profileV4.smallThings;
       if (body.profileV4.socialLinks) updatedProfile.socialLinks = body.profileV4.socialLinks;
       if (body.profileV4.photos) updatedProfile.photos = body.profileV4.photos;
-      if (body.profileV4.badges) updatedProfile.badges = body.profileV4.badges;
+      if (body.profileV4.badges) {
+        updatedProfile.badges = body.profileV4.badges.map(normalizeBadge).filter((x): x is CandorBadge => !!x);
+      }
     } else if (body.field) {
       // Apply single field updates (e.g. from AI proposal tags)
       const parts = body.field.split(".");
@@ -75,9 +77,15 @@ export async function POST(request: NextRequest) {
       } else if (body.field === "photos") {
         updatedProfile.photos = body.value as string[];
       } else if (body.field === "badges") {
-        updatedProfile.badges = body.value as string[];
+        updatedProfile.badges = (Array.isArray(body.value) ? body.value : []).map(normalizeBadge).filter((x): x is CandorBadge => !!x);
       }
     }
+
+    // Recompute badges based on updated profile V4 fields
+    updatedProfile.badges = calculateBadgeConfidences({
+      ...memory,
+      profileV4: updatedProfile
+    });
 
     const nextMemory = {
       ...memory,
