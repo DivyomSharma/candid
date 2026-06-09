@@ -119,6 +119,12 @@ export function CandorHome() {
     void start(message);
   };
 
+  const handlePrefill = (stem: string) => {
+    setMessage(stem);
+    const inputEl = document.getElementById("candor-home-input");
+    if (inputEl) inputEl.focus();
+  };
+
   const isInitiativePreview = preview?.content === defaultInitiativeLine;
 
   return (
@@ -212,7 +218,7 @@ export function CandorHome() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
-            <ScenarioPanel isSignedIn={isSignedIn} onScenarioSelect={selectPrompt} />
+            <ScenarioPanel isSignedIn={isSignedIn} onScenarioSelect={selectPrompt} onScenarioPrefill={handlePrefill} />
           </motion.div>
         </section>
 
@@ -227,6 +233,7 @@ export function CandorHome() {
             <div className="relative flex w-full items-center">
               <div className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,hsl(var(--foreground)/0.03),transparent)]" />
               <input
+                id="candor-home-input"
                 type="text"
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}

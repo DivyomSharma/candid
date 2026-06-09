@@ -58,7 +58,7 @@ export function selectScenario(memory: CandorMemory) {
   return scored[0]?.scenario ?? scenarios[0];
 }
 
-export type ScenarioType = "would_you_rather" | "have_you_ever" | "creative_argument";
+export type ScenarioType = "frame" | "mirror" | "finish_the_sentence" | "tiny_preference";
 
 export type CandorScenario = {
   id: string;
@@ -103,9 +103,9 @@ function buildScenariosPrompt(memory: CandorMemory) {
   return `
 you are candor.
 generate 3 highly specific, personalized interactive scenarios to hook the user into a deep conversation.
-Use their memory (values, communication needs, soft spots) to deeply personalize the psychological angle, but DO NOT obsess over their surface-level interests (like movies). For example, if they like movies, do NOT make the scenarios about movies. Instead, craft scenarios that target their underlying personality (e.g., how they handle conflict, view ambition, or experience a hyper-specific daily moment).
+Use their memory (values, communication needs, soft spots) to deeply personalize the psychological angle, but DO NOT obsess over their surface-level interests (like movies). Instead, craft scenarios that target their underlying personality (e.g., how they handle conflict, view ambition, or experience a hyper-specific daily moment).
 
-CRITICAL RULE: The 3 scenarios MUST cover ENTIRELY DIFFERENT themes and contexts. If one is about relationships, the second must be about career, and the third about existential habits. NEVER make them feel like 3 variations of the same topic or emotional tone. They must feel organic, spontaneous, and surprisingly varied.
+CRITICAL RULE: The 3 scenarios MUST cover ENTIRELY DIFFERENT themes and contexts. If one is about relationships, the second must be about career, and the third about existential habits. NEVER make them feel like 3 variations of the same topic. They must feel organic and spontaneous.
 randomness seed: ${seed}
 
 return only valid json:
@@ -113,21 +113,22 @@ return only valid json:
   "scenarios": [
     {
       "id": "scenario-1",
-      "type": "would_you_rather",
-      "title": "would you rather",
-      "prompt": "give up music or movies?",
-      "options": ["music", "movies"]
+      "type": "frame",
+      "title": "frame",
+      "prompt": "if you could freeze one tiny moment, which one would you keep?",
+      "options": ["your kitchen at 2am", "your favorite café at 6pm"]
     }
   ]
 }
 
 rules:
 - exactly 3 scenarios.
-- scenario types must be: one "would_you_rather", one "have_you_ever", and one "creative_argument".
+- scenario types must be drawn randomly from: "frame", "mirror", "finish_the_sentence", "tiny_preference". Do not use all of the same type.
 - lowercase only.
-- "would_you_rather": a tough, highly specific choice. do not use the example. provide exactly 2 options.
-- "have_you_ever": a very specific, slightly exposing question. provide exactly 2 options representing honest answers.
-- "creative_argument": set up a playful debate on a specific, non-cliche topic. provide exactly 2 options representing stances.
+- "frame": present two highly evocative, aesthetically specific moments. options must be exactly 2 distinct moments.
+- "mirror": a sentence stem revealing identity or social perception. e.g. "people think i'm confident but...". options MUST be an empty array [].
+- "finish_the_sentence": an incomplete thought revealing deeper psychology. e.g. "i instantly trust people who...". options MUST be an empty array [].
+- "tiny_preference": a small, low-stakes choice that reveals deeper rhythm/lifestyle. options must be exactly 2 choices.
 - no assistant tone, no therapy speak. be direct and engaging.
 `.trim();
 }
@@ -137,12 +138,12 @@ function normalizeScenarios(input: Partial<CandorScenariosPayload>): CandorScena
   const scenarios = (input.scenarios ?? [])
     .map((s, i) => ({
       id: s.id || `scenario-${i}`,
-      type: (s.type as ScenarioType) || "would_you_rather",
+      type: (s.type as ScenarioType) || "frame",
       title: cleanText(s.title, 6) || "scenario",
       prompt: cleanText(s.prompt, 30) || fallback.scenarios[i]?.prompt || "",
       options: (s.options ?? []).map(o => cleanText(o, 10)).filter(Boolean).slice(0, 2),
     }))
-    .filter((s) => s.prompt && s.options.length === 2)
+    .filter((s) => s.prompt && (s.type === "mirror" || s.type === "finish_the_sentence" || s.options.length === 2))
     .slice(0, 3);
 
   if (scenarios.length < 3) return fallback;
@@ -153,25 +154,25 @@ export function fallbackScenarios(): CandorScenariosPayload {
   return {
     scenarios: [
       {
-        id: "fallback-wyr",
-        type: "would_you_rather",
-        title: "would you rather",
-        prompt: "know all the answers but never speak, or speak but know nothing?",
-        options: ["know all", "speak always"],
+        id: "fallback-frame",
+        type: "frame",
+        title: "frame",
+        prompt: "if you could freeze one tiny moment, which one would you keep?",
+        options: ["your kitchen at 2am", "your favorite café at 6pm"],
       },
       {
-        id: "fallback-hye",
-        type: "have_you_ever",
-        title: "have you ever",
-        prompt: "ghosted someone because you were overwhelmed, not because you didn't care?",
-        options: ["yes, unfortunately", "no, i communicate"],
+        id: "fallback-mirror",
+        type: "mirror",
+        title: "mirror",
+        prompt: "people think i'm confident but...",
+        options: [],
       },
       {
-        id: "fallback-ca",
-        type: "creative_argument",
-        title: "playful argument",
-        prompt: "let's argue about whether brutal honesty is actually just a lack of empathy.",
-        options: ["it is a lack of empathy", "no, honesty is respect"],
+        id: "fallback-tiny",
+        type: "tiny_preference",
+        title: "tiny preference",
+        prompt: "which one dictates your mood more?",
+        options: ["slow sundays", "busy saturdays"],
       },
     ],
   };

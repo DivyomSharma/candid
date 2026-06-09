@@ -2,23 +2,100 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, MessageSquare, HandHeart, Shuffle } from "lucide-react";
+import { Sparkles, Shuffle, Image as ImageIcon, Eye, PenLine, Coffee } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CandorScenario } from "@/lib/candor/scenarios";
+
+const THREAD_WEAVING_MESSAGES = [
+  "finding a thread...",
+  "connecting small signals...",
+  "remembering what stayed...",
+  "looking somewhere unexpected...",
+  "holding two ideas together...",
+  "starting from something small...",
+  "finding the better question...",
+  "thinking about yesterday...",
+  "looking beneath the obvious...",
+  "staying with the feeling...",
+  "noticing what repeats...",
+  "piecing things together...",
+  "following quiet patterns...",
+  "searching for something true...",
+  "finding where this goes...",
+  "waiting for the right angle...",
+  "remembering old conversations...",
+  "seeing what still lingers...",
+  "connecting scattered moments...",
+  "looking past first impressions...",
+  "finding today's thread...",
+];
+
+function ThreadWeavingLoader({ isExceeded }: { isExceeded: boolean }) {
+  const [messages, setMessages] = useState<string[]>([]);
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const shuffled = [...THREAD_WEAVING_MESSAGES].sort(() => Math.random() - 0.5);
+    setMessages(shuffled);
+  }, []);
+
+  useEffect(() => {
+    if (isExceeded || messages.length === 0) return;
+    const interval = setInterval(() => {
+      setIndex((i) => (i + 1) % messages.length);
+    }, 1400); 
+    return () => clearInterval(interval);
+  }, [messages, isExceeded]);
+
+  const currentMessage = isExceeded ? "still following the thread..." : messages[index];
+
+  return (
+    <div className="flex flex-col items-center justify-center py-16 gap-8 opacity-80">
+      <div className="h-[1px] w-8 bg-border/40" />
+      <div className="h-[20px] flex items-center justify-center relative w-full">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentMessage}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.3 } }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="text-sm font-light text-foreground-secondary tracking-wide text-center absolute"
+          >
+            {currentMessage}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      <div className="h-[1px] w-8 bg-border/40" />
+    </div>
+  );
+}
 
 type ScenarioPanelProps = {
   isSignedIn: boolean;
   onScenarioSelect: (message: string) => void;
+  onScenarioPrefill: (text: string) => void;
 };
 
-export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelProps) {
+export function ScenarioPanel({ isSignedIn, onScenarioSelect, onScenarioPrefill }: ScenarioPanelProps) {
   const [scenarios, setScenarios] = useState<CandorScenario[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  const [isFetching, setIsFetching] = useState(true);
+  const [minLoadingDone, setMinLoadingDone] = useState(false);
+  const [isExceeded, setIsExceeded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
+    setIsFetching(true);
+    
+    const exceedTimeout = setTimeout(() => {
+      if (!cancelled) setIsExceeded(true);
+    }, 3000);
+
+    const minLoadTimeout = setTimeout(() => {
+      if (!cancelled) setMinLoadingDone(true);
+    }, 800);
 
     fetch("/api/candor/me/scenarios")
       .then((res) => (res.ok ? res.json() : null))
@@ -29,26 +106,27 @@ export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelPro
       })
       .catch(console.error)
       .finally(() => {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) setIsFetching(false);
       });
 
     return () => {
       cancelled = true;
+      clearTimeout(exceedTimeout);
+      clearTimeout(minLoadTimeout);
     };
   }, [isSignedIn]);
 
+  const showLoader = isFetching || !minLoadingDone;
+
   const handleSelect = (scenario: CandorScenario, option: string) => {
     let context = "";
-    if (scenario.type === "would_you_rather") {
-      context = `[System: The user is answering the "would you rather" scenario: "${scenario.prompt}"]\n\n`;
-    } else if (scenario.type === "have_you_ever") {
-      context = `[System: The user is answering the "have you ever" scenario: "${scenario.prompt}"]\n\n`;
-    } else if (scenario.type === "creative_argument") {
-      context = `[System: The user wants to playfully argue about: "${scenario.prompt}". You take the opposing side and challenge them immediately.]\n\n`;
+    if (scenario.type === "frame") {
+      context = `[System: The user is choosing a frame: "${scenario.prompt}"]\n\n`;
+    } else if (scenario.type === "tiny_preference") {
+      context = `[System: The user is selecting a tiny preference: "${scenario.prompt}"]\n\n`;
     } else {
       context = `[System: The user is responding to the scenario: "${scenario.prompt}"]\n\n`;
     }
-    
     onScenarioSelect(`${context}${option}`);
   };
 
@@ -56,81 +134,111 @@ export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelPro
     setCurrentIndex((prev) => (prev + 1) % scenarios.length);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-5 w-full">
-        <Card className="surface border-border/20 bg-card/10 backdrop-blur-md relative overflow-hidden">
-          <motion.div
-            animate={{ opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            className="flex flex-col gap-4 p-5"
-          >
-            <div className="h-3 w-32 rounded-full bg-foreground-secondary/20" />
-            <div className="flex flex-col gap-2 mt-1">
-              <div className="h-4 w-full rounded-full bg-foreground-secondary/30" />
-              <div className="h-4 w-[80%] rounded-full bg-foreground-secondary/30" />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <div className="h-11 rounded-xl bg-foreground-secondary/20" />
-              <div className="h-11 rounded-xl bg-foreground-secondary/20" />
-            </div>
-          </motion.div>
-        </Card>
-      </div>
-    );
-  }
-
-  if (scenarios.length === 0) return null;
-
-  const scenario = scenarios[currentIndex];
-  let Icon = Sparkles;
-  if (scenario.type === "would_you_rather") Icon = HandHeart;
-  if (scenario.type === "creative_argument") Icon = MessageSquare;
+  const handlePrefillClick = (scenario: CandorScenario) => {
+    onScenarioPrefill(scenario.prompt + " ");
+  };
 
   return (
-    <div className="flex flex-col gap-5 w-full">
+    <div className="flex flex-col gap-5 w-full min-h-[180px] justify-center">
       <AnimatePresence mode="wait">
-        <motion.div
-          key={scenario.id}
-          initial={{ opacity: 0, x: -12 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 12 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <Card className="surface border-border/45 bg-card/38 backdrop-blur-md transition-colors hover:border-accent/30 relative">
-            <button
-              onClick={handleShuffle}
-              className="absolute right-4 top-4 p-2 text-foreground-secondary hover:text-foreground hover:bg-background/40 rounded-full transition-colors"
-              title="Next scenario"
-            >
-              <Shuffle className="h-4 w-4" />
-            </button>
-            <CardContent className="flex flex-col gap-4 p-5">
-              <div className="flex items-center gap-2 text-xs font-light uppercase tracking-[0.18em] text-accent">
-                <Icon className="h-3.5 w-3.5" />
-                {scenario.title}
-              </div>
-              
-              <p className="text-base font-light leading-7 text-foreground pr-8">
-                {scenario.prompt}
-              </p>
-
-              <div className="grid grid-cols-2 gap-3 mt-1">
-                {scenario.options.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => handleSelect(scenario, option)}
-                    className="rounded-xl border border-border/45 bg-background/25 px-4 py-3 text-sm font-light text-foreground-secondary transition-all hover:bg-accent/10 hover:border-accent/40 hover:text-foreground active:scale-[0.98]"
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        {showLoader ? (
+          <motion.div 
+            key="loader"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="w-full flex justify-center"
+          >
+            <ThreadWeavingLoader isExceeded={isExceeded} />
+          </motion.div>
+        ) : scenarios.length > 0 ? (
+          <ScenarioCard 
+            key={scenarios[currentIndex].id}
+            scenario={scenarios[currentIndex]} 
+            onSelect={handleSelect}
+            onShuffle={handleShuffle}
+            onPrefill={handlePrefillClick}
+          />
+        ) : null}
       </AnimatePresence>
     </div>
+  );
+}
+
+function ScenarioCard({ 
+  scenario, 
+  onSelect, 
+  onShuffle, 
+  onPrefill 
+}: { 
+  scenario: CandorScenario; 
+  onSelect: (scenario: CandorScenario, option: string) => void;
+  onShuffle: () => void;
+  onPrefill: (scenario: CandorScenario) => void;
+}) {
+  let Icon = Sparkles;
+  if (scenario.type === "frame") Icon = ImageIcon;
+  if (scenario.type === "mirror") Icon = Eye;
+  if (scenario.type === "finish_the_sentence") Icon = PenLine;
+  if (scenario.type === "tiny_preference") Icon = Coffee;
+  
+  const hasOptions = scenario.options && scenario.options.length > 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.99 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.99, transition: { duration: 0.2 } }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      <Card 
+        className={`surface border-border/45 bg-card/38 backdrop-blur-md transition-colors hover:border-accent/30 relative ${!hasOptions ? "cursor-pointer group" : ""}`}
+        onClick={!hasOptions ? () => onPrefill(scenario) : undefined}
+      >
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onShuffle();
+          }}
+          className="absolute right-4 top-4 p-2 text-foreground-secondary hover:text-foreground hover:bg-background/40 rounded-full transition-colors z-10"
+          title="Next scenario"
+        >
+          <Shuffle className="h-4 w-4" />
+        </button>
+        <CardContent className="flex flex-col gap-4 p-5">
+          <div className="flex items-center gap-2 text-xs font-light uppercase tracking-[0.18em] text-accent">
+            <Icon className="h-3.5 w-3.5" />
+            {scenario.title}
+          </div>
+          
+          <p className="text-base font-light leading-7 text-foreground pr-8">
+            {scenario.prompt}
+          </p>
+
+          {hasOptions ? (
+            <div className="grid grid-cols-2 gap-3 mt-1">
+              {scenario.options.map((option) => (
+                <button
+                  key={option}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelect(scenario, option);
+                  }}
+                  className="rounded-xl border border-border/45 bg-background/25 px-4 py-3 text-sm font-light text-foreground-secondary transition-all hover:bg-accent/10 hover:border-accent/40 hover:text-foreground active:scale-[0.98]"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-1 flex items-center text-sm font-light text-accent/80 group-hover:text-accent transition-colors">
+              <PenLine className="h-3.5 w-3.5 mr-2" />
+              tap to complete this thought...
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
