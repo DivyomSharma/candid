@@ -690,37 +690,23 @@ export function applyUserCorrections(message: string, memory: CandorMemory): Can
 export function createEmptyProfileV4(): CandorProfileV4 {
   return {
     currently: {
-      building: "candor app",
-      watching: "past lives",
-      reading: "norwegian wood",
-      listening: "bon iver",
-      thinking: "moving cities"
+      building: "",
+      watching: "",
+      reading: "",
+      listening: "",
+      thinking: ""
     },
-    tonight: ["awake", "rain", "coding", "indie"],
-    shelf: [
-      { key: "favorite movie", value: "before sunrise" },
-      { key: "favorite album", value: "for emma, forever ago" },
-      { key: "favorite book", value: "the catcher in the rye" }
-    ],
+    tonight: [],
+    shelf: [],
     openLoops: {
-      thinkingAbout: "why nostalgia hurts",
-      recommending: "before trilogy",
-      defending: "movies should have intermissions"
+      thinkingAbout: "",
+      recommending: "",
+      defending: ""
     },
-    smallThings: ["window seat", "voice notes", "late replies", "museum dates", "black coffee"],
-    socialLinks: {
-      instagram: "divyom.sharma",
-      github: "divyomsharma"
-    },
-    photos: [
-      "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=600",
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=600",
-      "https://images.unsplash.com/photo-1507133750040-4a8f57021571?q=80&w=600"
-    ],
-    badges: [
-      { label: "Night Owl", confidence: 0.91, source: "inferred" },
-      { label: "Builder", confidence: 0.98, source: "confirmed" }
-    ]
+    smallThings: [],
+    socialLinks: {},
+    photos: [],
+    badges: []
   };
 }
 

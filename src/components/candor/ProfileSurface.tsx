@@ -203,7 +203,7 @@ export function ProfileSurface({
     ].filter(cfg => links[cfg.key]);
   }, [v4.socialLinks]);
 
-  const photosList = v4.photos && v4.photos.length > 0 ? v4.photos : DEFAULT_PHOTOS;
+  const photosList = v4.photos || [];
 
   const observation = profile.whatCandorNotices?.[0] || "opens up slowly before sharing their deeper rhythm.";
 
@@ -470,10 +470,10 @@ export function ProfileSurface({
                       <div key={item.key} className="p-3 rounded-2xl border border-border/30 bg-background/20 space-y-1 hover:border-accent/30 transition-colors">
                         <span className="text-[9px] uppercase tracking-widest text-foreground-secondary/55 font-light block">{item.key}</span>
                         <span className="text-sm font-light text-foreground flex items-center gap-1.5">
-                          {item.key.includes("movie") ? <Film className="h-3.5 w-3.5 text-accent/80" /> : 
-                           item.key.includes("album") ? <Music className="h-3.5 w-3.5 text-accent/80" /> :
-                           item.key.includes("book") ? <BookOpen className="h-3.5 w-3.5 text-accent/80" /> :
-                           item.key.includes("caf") ? <Coffee className="h-3.5 w-3.5 text-accent/80" /> :
+                          {item.key?.includes("movie") ? <Film className="h-3.5 w-3.5 text-accent/80" /> : 
+                           item.key?.includes("album") ? <Music className="h-3.5 w-3.5 text-accent/80" /> :
+                           item.key?.includes("book") ? <BookOpen className="h-3.5 w-3.5 text-accent/80" /> :
+                           item.key?.includes("caf") ? <Coffee className="h-3.5 w-3.5 text-accent/80" /> :
                            <Compass className="h-3.5 w-3.5 text-accent/80" />}
                           {item.value}
                         </span>

@@ -66,9 +66,9 @@ export function buildCandorProfilePresentation(input: {
   const handle = rawHandle.startsWith("@") ? rawHandle : `@${rawHandle}`;
   const safeHandle = handle.replace(/^@/, "");
 
-  const values = fallback(memory?.values, ["honesty"]);
-  const needs = fallback(memory?.communicationNeeds, ["gentle directness"]);
-  const softSpots = fallback(memory?.softSpots, ["feeling unseen"]);
+  const values = fallback(memory?.values, []);
+  const needs = fallback(memory?.communicationNeeds, []);
+  const softSpots = fallback(memory?.softSpots, []);
   const mem = memory || createEmptyMemory();
   const interests = topInterestTopics(mem, 5);
   const socialPreferences = fallback(memory?.socialPreferences, derivedSocialPreferences(memory));
@@ -101,36 +101,32 @@ export function buildCandorProfilePresentation(input: {
   const education = personalProfile?.education || null;
   const relationshipIntention = personalProfile?.relationshipPreference || null;
   const bio = personalProfile?.shortBio || (memory && memory.turnCount >= 3
-    ? `building things, watching films, thinking too much.` // Fallback example if no short bio
-    : "trying to make meaningful things with meaningful people.");
+    ? `${username} has been getting to know candor.`
+    : "");
 
   const aFewThingsAboutMe = dedupe([
-    memory?.socialPreferences[0] ? soften(memory.socialPreferences[0]) : "Night Owl",
-    interests[0] ? titleCase(themeLabel(interests[0])) : "Indie Films",
-    lifestylePreferences[0] ? titleCase(lifestylePreferences[0]) : "Long Walks",
-    interests[1] ? titleCase(themeLabel(interests[1])) : "Startups",
-    "One-on-One Conversations",
-  ]).slice(0, 5);
+    memory?.socialPreferences[0] ? soften(memory.socialPreferences[0]) : null,
+    interests[0] ? titleCase(themeLabel(interests[0])) : null,
+    lifestylePreferences[0] ? titleCase(lifestylePreferences[0]) : null,
+    interests[1] ? titleCase(themeLabel(interests[1])) : null,
+  ].filter(Boolean) as string[]).slice(0, 5);
 
   const lookingFor = dedupe([
-    relationshipIntention ? titleCase(relationshipIntention) : "Deep Conversations",
-    "Friendship",
-    "Conversation First",
-    "Open, Not Seeking",
-  ]).slice(0, 4);
+    relationshipIntention ? titleCase(relationshipIntention) : null,
+  ].filter(Boolean) as string[]).slice(0, 4);
 
   const whatCandorHasLearned = [
-    needs[0] ? `Usually opens through ${softPhrase(needs[0])}` : "Usually opens through humor",
-    interests[0] ? `Talks longest about ${themeLabel(interests[0])}` : "Thinks out loud when excited",
-    socialPreferences[0] ? soften(socialPreferences[0]) : "More expressive late at night",
-    values[0] ? `Values ${values[0]} over surface smoothness` : "Values recognition over attention",
-  ];
+    needs[0] ? `Usually opens through ${softPhrase(needs[0])}` : null,
+    interests[0] ? `Talks longest about ${themeLabel(interests[0])}` : null,
+    socialPreferences[0] ? soften(socialPreferences[0]) : null,
+    values[0] ? `Values ${values[0]} over surface smoothness` : null,
+  ].filter(Boolean) as string[];
 
   const recentSignals = [
-    { label: "Thinking About", value: memory?.lifeThemes[0] ? soften(memory.lifeThemes[0]) : "Building Candor" },
-    { label: "Recently Exploring", value: interests[0] ? themeLabel(interests[0]) : "Films that linger" },
-    { label: "Currently Curious About", value: interests[1] ? themeLabel(interests[1]) : "Creative communities" },
-  ];
+    memory?.lifeThemes[0] ? { label: "Thinking About", value: soften(memory.lifeThemes[0]) } : null,
+    interests[0] ? { label: "Recently Exploring", value: themeLabel(interests[0]) } : null,
+    interests[1] ? { label: "Currently Curious About", value: themeLabel(interests[1]) } : null,
+  ].filter(Boolean) as Array<{ label: string; value: string }>;
 
   const alignmentAndDepth = {
     phase: understandingDepth.phase === "spark" ? "Surface" : understandingDepth.phase === "rhythm" ? "Familiar" : understandingDepth.phase === "patterns" ? "Understood" : understandingDepth.phase === "nuance" ? "Understood" : understandingDepth.phase === "continuity" ? "Deeply Understood" : "Resonant",
@@ -256,29 +252,44 @@ function buildRelationalSections(input: {
   resonanceIndicators: string[];
 }) {
   const { memory, interests, socialPreferences, lifestylePreferences, needs, values, resonanceIndicators } = input;
-  const firstInterest = interests[0] ? themeLabel(interests[0]) : "topics with a little emotional charge";
-  const need = needs[0] ?? "gentle directness";
-  const preference = socialPreferences[0] ?? "texting rhythm probably matters";
+  const firstInterest = interests[0] ? themeLabel(interests[0]) : null;
+  const need = needs[0] ?? null;
+  const preference = socialPreferences[0] ?? null;
 
-  return [
-    { title: "conversational atmosphere", items: [resonanceIndicators[0] ?? "conversation may feel unusually natural", `opens better around ${softPhrase(need)}`] },
-    { title: "social energy", items: [preference, memory?.interactionProfile.engagementSignals.at(-1)?.replace(/_/g, " ") ?? "still learning their social pace"] },
-    { title: "what they light up about", items: [firstInterest, interests[1] ? themeLabel(interests[1]) : "small details other people miss"] },
-    { title: "relational style", items: [values[0] ? `moves toward ${values[0]}` : "moves toward something honest", memory?.relationalPatterns[0] ? soften(memory.relationalPatterns[0]) : "opens slowly before becoming clearer"] },
-    { title: "reassurance style", items: [`does better with ${softPhrase(need)}`, "prefers warmth that does not feel performative"] },
-    { title: "conflict rhythm", items: [memory?.softSpots[0] ? `may go quiet around ${memory.softSpots[0]}` : "needs time when the mood changes", "clear repair matters more than perfect wording"] },
-    { title: "ideal first conversation", items: [`start with ${firstInterest}`, "leave enough room for a sideways turn"] },
-    { title: "communication comfort", items: [preference, lifestylePreferences[0] ?? "routine is still becoming legible"] },
-    { title: "conversation starters", items: [`what opinion do you have about ${firstInterest}?`, "what topic makes you accidentally talk too much?"] },
-    { title: "emotional environment", items: [resonanceIndicators[1] ?? "notices shifts before naming them", "does better when the room feels unforced"] },
-  ];
+  const sections: Array<{ title: string; items: string[] }> = [];
+
+  if (resonanceIndicators[0] || need) {
+    sections.push({ title: "conversational atmosphere", items: [resonanceIndicators[0], need ? `opens better around ${softPhrase(need)}` : null].filter(Boolean) as string[] });
+  }
+  if (preference) {
+    sections.push({ title: "social energy", items: [preference, memory?.interactionProfile.engagementSignals.at(-1)?.replace(/_/g, " ")].filter(Boolean) as string[] });
+  }
+  if (firstInterest) {
+    sections.push({ title: "what they light up about", items: [firstInterest, interests[1] ? themeLabel(interests[1]) : null].filter(Boolean) as string[] });
+  }
+  if (values[0] || memory?.relationalPatterns[0]) {
+    sections.push({ title: "relational style", items: [values[0] ? `moves toward ${values[0]}` : null, memory?.relationalPatterns[0] ? soften(memory.relationalPatterns[0]) : null].filter(Boolean) as string[] });
+  }
+  if (need) {
+    sections.push({ title: "reassurance style", items: [`does better with ${softPhrase(need)}`] });
+  }
+  if (memory?.softSpots[0]) {
+    sections.push({ title: "conflict rhythm", items: [`may go quiet around ${memory.softSpots[0]}`] });
+  }
+  if (firstInterest) {
+    sections.push({ title: "ideal first conversation", items: [`start with ${firstInterest}`] });
+  }
+  if (preference || lifestylePreferences[0]) {
+    sections.push({ title: "communication comfort", items: [preference, lifestylePreferences[0]].filter(Boolean) as string[] });
+  }
+
+  return sections;
 }
 
 function buildNotices(memory: CandorMemory | null, values: string[], needs: string[], interests: string[]) {
   const pool = dedupe([
-    `notice emotional shifts faster than they let on`,
-    `care more about ${values[0]} than surface smoothness`,
-    `open more easily with ${softPhrase(needs[0])}`,
+    values[0] ? `care more about ${values[0]} than surface smoothness` : "",
+    needs[0] ? `open more easily with ${softPhrase(needs[0])}` : "",
     interests[0] ? `wake up a bit when ${themeLabel(interests[0])} enters the conversation` : "",
     memory?.socialPreferences[0] ? soften(memory.socialPreferences[0]) : "",
     memory?.softSpots[0] ? `still go quiet around ${memory.softSpots[0]}` : "",
@@ -449,7 +460,8 @@ function cleanSignalFragment(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 42);
 }
 
-function bannerFrom(seed: string) {
+function bannerFrom(seed?: string) {
+  if (!seed) return "linear-gradient(135deg, hsl(var(--surface-secondary)), hsl(var(--accent) / 0.28)), radial-gradient(circle at 70% 30%, hsl(var(--foreground) / 0.12), transparent 36%)";
   if (seed.includes("honest")) {
     return "linear-gradient(135deg, hsl(var(--accent) / 0.38), hsl(var(--background) / 0.2)), radial-gradient(circle at 20% 30%, hsl(var(--foreground) / 0.16), transparent 34%)";
   }
