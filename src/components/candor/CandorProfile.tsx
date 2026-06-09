@@ -106,16 +106,6 @@ export function CandorProfile() {
               router.push("/candor");
             }}
             className="rounded-full border-border/50 bg-background/50 px-5 font-light backdrop-blur-md hover:bg-accent/10"
-        onEditClick={() => setEditorOpen(true)}
-        actionSlot={
-          <Button
-            type="button"
-            variant="outline"
-            onClick={async () => {
-              await signOut();
-              router.push("/candor");
-            }}
-            className="rounded-full border-border/50 bg-background/50 px-5 font-light backdrop-blur-md hover:bg-accent/10"
           >
             sign out
           </Button>
