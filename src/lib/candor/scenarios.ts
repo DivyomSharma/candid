@@ -102,9 +102,9 @@ function buildScenariosPrompt(memory: CandorMemory) {
   const seed = Math.random().toString(36).substring(2, 9);
   return `
 you are candor.
-generate 3 completely unique, unpredictable, and diverse interactive scenarios to hook the user into a conversation.
-use their memory for tone and vibe, but DO NOT restrict the topics to their known interests. if they like movies, do NOT generate 3 movie scenarios. force extreme topic diversity (e.g. one about psychology, one about daily life, one completely absurd).
-do NOT use standard examples or cliches.
+generate 3 highly specific, personalized interactive scenarios to hook the user into a deep conversation.
+Use their memory (values, communication needs, soft spots) to deeply personalize the psychological angle, but DO NOT obsess over their surface-level interests (like movies). For example, if they like movies, do NOT make the scenarios about movies. Instead, craft scenarios that target their underlying personality (e.g., how they handle conflict, view ambition, or experience a hyper-specific daily moment).
+Ensure all 3 scenarios cover entirely different facets of life (e.g., one relational, one introspective, one situational). Make them feel grounded, real, and intimately personal, not vague or random.
 randomness seed: ${seed}
 
 return only valid json:
