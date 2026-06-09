@@ -17,13 +17,21 @@ import type { CandorHistoryMessage } from "@/lib/candor-api";
 type Message = CandorHistoryMessage & { id: string; pending?: boolean };
 
 // Helper to parse proposals out of AI message content
-const parseMessageContent = (content: string) => {
+type ProposalData = {
+  field?: string;
+  value?: unknown;
+  profileV4?: unknown;
+  confidence?: number;
+  reasoning?: string;
+} | null;
+
+const parseMessageContent = (content: string): { cleanContent: string, proposal: ProposalData } => {
   const proposalRegex = /<proposal>([\s\S]*?)<\/proposal>/;
   const match = content.match(proposalRegex);
   
   if (match) {
     const rawJson = match[1].trim();
-    let proposalData = null;
+    let proposalData: ProposalData = null;
     try {
       proposalData = JSON.parse(rawJson);
     } catch (e) {
@@ -341,7 +349,7 @@ export function CandorSession({ id }: { id: string }) {
                       <div className="space-y-1">
                         <p className="text-[10px] uppercase tracking-wider text-accent font-medium">update recommendation</p>
                         <p className="text-xs font-light text-foreground-secondary leading-relaxed">
-                          add <span className="text-foreground font-normal">"{proposal.value}"</span> to your profile's <span className="text-foreground font-normal">"{proposal.field.replace(".", " ")}"</span>?
+                          add <span className="text-foreground font-normal">"{typeof proposal.value === 'string' ? proposal.value : JSON.stringify(proposal.value)}"</span> to your profile's <span className="text-foreground font-normal">"{proposal.field.replace(".", " ")}"</span>?
                         </p>
                       </div>
                     </div>

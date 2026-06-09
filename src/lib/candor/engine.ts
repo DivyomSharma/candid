@@ -10,7 +10,7 @@ import {
 } from "@/lib/candor/memory";
 import { getLearningBias, logLearningEvent } from "@/lib/candor/learning";
 import { buildAnalysisPrompt, buildCandorPrompt } from "@/lib/candor/prompts";
-import { selectScenario } from "@/lib/candor/scenarios";
+import { selectSignals } from "@/lib/candor/scenarios";
 import { chooseSocialMove, socialMoveInstruction } from "@/lib/candor/social-moves";
 import { normalizeSocialState, understandingLine, updateSocialState } from "@/lib/candor/social-state";
 import type {
@@ -44,7 +44,7 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     learningBias,
     primaryTopic: interestEnergy.primaryTopic,
   });
-  const scenario = decision.mode === "scenario" ? selectScenario(lightMemory) : undefined;
+  const scenario = decision.mode === "scenario" ? selectSignals(lightMemory)[0] : undefined;
   const suppressedPhrases = buildSuppressedPhrases(lightMemory);
   const socialReadState = updateSocialState({
     current: startingSocialState,

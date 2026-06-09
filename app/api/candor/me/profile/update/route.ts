@@ -3,6 +3,7 @@ import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getOrCreateCandorUser } from "@/lib/candor/persistence";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
+import type { CandorProfileV4 } from "@/lib/candor/types";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +16,17 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json().catch(() => ({}))) as {
       field?: string;
-      value?: any;
-      profileV4?: any;
+      value?: unknown;
+      profileV4?: {
+        currently?: Record<string, string>;
+        tonight?: string[];
+        shelf?: Array<{ key: string; value: string }>;
+        openLoops?: Record<string, string>;
+        smallThings?: string[];
+        socialLinks?: Record<string, string>;
+        photos?: string[];
+        badges?: string[];
+      };
     };
 
     const supabaseAdmin = getSupabaseAdmin();
@@ -29,7 +39,7 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     const memory = normalizeMemory(traits?.data ?? createEmptyMemory());
-    const updatedProfile = { ...memory.profileV4 };
+    const updatedProfile: CandorProfileV4 = { ...memory.profileV4 } as CandorProfileV4;
 
     if (body.profileV4) {
       // Apply block updates (e.g. from editor)
@@ -47,25 +57,25 @@ export async function POST(request: NextRequest) {
       if (parts[0] === "currently" && parts[1]) {
         updatedProfile.currently = {
           ...updatedProfile.currently,
-          [parts[1]]: body.value,
+          [parts[1]]: body.value as string,
         };
       } else if (parts[0] === "openLoops" && parts[1]) {
         updatedProfile.openLoops = {
           ...updatedProfile.openLoops,
-          [parts[1]]: body.value,
+          [parts[1]]: body.value as string,
         };
       } else if (body.field === "tonight") {
-        updatedProfile.tonight = body.value;
+        updatedProfile.tonight = body.value as string[];
       } else if (body.field === "shelf") {
-        updatedProfile.shelf = body.value;
+        updatedProfile.shelf = body.value as Array<{ key: string; value: string }>;
       } else if (body.field === "smallThings") {
-        updatedProfile.smallThings = body.value;
+        updatedProfile.smallThings = body.value as string[];
       } else if (body.field === "socialLinks") {
-        updatedProfile.socialLinks = body.value;
+        updatedProfile.socialLinks = body.value as Record<string, string>;
       } else if (body.field === "photos") {
-        updatedProfile.photos = body.value;
+        updatedProfile.photos = body.value as string[];
       } else if (body.field === "badges") {
-        updatedProfile.badges = body.value;
+        updatedProfile.badges = body.value as string[];
       }
     }
 

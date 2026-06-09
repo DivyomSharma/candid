@@ -66,6 +66,7 @@ export function CandorHome() {
     fetchSignal();
     fetchAligns();
     fetchReflection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, user?.id]);
 
   const fetchSignal = async (excludeId?: string) => {
@@ -95,7 +96,7 @@ export function CandorHome() {
       if (res.ok) {
         const data = await res.json();
         if (data.ready && data.aligns) {
-          const list = data.aligns.slice(0, 2).map((a: any) => ({
+          const list = data.aligns.slice(0, 2).map((a: { id: string; profile: { username: string; avatarInitials: string; avatarTone: string }; score: number }) => ({
             id: a.id,
             username: a.profile.username,
             initials: a.profile.avatarInitials,

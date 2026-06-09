@@ -74,7 +74,7 @@ export function ProfileSurface({
   publicMode?: boolean;
 }) {
   const router = useRouter();
-  const [viewerTraits, setViewerTraits] = useState<any | null>(null);
+  const [viewerTraits, setViewerTraits] = useState<Record<string, unknown> | null>(null);
 
   const fullUrl = useMemo(() => {
     if (typeof window === "undefined") return profile.publicPath;
@@ -136,7 +136,7 @@ export function ProfileSurface({
     }
 
     (v4.shelf || []).forEach((item) => {
-      const match = (viewerV4.shelf || []).find((x: any) => 
+      const match = (viewerV4.shelf || []).find((x: { key: string; value: string }) => 
         x.key.toLowerCase() === item.key.toLowerCase() && 
         x.value.toLowerCase() === item.value.toLowerCase()
       );
