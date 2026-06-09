@@ -57,27 +57,7 @@ export function ScenarioPanel({ isSignedIn, onScenarioSelect }: ScenarioPanelPro
   };
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col gap-5 w-full">
-        <motion.div
-          animate={{ opacity: [0.3, 0.7, 0.3], filter: ["blur(2px)", "blur(6px)", "blur(2px)"] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <Card className="surface border-border/10 bg-card/5 backdrop-blur-md overflow-hidden relative min-h-[200px]">
-            {/* A soft, organic glowing orb moving slowly inside the card, representing a forming thought */}
-            <motion.div
-              animate={{ 
-                x: ["-30%", "30%", "-30%"],
-                y: ["-10%", "10%", "-10%"],
-                scale: [1, 1.3, 1] 
-              }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute inset-0 m-auto h-[140px] w-[140px] rounded-full bg-accent/25 blur-[50px]"
-            />
-          </Card>
-        </motion.div>
-      </div>
-    );
+    return null;
   }
 
   if (scenarios.length === 0) return null;

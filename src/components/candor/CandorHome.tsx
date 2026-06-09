@@ -171,7 +171,7 @@ export function CandorHome() {
         )}
       </AnimatePresence>
 
-      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-40 pt-20">
+      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-52 pt-20">
         <AmbientGlow />
         <div className="pointer-events-none absolute inset-0 opacity-70">
           <div className="absolute left-[12%] top-24 h-48 w-48 rounded-full bg-[hsl(var(--glow)/0.08)] blur-3xl" />
@@ -225,13 +225,15 @@ export function CandorHome() {
           >
             <ScenarioPanel isSignedIn={isSignedIn} onScenarioSelect={selectPrompt} />
           </motion.div>
+        </section>
 
+        <div className="fixed inset-x-6 bottom-24 z-[100] pointer-events-none">
           <motion.form
             onSubmit={submit}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col gap-3"
+            className="mx-auto flex w-full max-w-[600px] flex-col gap-3 pointer-events-auto"
           >
             <div className="relative flex w-full items-center">
               <div className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,hsl(var(--foreground)/0.03),transparent)]" />
@@ -268,7 +270,7 @@ export function CandorHome() {
             </div>
             {error && <p className="text-right text-xs font-light leading-5 text-foreground-secondary">{error}</p>}
           </motion.form>
-        </section>
+        </div>
         <BottomNav />
       </main>
     </>
