@@ -1,191 +1,474 @@
-import { sendCandorJson } from "@/lib/candor-api";
-import { topInterestTopics } from "@/lib/candor/memory";
 import type { CandorMemory } from "@/lib/candor/types";
 
-type Scenario = {
+export type SignalType =
+  | "hear_me_out"
+  | "hot_take"
+  | "red_flag"
+  | "green_flag"
+  | "instant_ick"
+  | "delusion_check"
+  | "vibe_check"
+  | "too_real"
+  | "creative_argument"
+  | "would_you_rather"
+  | "have_you_ever";
+
+export type SignalCategory =
+  | "funny"
+  | "flirty"
+  | "relatable"
+  | "culture"
+  | "opinion"
+  | "emotional"
+  | "deep";
+
+export type SignalOutcomeType =
+  | "quick_answer"
+  | "community_reveal"
+  | "candor_learns"
+  | "conversation_worthy";
+
+export type CandorSignal = {
   id: string;
-  text: string;
-  tags: string[];
-};
-
-const scenarios: Scenario[] = [
-  {
-    id: "unsent-message",
-    text: "you type out something honest, then delete it.\nnot because it was wrong.\nbecause it would make you too visible.",
-    tags: ["communication", "feeling unseen"],
-  },
-  {
-    id: "family-table",
-    text: "you're at home, and everyone is talking like things are normal.\nbut you're carrying something nobody has asked about.",
-    tags: ["family", "emotional safety"],
-  },
-  {
-    id: "career-pressure",
-    text: "someone asks about your future.\nyou answer casually, but your body already knows it feels heavier than that.",
-    tags: ["career pressure"],
-  },
-  {
-    id: "friend-shift",
-    text: "a friend replies differently than they used to.\nnothing dramatic happened.\nstill, something in you notices the distance.",
-    tags: ["friendships", "feeling unseen"],
-  },
-  {
-    id: "almost-ask",
-    text: "you want reassurance.\nbut asking for it would make it feel less real.",
-    tags: ["emotional safety", "holds back before asking directly"],
-  },
-];
-
-export function selectScenario(memory: CandorMemory) {
-  const seen = new Set(memory.seenScenarios);
-  const available = scenarios.filter((scenario) => !seen.has(scenario.id));
-  const pool = available.length > 0 ? available : scenarios;
-  const signals = [
-    ...memory.values,
-    ...memory.softSpots,
-    ...memory.lifeThemes,
-    ...memory.relationalPatterns,
-    ...memory.communicationNeeds,
-  ];
-
-  const scored = pool
-    .map((scenario) => ({
-      scenario,
-      score: scenario.tags.filter((tag) => signals.some((signal) => signal.includes(tag) || tag.includes(signal))).length,
-    }))
-    .sort((a, b) => b.score - a.score);
-
-  return scored[0]?.scenario ?? scenarios[0];
-}
-
-export type ScenarioType = "frame" | "mirror" | "finish_the_sentence" | "tiny_preference";
-
-export type CandorScenario = {
-  id: string;
-  type: ScenarioType;
-  title: string;
+  type: SignalType;
+  category: SignalCategory;
+  title: string; // e.g. "hear me out", "hot take", etc.
   prompt: string;
   options: string[];
+  outcomeType: SignalOutcomeType;
+  communitySplit?: number[]; // Split e.g. [64, 36] or [45, 30, 25]
 };
 
-export type CandorScenariosPayload = {
-  scenarios: CandorScenario[];
-};
+// Alias for backward compatibility
+export type CandorScenario = CandorSignal;
 
-export async function generateCandorScenarios(memory: CandorMemory): Promise<CandorScenariosPayload> {
-  try {
-    const generated = await sendCandorJson<Partial<CandorScenariosPayload>>({
-      systemPrompt: buildScenariosPrompt(memory),
-      message: JSON.stringify({
-        values: memory.values,
-        softSpots: memory.softSpots,
-        relationalPatterns: memory.relationalPatterns,
-        communicationNeeds: memory.communicationNeeds,
-        interests: topInterestTopics(memory),
-      }),
-      temperature: 0.9,
-      maxTokens: 1500,
-      modelRoute: "initiative",
-      routeReason: "generating highly interactive dynamic scenarios",
-      emotionalDepthScore: 4,
-      continuityDepthScore: 4,
-    });
+export const STATIC_SIGNALS: Omit<CandorSignal, "outcomeType">[] = [
+  // 1. Funny (20%)
+  {
+    id: "ick-alpha-male",
+    type: "instant_ick",
+    category: "funny",
+    title: "instant ick",
+    prompt: "they say: 'alpha male' in a conversation.",
+    options: ["run", "harmless", "lowkey cute"]
+  },
+  {
+    id: "ick-emoji-laugh",
+    type: "instant_ick",
+    category: "funny",
+    title: "instant ick",
+    prompt: "they use 😂 in literally every single message.",
+    options: ["run", "harmless", "lowkey cute"]
+  },
+  {
+    id: "red-flag-plane",
+    type: "red_flag",
+    category: "funny",
+    title: "red flag",
+    prompt: "they clap when planes land.",
+    options: ["red flag", "green flag", "depends"]
+  },
+  {
+    id: "ick-selfies",
+    type: "instant_ick",
+    category: "funny",
+    title: "instant ick",
+    prompt: "their camera roll is 99% selfies.",
+    options: ["run", "harmless", "lowkey cute"]
+  },
+  {
+    id: "delusion-hahaha",
+    type: "delusion_check",
+    category: "funny",
+    title: "delusion check",
+    prompt: "you sent a long story and they replied: 'hahaha'.",
+    options: ["interested", "bored", "stop overthinking"]
+  },
+  
+  // 2. Flirty (20%)
+  {
+    id: "hear-laugh-hotter",
+    type: "hear_me_out",
+    category: "flirty",
+    title: "hear me out",
+    prompt: "people become instantly hotter after making you laugh.",
+    options: ["agree", "disagree", "depends"]
+  },
+  {
+    id: "hear-playlist-kiss",
+    type: "hear_me_out",
+    category: "flirty",
+    title: "hear me out",
+    prompt: "sharing your main playlist is more intimate than kissing.",
+    options: ["agree", "disagree", "depends"]
+  },
+  {
+    id: "hear-texting-chemistry",
+    type: "hear_me_out",
+    category: "flirty",
+    title: "hear me out",
+    prompt: "texting chemistry matters way more than physical chemistry early on.",
+    options: ["agree", "disagree", "depends"]
+  },
+  {
+    id: "vibe-headphones",
+    type: "vibe_check",
+    category: "flirty",
+    title: "vibe check",
+    prompt: "what is the ultimate form of physical intimacy?",
+    options: ["sharing headphones", "sharing fries", "sharing silence", "holding hands"]
+  },
+  {
+    id: "delusion-story-like",
+    type: "delusion_check",
+    category: "flirty",
+    title: "delusion check",
+    prompt: "they liked your instagram story after six months of silence.",
+    options: ["interested", "bored", "stop overthinking"]
+  },
+  {
+    id: "delusion-hang-soon",
+    type: "delusion_check",
+    category: "flirty",
+    title: "delusion check",
+    prompt: "they texted: 'we should hang soon' but didn't give a day.",
+    options: ["interested", "bored", "stop overthinking"]
+  },
 
-    return normalizeScenarios(generated);
-  } catch (error) {
-    console.error("Candor scenario generation failed:", error);
-    return fallbackScenarios();
+  // 3. Relatable (20%)
+  {
+    id: "red-flag-reply",
+    type: "red_flag",
+    category: "relatable",
+    title: "red flag",
+    prompt: "they reply instantly, every single time, day or night.",
+    options: ["red flag", "green flag", "depends"]
+  },
+  {
+    id: "green-flag-apologize",
+    type: "green_flag",
+    category: "relatable",
+    title: "green flag",
+    prompt: "they apologize first after a stupid argument.",
+    options: ["green flag", "depends", "not enough"]
+  },
+  {
+    id: "have-up-4am",
+    type: "have_you_ever",
+    category: "relatable",
+    title: "have you ever",
+    prompt: "stayed up till 4am waiting for a reply you knew wasn't coming?",
+    options: ["yes", "no", "depends"]
+  },
+  {
+    id: "have-reread-conv",
+    type: "have_you_ever",
+    category: "relatable",
+    title: "have you ever",
+    prompt: "re-read a single chat thread more than twenty times?",
+    options: ["yes", "no", "depends"]
+  },
+  {
+    id: "have-fake-sleep",
+    type: "have_you_ever",
+    category: "relatable",
+    title: "have you ever",
+    prompt: "pretended to go to sleep just to stop replying to someone?",
+    options: ["yes", "no", "depends"]
+  },
+
+  // 4. Culture (15%)
+  {
+    id: "take-coffee-date",
+    type: "hot_take",
+    category: "culture",
+    title: "hot take",
+    prompt: "coffee dates are completely overrated.",
+    options: ["agree", "fight me", "depends"]
+  },
+  {
+    id: "vibe-first-date",
+    type: "vibe_check",
+    category: "culture",
+    title: "vibe check",
+    prompt: "what's the best setting for a first date?",
+    options: ["museum", "bookstore", "chai spot", "arcade"]
+  },
+  {
+    id: "have-book-cover",
+    type: "have_you_ever",
+    category: "culture",
+    title: "have you ever",
+    prompt: "bought a book just because the cover looked perfect on your shelf?",
+    options: ["yes", "no", "depends"]
+  },
+  {
+    id: "take-mysterious",
+    type: "hot_take",
+    category: "culture",
+    title: "hot take",
+    prompt: "being mysterious is overrated. just tell me your hyperfixations.",
+    options: ["agree", "fight me", "depends"]
+  },
+
+  // 5. Opinion (15%)
+  {
+    id: "take-timing-compat",
+    type: "hot_take",
+    category: "opinion",
+    title: "hot take",
+    prompt: "timing matters much more than actual compatibility.",
+    options: ["agree", "fight me", "depends"]
+  },
+  {
+    id: "red-flag-ex",
+    type: "red_flag",
+    category: "opinion",
+    title: "red flag",
+    prompt: "they still text their ex on their birthday.",
+    options: ["red flag", "green flag", "depends"]
+  },
+  {
+    id: "argue-cereal-soup",
+    type: "creative_argument",
+    category: "opinion",
+    title: "creative argument",
+    prompt: "is cereal technically a cold soup?",
+    options: ["yes", "no", "depends"]
+  },
+  {
+    id: "rather-mind-history",
+    type: "would_you_rather",
+    category: "opinion",
+    title: "would you rather",
+    prompt: "they could read your mind or read your entire search history?",
+    options: ["read my mind", "read my history"]
+  },
+  {
+    id: "rather-call-text",
+    type: "would_you_rather",
+    category: "opinion",
+    title: "would you rather",
+    prompt: "never text anyone again or never talk on the phone again?",
+    options: ["never text", "never call"]
+  },
+
+  // 6. Emotional (15%)
+  {
+    id: "real-deleted-para",
+    type: "too_real",
+    category: "emotional",
+    title: "too real",
+    prompt: "you typed a huge paragraph, then deleted it. why?",
+    options: ["too visible", "didn't matter", "regretted it", "overthinking"]
+  },
+  {
+    id: "real-deserve-better",
+    type: "too_real",
+    category: "emotional",
+    title: "too real",
+    prompt: "someone says: 'you deserve better.' your first thought?",
+    options: ["prove them wrong", "find better", "laugh", "panic"]
+  },
+  {
+    id: "green-flag-details",
+    type: "green_flag",
+    category: "emotional",
+    title: "green flag",
+    prompt: "they remember a tiny, throwaway detail you mentioned weeks ago.",
+    options: ["green flag", "depends", "not enough"]
+  },
+  {
+    id: "green-flag-books",
+    type: "green_flag",
+    category: "emotional",
+    title: "green flag",
+    prompt: "they recommend a book that made them think of you.",
+    options: ["green flag", "depends", "not enough"]
+  },
+
+  // 7. Deep (10%)
+  {
+    id: "real-hard-truth",
+    type: "too_real",
+    category: "deep",
+    title: "too real",
+    prompt: "what is the hardest truth you have had to accept about yourself lately?",
+    options: ["i avoid conflict", "i seek validation", "i fear intimacy", "i hold onto the past"]
+  },
+  {
+    id: "rather-lie-truth",
+    type: "would_you_rather",
+    category: "deep",
+    title: "would you rather",
+    prompt: "live a highly comfortable lie or face a painful truth?",
+    options: ["comfortable lie", "painful truth"]
+  }
+];
+
+export function getDeterministicSplit(signalId: string, optionsCount: number): number[] {
+  // Simple stable hash based on ID to generate realistic looking percentages adding up to 100
+  let hash = 0;
+  for (let i = 0; i < signalId.length; i++) {
+    hash = signalId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  hash = Math.abs(hash);
+
+  if (optionsCount === 2) {
+    const split = 45 + (hash % 35); // 45 to 80
+    return [split, 100 - split];
+  } else if (optionsCount === 3) {
+    const first = 40 + (hash % 30); // 40 to 70
+    const second = Math.floor((100 - first) * (0.3 + ((hash >> 2) % 4) * 0.15));
+    const third = 100 - first - second;
+    return [first, second, third];
+  } else {
+    const base = Math.floor(100 / optionsCount);
+    const split: number[] = [];
+    let remaining = 100;
+    for (let i = 0; i < optionsCount - 1; i++) {
+      const share = Math.floor(remaining * (0.2 + ((hash >> i) % 4) * 0.1));
+      split.push(share);
+      remaining -= share;
+    }
+    split.push(remaining);
+    return split;
   }
 }
 
-function buildScenariosPrompt(memory: CandorMemory) {
-  const seed = Math.random().toString(36).substring(2, 9);
-  return `
-you are candor.
-generate 3 highly specific, personalized interactive scenarios to hook the user into a deep conversation.
-Use their memory (values, communication needs, soft spots) to deeply personalize the psychological angle, but DO NOT obsess over their surface-level interests (like movies). Instead, craft scenarios that target their underlying personality (e.g., how they handle conflict, view ambition, or experience a hyper-specific daily moment).
+export function selectSignals(memory: CandorMemory, limit = 15): CandorSignal[] {
+  const seen = new Set([
+    ...(memory.seenScenarios ?? []),
+    ...Object.keys(memory.answeredSignals ?? {})
+  ]);
 
-CRITICAL RULE: The 3 scenarios MUST cover ENTIRELY DIFFERENT themes and contexts. If one is about relationships, the second must be about career, and the third about existential habits. NEVER make them feel like 3 variations of the same topic. They must feel organic and spontaneous.
-randomness seed: ${seed}
+  // Filter out already answered/seen signals
+  let available = STATIC_SIGNALS.filter((s) => !seen.has(s.id));
+  if (available.length < 5) {
+    // Reset pool if they answered almost everything
+    available = STATIC_SIGNALS;
+  }
 
-return only valid json:
-{
-  "scenarios": [
-    {
-      "id": "scenario-1",
-      "type": "frame",
-      "title": "frame",
-      "prompt": "if you could freeze one tiny moment, which one would you keep?",
-      "options": ["your kitchen at 2am", "your favorite café at 6pm"]
+  // Shuffle available signals
+  const shuffled = [...available].sort(() => Math.random() - 0.5);
+
+  // Group by category to enforce target diversity
+  const groups: Record<SignalCategory, Omit<CandorSignal, "outcomeType">[]> = {
+    funny: [],
+    flirty: [],
+    relatable: [],
+    culture: [],
+    opinion: [],
+    emotional: [],
+    deep: []
+  };
+
+  for (const s of shuffled) {
+    groups[s.category].push(s);
+  }
+
+  // Target Proportions (limit = 15 as baseline)
+  // funny: 20% (3 cards)
+  // flirty: 20% (3 cards)
+  // relatable: 20% (3 cards)
+  // culture: 15% (2 cards)
+  // opinion: 15% (2 cards)
+  // emotional: 15% (2 cards)
+  // deep: 10% (1-2 cards)
+  const targets: { category: SignalCategory; count: number }[] = [
+    { category: "funny", count: Math.max(1, Math.round(limit * 0.20)) },
+    { category: "flirty", count: Math.max(1, Math.round(limit * 0.20)) },
+    { category: "relatable", count: Math.max(1, Math.round(limit * 0.20)) },
+    { category: "culture", count: Math.max(1, Math.round(limit * 0.15)) },
+    { category: "opinion", count: Math.max(1, Math.round(limit * 0.15)) },
+    { category: "emotional", count: Math.max(1, Math.round(limit * 0.15)) },
+    { category: "deep", count: Math.max(1, Math.round(limit * 0.10)) }
+  ];
+
+  const selected: Omit<CandorSignal, "outcomeType">[] = [];
+  
+  // Select from groups based on targets
+  for (const target of targets) {
+    const pool = groups[target.category];
+    const taken = pool.slice(0, target.count);
+    selected.push(...taken);
+  }
+
+  // If we couldn't meet the limit (not enough cards in some categories), fill up from shuffled remainder
+  if (selected.length < limit) {
+    const selectedIds = new Set(selected.map((s) => s.id));
+    const remainder = shuffled.filter((s) => !selectedIds.has(s.id));
+    selected.push(...remainder.slice(0, limit - selected.length));
+  }
+
+  // Final shuffle of selection
+  const finalSelection = selected.slice(0, limit).sort(() => Math.random() - 0.5);
+
+  // Assign outcome types:
+  // 15-20% conversation_worthy (TYPE D) -> e.g. 2-3 out of 15
+  // The rest are TYPE A (quick_answer), TYPE B (community_reveal), TYPE C (candor_learns)
+  const outcomeTypes: SignalOutcomeType[] = [
+    "quick_answer",
+    "community_reveal",
+    "candor_learns",
+    "conversation_worthy"
+  ];
+
+  return finalSelection.map((s, idx) => {
+    let outcomeType: SignalOutcomeType = "quick_answer";
+    // 18% conversation worthy (roughly 1 in 6)
+    if (idx % 6 === 2) {
+      outcomeType = "conversation_worthy";
+    } else if (idx % 3 === 0) {
+      outcomeType = "community_reveal";
+    } else if (idx % 3 === 1) {
+      outcomeType = "candor_learns";
+    } else {
+      outcomeType = "quick_answer";
     }
-  ]
+
+    const split = s.options.length > 0 ? getDeterministicSplit(s.id, s.options.length) : undefined;
+
+    return {
+      ...s,
+      outcomeType,
+      communitySplit: split
+    } as CandorSignal;
+  });
 }
 
-rules:
-- exactly 3 scenarios.
-- scenario types must be drawn randomly from: "frame", "mirror", "finish_the_sentence", "tiny_preference". Do not use all of the same type.
-- lowercase only.
-- "frame": present two highly evocative, aesthetically specific moments. options must be exactly 2 distinct moments.
-- "mirror": a sentence stem revealing identity or social perception. e.g. "people think i'm confident but...". options MUST be an empty array [].
-- "finish_the_sentence": an incomplete thought revealing deeper psychology. e.g. "i instantly trust people who...". options MUST be an empty array [].
-- "tiny_preference": a small, low-stakes choice that reveals deeper rhythm/lifestyle. options must be exactly 2 choices.
-- no assistant tone, no therapy speak. be direct and engaging.
-`.trim();
-}
-
-function normalizeScenarios(input: Partial<CandorScenariosPayload>): CandorScenariosPayload {
-  const fallback = fallbackScenarios();
-  const scenarios = (input.scenarios ?? [])
-    .map((s, i) => ({
-      id: s.id || `scenario-${i}`,
-      type: (s.type as ScenarioType) || "frame",
-      title: cleanText(s.title, 6) || "scenario",
-      prompt: cleanText(s.prompt, 30) || fallback.scenarios[i]?.prompt || "",
-      options: (s.options ?? []).map(o => cleanText(o, 10)).filter(Boolean).slice(0, 2),
-    }))
-    .filter((s) => s.prompt && (s.type === "mirror" || s.type === "finish_the_sentence" || s.options.length === 2))
-    .slice(0, 3);
-
-  if (scenarios.length < 3) return fallback;
-  return { scenarios };
-}
-
-export function fallbackScenarios(): CandorScenariosPayload {
+// Retro-compatibility functions
+export function fallbackScenarios() {
+  const dummyMemory = {
+    turnCount: 0,
+    lastModes: [],
+    values: [],
+    softSpots: [],
+    lifeThemes: [],
+    relationalPatterns: [],
+    communicationNeeds: [],
+    appreciatesInPeople: [],
+    socialPreferences: [],
+    lifestylePreferences: [],
+    seenScenarios: [],
+    answeredSignals: {},
+    alignmentReady: false,
+    notes: [],
+    presenceState: { clarity: "low", curiosity: "medium", resonance: "low" },
+    responseHistory: [],
+    recentStructures: [],
+    suppressedPhrases: [],
+    interactionProfile: { choicePatterns: [], acceptedInsightTypes: [], rejectedInsightTypes: [], engagementSignals: [], interestSignals: {} }
+  } as CandorMemory;
+  
   return {
-    scenarios: [
-      {
-        id: "fallback-frame",
-        type: "frame",
-        title: "frame",
-        prompt: "if you could freeze one tiny moment, which one would you keep?",
-        options: ["your kitchen at 2am", "your favorite café at 6pm"],
-      },
-      {
-        id: "fallback-mirror",
-        type: "mirror",
-        title: "mirror",
-        prompt: "people think i'm confident but...",
-        options: [],
-      },
-      {
-        id: "fallback-tiny",
-        type: "tiny_preference",
-        title: "tiny preference",
-        prompt: "which one dictates your mood more?",
-        options: ["slow sundays", "busy saturdays"],
-      },
-    ],
+    scenarios: selectSignals(dummyMemory, 3)
   };
 }
 
-function cleanText(value: unknown, maxWords = 40) {
-  if (typeof value !== "string") return "";
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .split(" ")
-    .slice(0, maxWords)
-    .join(" ")
-    .slice(0, 250);
+export async function generateCandorScenarios(memory: CandorMemory) {
+  // Repurposed to serve 3 high-diversity modern signals for preview
+  return {
+    scenarios: selectSignals(memory, 3)
+  };
 }

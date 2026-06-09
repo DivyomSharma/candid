@@ -22,6 +22,7 @@ export function buildCandorPrompt(input: {
   momentumCue?: string;
   scenario?: string;
   retryReason?: string;
+  isImproveMode?: boolean;
 }) {
   const {
     memory,
@@ -37,9 +38,10 @@ export function buildCandorPrompt(input: {
     momentumCue,
     scenario,
     retryReason,
+    isImproveMode,
   } = input;
 
-  return `
+  let prompt = `
 you are candor.
 
 you are not an assistant, therapist, coach, or chatbot.
@@ -219,6 +221,15 @@ hard rules:
 - do not say "that sounds nice", "that sounds hard", "something's on your mind", "i understand", or similar generic therapy-adjacent lines
 - if the user asks to meet people, say you will, but first you need to understand them more
 `.trim();
+
+  if (isImproveMode) {
+    prompt += `\n\nPROFILE IMPROVEMENT MODE ACTIVE:
+- your goal is to help the user improve their profile by asking natural questions about their taste, currently watched movies, books, music, cafes, open loops, or small things they love.
+- keep questions conversational, low-pressure, and one at a time.
+- when you want to suggest an update to a profile field based on their input, append a JSON proposal block in this exact format: <proposal>{"field": "currently.watching", "value": "Movie Name"}</proposal> or <proposal>{"field": "shelf", "value": [{"key": "favorite café", "value": "Blue Tokai"}]}</proposal> or <proposal>{"field": "openLoops.defending", "value": "movies should have intermissions"}</proposal>. only output the proposal when you've confirmed the value.`;
+  }
+
+  return prompt;
 }
 
 export function buildAnalysisPrompt() {

@@ -1,9 +1,9 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowUp } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUp, Sparkles, Check, ArrowLeft } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
@@ -16,15 +16,49 @@ import type { CandorHistoryMessage } from "@/lib/candor-api";
 
 type Message = CandorHistoryMessage & { id: string; pending?: boolean };
 
+// Helper to parse proposals out of AI message content
+const parseMessageContent = (content: string) => {
+  const proposalRegex = /<proposal>([\s\S]*?)<\/proposal>/;
+  const match = content.match(proposalRegex);
+  
+  if (match) {
+    const rawJson = match[1].trim();
+    let proposalData = null;
+    try {
+      proposalData = JSON.parse(rawJson);
+    } catch (e) {
+      console.error("Failed to parse proposal JSON:", e);
+    }
+    
+    const cleanContent = content.replace(proposalRegex, "").trim();
+    return {
+      cleanContent,
+      proposal: proposalData
+    };
+  }
+  
+  return {
+    cleanContent: content,
+    proposal: null
+  };
+};
+
 export function CandorSession({ id }: { id: string }) {
   const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isImproveMode = searchParams.get("mode") === "improve";
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [isResponding, setIsResponding] = useState(false);
   const [historyCursor, setHistoryCursor] = useState<string | null>(null);
   const [hasMoreHistory, setHasMoreHistory] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
+  const [hasTriggeredImproveInit, setHasTriggeredImproveInit] = useState(false);
+  const [proposalStates, setProposalStates] = useState<Record<string, "idle" | "applying" | "applied" | "skipped">>({});
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const shouldRestoreHistoryPositionRef = useRef(false);
   const previousScrollHeightRef = useRef(0);
@@ -68,6 +102,7 @@ export function CandorSession({ id }: { id: string }) {
 
   useEffect(() => {
     if (!isSignedIn || !user?.id) return;
+    setHasLoadedHistory(false);
 
     fetch(`/api/candor/conversations/${id}/messages`)
       .then((response) => (response.ok ? response.json() : { messages: [] }))
@@ -76,12 +111,12 @@ export function CandorSession({ id }: { id: string }) {
           setMessages(data.messages);
           setHistoryCursor(data.nextCursor ?? null);
           setHasMoreHistory(Boolean(data.hasMore));
-          return;
+        } else {
+          const saved = window.localStorage.getItem(candorThreadStorageKey(user.id));
+          if (saved) setMessages(JSON.parse(saved) as Message[]);
         }
-
-        const saved = window.localStorage.getItem(candorThreadStorageKey(user.id));
-        if (saved) setMessages(JSON.parse(saved) as Message[]);
-      });
+      })
+      .finally(() => setHasLoadedHistory(true));
   }, [id, isSignedIn, user?.id]);
 
   useEffect(() => {
@@ -115,6 +150,42 @@ export function CandorSession({ id }: { id: string }) {
     [messages],
   );
 
+  // Automatically start onboarding in improve mode
+  useEffect(() => {
+    if (!hasLoadedHistory || !isImproveMode || hasTriggeredImproveInit || isResponding) return;
+
+    const lastMessage = messages[messages.length - 1];
+    const shouldGreet = !lastMessage || lastMessage.role === "user";
+
+    if (shouldGreet) {
+      setHasTriggeredImproveInit(true);
+      const systemText = `[System: User clicked Improve with Candor. Greet them warmly and start asking about their currently, shelf, loops, or small things in a conversational, low-pressure way to refine their profile. Use proposals like <proposal>{"field": "currently.watching", "value": "movie"}</proposal> when they mention their tastes.]\n\n`;
+
+      const optimistic: Message = { id: crypto.randomUUID(), role: "user" as const, content: systemText };
+      setMessages((current) => [...current, optimistic]);
+      setIsResponding(true);
+
+      fetch(`/api/candor/conversations/${id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: systemText, history: history.slice(-8), isImproveMode: true }),
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data: { message: Message } | null) => {
+          if (data && data.message) {
+            setMessages((current) => [
+              ...current.filter((msg) => msg.id !== optimistic.id),
+              optimistic,
+              data.message,
+            ]);
+          }
+        })
+        .finally(() => {
+          setIsResponding(false);
+        });
+    }
+  }, [hasLoadedHistory, isImproveMode, messages, hasTriggeredImproveInit, isResponding, history, id]);
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const content = draft.trim();
@@ -131,7 +202,7 @@ export function CandorSession({ id }: { id: string }) {
     const response = await fetch(`/api/candor/conversations/${id}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: content, history }),
+      body: JSON.stringify({ message: content, history, isImproveMode }),
     });
 
     if (response.ok) {
@@ -195,8 +266,22 @@ export function CandorSession({ id }: { id: string }) {
     <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-48 pt-16">
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[600px] flex-col gap-12">
-        <div className="pt-8">
-          <p className="text-sm font-light text-foreground-secondary">the same thread. still here.</p>
+        <div className="pt-8 flex items-center justify-between">
+          {isImproveMode ? (
+            <button
+              onClick={() => router.push("/candor/you")}
+              className="text-xs font-light text-accent hover:underline flex items-center gap-1.5"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> back to profile
+            </button>
+          ) : (
+            <p className="text-sm font-light text-foreground-secondary">the same thread. still here.</p>
+          )}
+          {isImproveMode && (
+            <span className="text-[10px] font-medium tracking-wider text-accent bg-accent/10 border border-accent/20 px-2.5 py-0.5 rounded-full uppercase">
+              profile refinement
+            </span>
+          )}
         </div>
 
         <div
@@ -214,29 +299,102 @@ export function CandorSession({ id }: { id: string }) {
             </button>
           )}
 
-          {messages.map((message, index) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: message.role === "ai" ? 16 : 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.5,
-                delay: message.role === "ai" ? 0.05 : 0,
-                ease: [0.22, 1, 0.36, 1]
-              }}
-              className={message.role === "user" ? "self-end text-right" : "self-start"}
-            >
-              <p
-                className={
-                  message.role === "user"
-                    ? "max-w-[460px] text-lg font-light leading-8 text-foreground"
-                    : "max-w-[500px] text-xl font-light leading-9 text-foreground-secondary"
-                }
+          {messages.map((message, index) => {
+            const isSystemText = message.role === "user" && message.content.startsWith("[System:");
+            if (isSystemText) return null;
+
+            const { cleanContent, proposal } = message.role === "ai" 
+              ? parseMessageContent(message.content) 
+              : { cleanContent: message.content, proposal: null };
+
+            return (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: message.role === "ai" ? 16 : 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.5,
+                  delay: message.role === "ai" ? 0.05 : 0,
+                  ease: [0.22, 1, 0.36, 1]
+                }}
+                className={message.role === "user" ? "self-end text-right flex flex-col items-end" : "self-start flex flex-col items-start"}
               >
-                {message.role === "user" ? message.content.replace(/^\[System:[\s\S]*?\]\n\n/, "") : message.content}
-              </p>
-            </motion.div>
-          ))}
+                <p
+                  className={
+                    message.role === "user"
+                      ? "max-w-[460px] text-lg font-light leading-8 text-foreground"
+                      : "max-w-[500px] text-xl font-light leading-9 text-foreground-secondary"
+                  }
+                >
+                  {cleanContent}
+                </p>
+
+                {/* Inline Proposal UI Card */}
+                {proposal && proposal.field && proposalStates[message.id] !== "skipped" && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mt-3 overflow-hidden rounded-2xl border border-accent/20 bg-accent/5 p-4 max-w-[400px] space-y-3 shadow-md backdrop-blur-md text-left"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <Sparkles className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider text-accent font-medium">update recommendation</p>
+                        <p className="text-xs font-light text-foreground-secondary leading-relaxed">
+                          add <span className="text-foreground font-normal">"{proposal.value}"</span> to your profile's <span className="text-foreground font-normal">"{proposal.field.replace(".", " ")}"</span>?
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 justify-end pt-1">
+                      {proposalStates[message.id] === "applied" ? (
+                        <span className="text-xs font-light text-accent flex items-center gap-1">
+                          <Check className="h-3.5 w-3.5" /> applied to profile
+                        </span>
+                      ) : (
+                        <>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setProposalStates(prev => ({ ...prev, [message.id]: "skipped" }))}
+                            disabled={proposalStates[message.id] === "applying"}
+                            className="h-8 rounded-full px-3 text-xs font-light text-foreground-secondary hover:bg-background/40 hover:text-foreground shadow-none"
+                          >
+                            skip
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={async () => {
+                              setProposalStates(prev => ({ ...prev, [message.id]: "applying" }));
+                              try {
+                                const res = await fetch("/api/candor/me/profile/update", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ field: proposal.field, value: proposal.value })
+                                });
+                                if (res.ok) {
+                                  setProposalStates(prev => ({ ...prev, [message.id]: "applied" }));
+                                } else {
+                                  setProposalStates(prev => ({ ...prev, [message.id]: "idle" }));
+                                }
+                              } catch (e) {
+                                console.error(e);
+                                setProposalStates(prev => ({ ...prev, [message.id]: "idle" }));
+                              }
+                            }}
+                            disabled={proposalStates[message.id] === "applying"}
+                            className="h-8 rounded-full bg-accent px-4 text-xs font-light text-primary-foreground hover:bg-accent/90 shadow-none"
+                          >
+                            {proposalStates[message.id] === "applying" ? "applying..." : "apply"}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            );
+          })}
 
           {isResponding && (
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.55 }} className="text-xl font-light text-foreground-secondary">

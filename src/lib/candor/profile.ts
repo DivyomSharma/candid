@@ -1,6 +1,6 @@
-import { interestLevelMap, topInterestTopics } from "@/lib/candor/memory";
+import { createEmptyProfileV4, interestLevelMap, topInterestTopics } from "@/lib/candor/memory";
 import { ageFromDob, type CandorPersonalProfile } from "@/lib/candor/personal-profile";
-import type { CandorMemory } from "@/lib/candor/types";
+import type { CandorMemory, CandorProfileV4 } from "@/lib/candor/types";
 
 export type CandorProfilePresentation = {
   username: string;
@@ -9,6 +9,7 @@ export type CandorProfilePresentation = {
   publicPath: string;
   bannerTone: string;
   bio: string;
+  profileV4: CandorProfileV4;
   age: string | null;
   city: string | null;
   occupation: string | null;
@@ -146,6 +147,7 @@ export function buildCandorProfilePresentation(input: {
     publicPath: `/u/${safeHandle}`,
     bannerTone: bannerFrom(values[0]),
     bio,
+    profileV4: memory?.profileV4 ?? createEmptyProfileV4(),
     age: age ? String(age) : null,
     city,
     occupation,

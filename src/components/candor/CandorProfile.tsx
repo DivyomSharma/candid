@@ -106,6 +106,16 @@ export function CandorProfile() {
               router.push("/candor");
             }}
             className="rounded-full border-border/50 bg-background/50 px-5 font-light backdrop-blur-md hover:bg-accent/10"
+        onEditClick={() => setEditorOpen(true)}
+        actionSlot={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={async () => {
+              await signOut();
+              router.push("/candor");
+            }}
+            className="rounded-full border-border/50 bg-background/50 px-5 font-light backdrop-blur-md hover:bg-accent/10"
           >
             sign out
           </Button>
@@ -120,8 +130,10 @@ export function CandorProfile() {
             </SheetHeader>
             <PersonalProfileEditor
               profile={personalProfile}
-              onSaved={(nextProfile) => {
+              profileV4={memory?.profileV4 ?? null}
+              onSaved={(nextProfile, nextProfileV4) => {
                 setPersonalProfile(nextProfile);
+                setMemory((prev) => prev ? { ...prev, profileV4: nextProfileV4 } : null);
                 setEditorOpen(false);
               }}
             />

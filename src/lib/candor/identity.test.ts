@@ -20,6 +20,9 @@ describe("candor profile identity", () => {
       genderIdentity: "woman",
       city: "London",
       relationshipPreference: "long term",
+      shortBio: null,
+      occupation: null,
+      education: null,
     });
   });
 

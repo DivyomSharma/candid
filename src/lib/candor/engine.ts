@@ -78,6 +78,7 @@ export async function runCandorTurn(input: CandorTurnInput): Promise<CandorTurnR
     retrievedMemories: input.retrievedMemories ?? [],
     understanding: understandingLine(socialReadState),
     scenario: scenario?.text,
+    isImproveMode: input.isImproveMode,
   });
   const routeDecision = routeForTurn(
     decision,

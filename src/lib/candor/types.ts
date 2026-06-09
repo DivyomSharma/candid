@@ -81,6 +81,8 @@ export type CandorMemory = {
   socialPreferences: string[];
   lifestylePreferences: string[];
   seenScenarios: string[];
+  answeredSignals: Record<string, string>;
+  profileV4: CandorProfileV4;
   alignmentReady: boolean;
   notes: string[];
   presenceState: PresenceState;
@@ -148,6 +150,7 @@ export type CandorTurnInput = {
   accessTier?: "echo" | "continuity" | "resonance";
   socialState?: CandorSocialState;
   retrievedMemories?: CandorRetrievedMemory[];
+  isImproveMode?: boolean;
 };
 
 export type CandorTurnResult = {
@@ -199,4 +202,29 @@ export type CandorLearningEvent = {
   insightType: string | null;
   accepted: boolean | null;
   engagementSignal: string;
+};
+
+export type CurrentlyV4 = {
+  building: string;
+  watching: string;
+  reading: string;
+  listening: string;
+  thinking: string;
+};
+
+export type OpenLoopsV4 = {
+  thinkingAbout: string;
+  recommending: string;
+  defending: string;
+};
+
+export type CandorProfileV4 = {
+  currently: CurrentlyV4;
+  tonight: string[];
+  shelf: Array<{ key: string; value: string }>;
+  openLoops: OpenLoopsV4;
+  smallThings: string[];
+  socialLinks: Record<string, string>;
+  photos: string[];
+  badges: string[];
 };

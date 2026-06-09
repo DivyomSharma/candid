@@ -83,6 +83,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const body = (await request.json().catch(() => ({}))) as {
     message?: string;
     history?: CandorHistoryMessage[];
+    isImproveMode?: boolean;
   };
   const content = body.message?.trim();
 
@@ -130,6 +131,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       accessTier: access.tier,
       socialState,
       retrievedMemories: [...retrievedMemories, ...factMemories].slice(0, accessProfile.retrievedMemoryLimit),
+      isImproveMode: body.isImproveMode,
     });
     aiContent = turn.reply;
     memory = turn.memory;

@@ -3,15 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageCircleMore, Sparkles, UserRound, Sun, Moon } from "lucide-react";
+import { Home, Compass, Sparkles, UserRound, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme, accents } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { CANDOR_THREAD_ID, candorThreadPresenceStorageKey, candorThreadReadStorageKey, candorThreadStorageKey } from "@/lib/candor/thread";
 
 const navItems = [
-  { href: `/candor/session/${CANDOR_THREAD_ID}`, label: "thread", icon: MessageCircleMore, kind: "thread" },
   { href: "/candor/home", label: "home", icon: Home },
+  { href: "/candor/signals", label: "signals", icon: Compass },
   { href: "/candor/aligns", label: "aligns", icon: Sparkles },
   { href: "/candor/you", label: "you", icon: UserRound },
 ];
@@ -168,17 +168,22 @@ export function BottomNav() {
       <nav className="fixed inset-x-0 bottom-4 z-[100] flex justify-center gap-2 px-3 pointer-events-none sm:bottom-5 sm:gap-3 sm:px-6">
         <div className="pointer-events-auto surface soft-shadow flex max-w-[calc(100vw-4.5rem)] items-center gap-0.5 rounded-full border border-border/50 px-1.5 py-1.5 backdrop-blur-md sm:max-w-none sm:gap-1 sm:px-2 sm:py-2">
         <Link
-          href="/candor"
-          className="flex h-9 items-center rounded-full px-3 text-sm font-light tracking-tight text-foreground transition-colors active:scale-95 sm:h-10 sm:px-4"
-          aria-label="Candor landing page"
+          href={`/candor/session/${CANDOR_THREAD_ID}`}
+          className={cn(
+            "relative flex h-9 items-center rounded-full px-3 text-sm font-light tracking-tight transition-colors active:scale-95 sm:h-10 sm:px-4",
+            pathname.startsWith("/candor/session") ? "text-accent" : "text-foreground hover:text-accent"
+          )}
+          aria-label="Candor AI Chat"
         >
+          {threadHasPresence && !pathname.startsWith("/candor/session") ? (
+            <span className="absolute top-1 right-2 h-1.5 w-1.5 rounded-full bg-accent/80 shadow-[0_0_12px_hsl(var(--accent)/0.85)] animate-[candor-breathe_2.8s_ease-in-out_infinite]" />
+          ) : null}
           Candor
         </Link>
         <div className="mx-0.5 h-5 w-px bg-border/50 sm:mx-1" aria-hidden="true" />
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isThread = item.kind === "thread";
-          const isActive = isThread ? pathname.startsWith("/candor/session") : pathname === item.href;
+          const isActive = pathname === item.href;
 
           return (
             <Link
@@ -187,11 +192,9 @@ export function BottomNav() {
               className={cn(
                 "relative flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-light tracking-wide transition-colors active:scale-95 sm:h-auto sm:min-w-24 sm:gap-2 sm:px-4 sm:py-2",
                 isActive ? "bg-accent text-accent-foreground" : "text-foreground-secondary sm:hover:text-foreground",
-                isThread && threadHasPresence && !isActive && "text-foreground shadow-[0_0_28px_-10px_hsl(var(--accent)/0.72)]",
               )}
             >
-              {isThread && threadHasPresence && !isActive ? <PresenceDot /> : null}
-              <Icon data-icon="inline-start" />
+              <Icon data-icon="inline-start" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="max-[380px]:sr-only">{item.label}</span>
             </Link>
           );

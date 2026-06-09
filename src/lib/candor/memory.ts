@@ -23,6 +23,8 @@ export function createEmptyMemory(): CandorMemory {
     socialPreferences: [],
     lifestylePreferences: [],
     seenScenarios: [],
+    answeredSignals: {},
+    profileV4: createEmptyProfileV4(),
     alignmentReady: false,
     notes: [],
     presenceState: createDefaultPresenceState(),
@@ -51,6 +53,8 @@ export function normalizeMemory(value: unknown): CandorMemory {
     socialPreferences: cleanList(input.socialPreferences),
     lifestylePreferences: cleanList(input.lifestylePreferences),
     seenScenarios: cleanList(input.seenScenarios, 40),
+    answeredSignals: input.answeredSignals && typeof input.answeredSignals === "object" ? (input.answeredSignals as Record<string, string>) : {},
+    profileV4: normalizeProfileV4(input.profileV4),
     alignmentReady: Boolean(input.alignmentReady),
     notes: cleanList(input.notes, 20),
     presenceState: normalizePresenceState(input.presenceState),
@@ -73,6 +77,8 @@ export function mergeMemory(existing: CandorMemory, incoming: Partial<CandorMemo
     socialPreferences: mergeList(existing.socialPreferences, incoming.socialPreferences),
     lifestylePreferences: mergeList(existing.lifestylePreferences, incoming.lifestylePreferences),
     seenScenarios: mergeList(existing.seenScenarios, incoming.seenScenarios, 40),
+    answeredSignals: { ...existing.answeredSignals, ...incoming.answeredSignals },
+    profileV4: mergeProfileV4(existing.profileV4, incoming.profileV4),
     notes: mergeList(existing.notes, incoming.notes, 20),
     presenceState: normalizePresenceState(incoming.presenceState ?? existing.presenceState),
     responseHistory: cleanResponses(incoming.responseHistory ?? existing.responseHistory),
@@ -407,4 +413,88 @@ function mergeInterestSignals(current: Record<string, number>, incoming: unknown
       .sort((a, b) => b[1] - a[1])
       .slice(0, 12),
   );
+}
+
+import type { CandorProfileV4 } from "@/lib/candor/types";
+
+export function createEmptyProfileV4(): CandorProfileV4 {
+  return {
+    currently: {
+      building: "candor app",
+      watching: "past lives",
+      reading: "norwegian wood",
+      listening: "bon iver",
+      thinking: "moving cities"
+    },
+    tonight: ["awake", "chai", "rain", "coding", "indie"],
+    shelf: [
+      { key: "favorite movie", value: "before sunrise" },
+      { key: "favorite album", value: "for emma, forever ago" },
+      { key: "favorite book", value: "the catcher in the rye" }
+    ],
+    openLoops: {
+      thinkingAbout: "why nostalgia hurts",
+      recommending: "before trilogy",
+      defending: "movies should have intermissions"
+    },
+    smallThings: ["window seat", "voice notes", "late replies", "museum dates", "black coffee"],
+    socialLinks: {
+      instagram: "divyom.sharma",
+      github: "divyomsharma"
+    },
+    photos: [
+      "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=600",
+      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=600",
+      "https://images.unsplash.com/photo-1507133750040-4a8f57021571?q=80&w=600"
+    ],
+    badges: ["night owl", "builder", "chai lover"]
+  };
+}
+
+function normalizeProfileV4(value: unknown): CandorProfileV4 {
+  const empty = createEmptyProfileV4();
+  if (!value || typeof value !== "object") return empty;
+  const val = value as Partial<CandorProfileV4>;
+  
+  const cur = val.currently || {};
+  const loops = val.openLoops || {};
+
+  return {
+    currently: {
+      building: typeof cur.building === "string" ? cur.building.trim() : empty.currently.building,
+      watching: typeof cur.watching === "string" ? cur.watching.trim() : empty.currently.watching,
+      reading: typeof cur.reading === "string" ? cur.reading.trim() : empty.currently.reading,
+      listening: typeof cur.listening === "string" ? cur.listening.trim() : empty.currently.listening,
+      thinking: typeof cur.thinking === "string" ? cur.thinking.trim() : empty.currently.thinking,
+    },
+    tonight: Array.isArray(val.tonight) ? val.tonight.map(x => String(x).trim()).filter(Boolean) : empty.tonight,
+    shelf: Array.isArray(val.shelf) 
+      ? val.shelf.map(x => ({ key: String(x?.key || ""), value: String(x?.value || "") })).filter(x => x.key && x.value) 
+      : empty.shelf,
+    openLoops: {
+      thinkingAbout: typeof loops.thinkingAbout === "string" ? loops.thinkingAbout.trim() : empty.openLoops.thinkingAbout,
+      recommending: typeof loops.recommending === "string" ? loops.recommending.trim() : empty.openLoops.recommending,
+      defending: typeof loops.defending === "string" ? loops.defending.trim() : empty.openLoops.defending,
+    },
+    smallThings: Array.isArray(val.smallThings) ? val.smallThings.map(x => String(x).trim()).filter(Boolean) : empty.smallThings,
+    socialLinks: val.socialLinks && typeof val.socialLinks === "object" 
+      ? Object.fromEntries(Object.entries(val.socialLinks).map(([k, v]) => [String(k).trim().toLowerCase(), String(v).trim()]).filter(([k, v]) => k && v))
+      : empty.socialLinks,
+    photos: Array.isArray(val.photos) ? val.photos.map(x => String(x).trim()).filter(Boolean) : empty.photos,
+    badges: Array.isArray(val.badges) ? val.badges.map(x => String(x).trim()).filter(Boolean) : empty.badges,
+  };
+}
+
+function mergeProfileV4(existing: CandorProfileV4, incoming?: Partial<CandorProfileV4>): CandorProfileV4 {
+  if (!incoming) return existing;
+  const merged = { ...existing };
+  if (incoming.currently) merged.currently = { ...existing.currently, ...incoming.currently };
+  if (incoming.tonight) merged.tonight = incoming.tonight;
+  if (incoming.shelf) merged.shelf = incoming.shelf;
+  if (incoming.openLoops) merged.openLoops = { ...existing.openLoops, ...incoming.openLoops };
+  if (incoming.smallThings) merged.smallThings = incoming.smallThings;
+  if (incoming.socialLinks) merged.socialLinks = { ...existing.socialLinks, ...incoming.socialLinks };
+  if (incoming.photos) merged.photos = incoming.photos;
+  if (incoming.badges) merged.badges = incoming.badges;
+  return merged;
 }

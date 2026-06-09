@@ -1,4 +1,4 @@
-import type { CandorMemory } from "@/lib/candor/types";
+import type { CandorMemory, CandorProfileV4 } from "@/lib/candor/types";
 
 export type PublicCandorProfile = {
   username: string;
@@ -16,6 +16,7 @@ export type PublicCandorProfile = {
     setup: string;
     response: string;
   };
+  profileV4: CandorProfileV4;
 };
 
 export type AlignmentResonance =
@@ -57,6 +58,7 @@ export function buildPublicProfile(
     ).slice(0, 4),
     storySignal: storySignalFrom(memory),
     situation: situationFrom(memory),
+    profileV4: memory.profileV4,
   };
 }
 
