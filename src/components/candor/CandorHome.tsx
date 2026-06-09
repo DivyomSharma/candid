@@ -72,6 +72,7 @@ export function CandorHome() {
     setError("");
     setIsStarting(true);
 
+    let success = false;
     try {
       const response = await fetch("/api/candor/conversations", {
         method: "POST",
@@ -93,6 +94,7 @@ export function CandorHome() {
           ];
           window.localStorage.setItem(candorThreadStorageKey(user.id), JSON.stringify(initialMessages));
         }
+        success = true;
         router.push(`/candor/session/${data.id || CANDOR_THREAD_ID}`);
         return;
       }
@@ -111,7 +113,9 @@ export function CandorHome() {
     } catch {
       setError("the connection did not answer. try again in a moment.");
     } finally {
-      setIsStarting(false);
+      if (!success) {
+        setIsStarting(false);
+      }
     }
   };
 
@@ -236,7 +240,7 @@ export function CandorHome() {
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
                 placeholder="start with the thing you actually care about"
-                className="h-14 w-full rounded-full border border-border/50 bg-background/45 pl-6 pr-32 text-base font-light text-foreground placeholder:text-muted-foreground outline-none transition-shadow focus:border-accent/40 focus:ring-1 focus:ring-accent/40"
+                className="h-14 w-full rounded-full border border-border/50 bg-background/45 pl-6 pr-[150px] sm:pr-40 text-base font-light text-foreground placeholder:text-muted-foreground outline-none transition-shadow focus:border-accent/40 focus:ring-1 focus:ring-accent/40 text-ellipsis overflow-hidden whitespace-nowrap"
               />
 
               <div className="absolute right-1.5 flex items-center">
