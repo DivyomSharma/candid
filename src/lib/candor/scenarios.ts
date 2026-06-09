@@ -148,7 +148,7 @@ function normalizeScenarios(input: Partial<CandorScenariosPayload>): CandorScena
   return { scenarios };
 }
 
-function fallbackScenarios(): CandorScenariosPayload {
+export function fallbackScenarios(): CandorScenariosPayload {
   return {
     scenarios: [
       {

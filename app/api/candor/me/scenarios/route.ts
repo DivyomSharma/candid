@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateCandorScenarios } from "@/lib/candor/scenarios";
+import { generateCandorScenarios, fallbackScenarios } from "@/lib/candor/scenarios";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -11,7 +11,7 @@ export async function GET() {
 
   if (!userId) {
     return NextResponse.json(
-      { scenarios: (await generateCandorScenarios(createEmptyMemory())).scenarios },
+      { scenarios: fallbackScenarios().scenarios },
       { headers: { "Cache-Control": "no-store" } },
     );
   }
@@ -26,7 +26,7 @@ export async function GET() {
 
     if (!user) {
       return NextResponse.json(
-        { scenarios: (await generateCandorScenarios(createEmptyMemory())).scenarios },
+        { scenarios: fallbackScenarios().scenarios },
         { headers: { "Cache-Control": "no-store" } },
       );
     }
@@ -38,6 +38,15 @@ export async function GET() {
       .maybeSingle();
 
     const memory = normalizeMemory(traits?.data ?? createEmptyMemory());
+    
+    // Fallback immediately if memory is empty
+    if (!memory.values.length && !memory.softSpots.length && !memory.relationalPatterns.length && !memory.communicationNeeds.length && !memory.interests.length) {
+      return NextResponse.json(
+        { scenarios: fallbackScenarios().scenarios },
+        { headers: { "Cache-Control": "no-store" } },
+      );
+    }
+
     const payload = await generateCandorScenarios(memory);
     return NextResponse.json(
       { scenarios: payload.scenarios },
@@ -46,7 +55,7 @@ export async function GET() {
   } catch (error) {
     console.error("Scenarios fetch failed:", error);
     return NextResponse.json(
-      { scenarios: (await generateCandorScenarios(createEmptyMemory())).scenarios },
+      { scenarios: fallbackScenarios().scenarios },
       { headers: { "Cache-Control": "no-store" } },
     );
   }
