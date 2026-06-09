@@ -424,26 +424,26 @@ function mergeInterestSignals(current: Record<string, number>, incoming: unknown
 import type { CandorProfileV4, CandorBadge } from "@/lib/candor/types";
 
 export const BEHAVIORAL_BADGES = [
-  { label: "💻 Builder", keywords: ["founder", "startup", "developer", "programmer", "coding", "engineer", "build", "builder"] },
-  { label: "🎬 Film Brain", keywords: ["movie", "movies", "film", "films", "cinema", "director", "letterboxd"] },
-  { label: "🎵 Playlist Sharer", keywords: ["music", "album", "song", "songs", "playlist", "spotify"] },
-  { label: "📚 Reader", keywords: ["book", "books", "reading", "read", "novel", "literature", "author"] },
-  { label: "☁ Daydreamer", keywords: ["dreamer", "daydreaming", "daydream", "zoning out", "wandering mind", "lost in thought"] },
-  { label: "🏔 Explorer", keywords: ["travel", "exploring", "hike", "hiking", "outdoors", "mountains", "adventure"] },
-  { label: "🎨 Designer", keywords: ["designer", "design", "artist", "ui", "ux", "typeface", "typography", "branding"] },
-  { label: "📸 Observer", keywords: ["photography", "observer", "taking photos", "noticing details", "people watching"] },
-  { label: "✍ Writer", keywords: ["writer", "writing", "write", "poetry", "poet", "journal", "journaling"] },
-  { label: "🌙 Night Owl", keywords: ["night owl", "late night", "3am", "nocturnal", "sleep schedule", "insomnia"] },
-  { label: "🗺 Wanderer", keywords: ["wanderer", "wandering", "wanderlust", "traveling", "exploring cities"] },
-  { label: "🎮 Gamer", keywords: ["gamer", "gaming", "games", "playstation", "xbox", "nintendo", "rpg"] },
-  { label: "🎧 Album Listener", keywords: ["vinyl", "record", "listening to albums", "full album", "album listener"] },
-  { label: "🌧 Rain Person", keywords: ["rain", "rainy days", "pluviophile", "thunderstorms", "rain person"] },
-  { label: "🍜 Midnight Snacker", keywords: ["midnight snack", "midnight snacker", "midnight food", "late night eating"] },
-  { label: "☕ Café Hopper", keywords: ["café", "cafe", "cafés", "coffee shop", "coffee shops", "café hopper"] },
-  { label: "🧠 Curious Mind", keywords: ["curious", "curiosity", "learning", "rabbit holes", "research spirals", "obsessed with"] },
-  { label: "🎭 Theater Kid", keywords: ["theater", "broadway", "acting", "drama", "musical", "plays"] },
-  { label: "🏃 Runner", keywords: ["runner", "running", "jogging", "marathon", "movement"] },
-  { label: "🌱 Plant Parent", keywords: ["plants", "plant parent", "gardening", "monstera", "houseplants"] }
+  { label: "Builder", keywords: ["founder", "startup", "developer", "programmer", "coding", "engineer", "build", "builder"] },
+  { label: "Film Brain", keywords: ["movie", "movies", "film", "films", "cinema", "director", "letterboxd"] },
+  { label: "Playlist Sharer", keywords: ["music", "album", "song", "songs", "playlist", "spotify"] },
+  { label: "Reader", keywords: ["book", "books", "reading", "read", "novel", "literature", "author"] },
+  { label: "Daydreamer", keywords: ["dreamer", "daydreaming", "daydream", "zoning out", "wandering mind", "lost in thought"] },
+  { label: "Explorer", keywords: ["travel", "exploring", "hike", "hiking", "outdoors", "mountains", "adventure"] },
+  { label: "Designer", keywords: ["designer", "design", "artist", "ui", "ux", "typeface", "typography", "branding"] },
+  { label: "Observer", keywords: ["photography", "observer", "taking photos", "noticing details", "people watching"] },
+  { label: "Writer", keywords: ["writer", "writing", "write", "poetry", "poet", "journal", "journaling"] },
+  { label: "Night Owl", keywords: ["night owl", "late night", "3am", "nocturnal", "sleep schedule", "insomnia"] },
+  { label: "Wanderer", keywords: ["wanderer", "wandering", "wanderlust", "traveling", "exploring cities"] },
+  { label: "Gamer", keywords: ["gamer", "gaming", "games", "playstation", "xbox", "nintendo", "rpg"] },
+  { label: "Album Listener", keywords: ["vinyl", "record", "listening to albums", "full album", "album listener"] },
+  { label: "Rain Person", keywords: ["rain", "rainy days", "pluviophile", "thunderstorms", "rain person"] },
+  { label: "Midnight Snacker", keywords: ["midnight snack", "midnight snacker", "midnight food", "late night eating"] },
+  { label: "Café Hopper", keywords: ["café", "cafe", "cafés", "coffee shop", "coffee shops", "café hopper"] },
+  { label: "Curious Mind", keywords: ["curious", "curiosity", "learning", "rabbit holes", "research spirals", "obsessed with"] },
+  { label: "Theater Kid", keywords: ["theater", "broadway", "acting", "drama", "musical", "plays"] },
+  { label: "Runner", keywords: ["runner", "running", "jogging", "marathon", "movement"] },
+  { label: "Plant Parent", keywords: ["plants", "plant parent", "gardening", "monstera", "houseplants"] }
 ];
 
 export function calculateBadgeConfidences(memory: CandorMemory): CandorBadge[] {
@@ -718,8 +718,8 @@ export function createEmptyProfileV4(): CandorProfileV4 {
       "https://images.unsplash.com/photo-1507133750040-4a8f57021571?q=80&w=600"
     ],
     badges: [
-      { label: "🌙 Night Owl", confidence: 0.91, source: "inferred" },
-      { label: "💻 Builder", confidence: 0.98, source: "confirmed" }
+      { label: "Night Owl", confidence: 0.91, source: "inferred" },
+      { label: "Builder", confidence: 0.98, source: "confirmed" }
     ]
   };
 }

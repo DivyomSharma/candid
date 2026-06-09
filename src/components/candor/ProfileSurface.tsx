@@ -299,7 +299,6 @@ export function ProfileSurface({
                       onClick={() => router.push("/candor/session/ongoing?mode=improve")}
                       className="rounded-full bg-accent text-accent-foreground px-6 font-medium hover:bg-accent/90 h-10 transition-all hover:scale-105 shadow-lg flex items-center gap-2"
                     >
-                      <Sparkles className="h-4 w-4" />
                       Improve with Candor
                     </Button>
 

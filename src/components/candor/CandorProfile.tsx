@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
+import { CandorLoading } from "@/components/candor/CandorLoading";
 import { ProfileSurface } from "@/components/candor/ProfileSurface";
 import { PersonalProfileEditor } from "@/components/candor/PersonalProfileEditor";
 import { useAuth } from "@/contexts/AuthContext";
@@ -79,15 +80,7 @@ export function CandorProfile() {
   }
 
   if (!hasLoadedMemory) {
-    return (
-      <main className="gradient-bg grain relative flex min-h-screen items-center justify-center overflow-hidden px-6">
-        <AmbientGlow />
-        <div className="relative z-10 flex max-w-[420px] flex-col items-center gap-6 text-center">
-          <h1 className="text-3xl font-light">your candor profile</h1>
-          <p className="text-sm font-light leading-6 text-foreground-secondary">reading what candor knows so far...</p>
-        </div>
-      </main>
-    );
+    return <CandorLoading />;
   }
 
   return (

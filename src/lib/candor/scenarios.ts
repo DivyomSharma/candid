@@ -1,5 +1,6 @@
 import type { CandorMemory } from "@/lib/candor/types";
 import { createEmptyMemory } from "@/lib/candor/memory";
+import { sendCandorJson } from "@/lib/candor-api";
 
 export type SignalType =
   | "hear_me_out"
@@ -451,5 +452,146 @@ export async function generateCandorScenarios(memory: CandorMemory) {
   // Repurposed to serve 3 high-diversity modern signals for preview
   return {
     scenarios: selectSignals(memory, 3)
+  };
+}
+
+// --- AI Signal Generation ---
+
+const SIGNAL_TYPES_LIST = [
+  "hear_me_out", "hot_take", "red_flag", "green_flag", "instant_ick",
+  "delusion_check", "vibe_check", "too_real",
+  "creative_argument", "would_you_rather", "have_you_ever"
+] as const;
+
+const SIGNAL_CATEGORIES_LIST = [
+  "funny", "flirty", "relatable", "culture", "opinion", "emotional", "deep"
+] as const;
+
+type AiGeneratedSignal = {
+  id: string;
+  type: string;
+  category: string;
+  title: string;
+  prompt: string;
+  options: string[];
+};
+
+export async function generateAiSignals(
+  memory: CandorMemory,
+  count: number = 3
+): Promise<CandorSignal[]> {
+  const memoryContext = buildMemoryContextForAi(memory);
+  
+  const systemPrompt = `you are candor's signal engine. you generate short, punchy social/emotional micro-prompts (called "signals") for a user to answer.
+
+rules:
+- each signal has: id (unique kebab-case string), type, category, title, prompt, options (2-4 short answer choices)
+- types must be one of: ${SIGNAL_TYPES_LIST.join(", ")}
+- categories must be one of: ${SIGNAL_CATEGORIES_LIST.join(", ")}
+- title should match the type in human-readable form (e.g. "would you rather", "hear me out", "creative argument", "have you ever", "hot take", "red flag", "green flag", etc.)
+- prompts should be lowercase, conversational, slightly provocative or thought-provoking
+- options should be 2-4 words each, lowercase
+- no emojis anywhere
+- make signals feel social-media-native: the kind of thing someone would screenshot and share
+- vary the types — include at least one scenario type (would_you_rather, have_you_ever, or creative_argument)
+- if user context is provided, tailor 1-2 signals to their interests/personality but keep them universally engaging`;
+
+  const message = `generate exactly ${count} signals as a JSON array.
+${memoryContext ? `\nuser context:\n${memoryContext}` : ""}
+
+return format: [{ "id": "...", "type": "...", "category": "...", "title": "...", "prompt": "...", "options": ["...", "..."] }]`;
+
+  try {
+    const raw = await sendCandorJson<AiGeneratedSignal[]>({
+      systemPrompt,
+      message,
+      temperature: 0.9,
+      maxTokens: 1200,
+      modelRoute: "extraction",
+      routeReason: "ai_signal_generation",
+    });
+
+    const signals = (Array.isArray(raw) ? raw : [])
+      .filter(isValidAiSignal)
+      .slice(0, count)
+      .map((s, idx) => normalizeAiSignal(s, idx));
+
+    if (signals.length >= Math.max(1, count - 1)) {
+      return signals;
+    }
+  } catch (error) {
+    console.error("AI signal generation failed, falling back to static:", error);
+  }
+
+  // Fallback to static signals
+  return selectSignals(memory, count);
+}
+
+function buildMemoryContextForAi(memory: CandorMemory): string {
+  const parts: string[] = [];
+
+  if (memory.values?.length) parts.push(`values: ${memory.values.slice(0, 3).join(", ")}`);
+  if (memory.softSpots?.length) parts.push(`soft spots: ${memory.softSpots.slice(0, 2).join(", ")}`);
+  if (memory.lifeThemes?.length) parts.push(`life themes: ${memory.lifeThemes.slice(0, 2).join(", ")}`);
+
+  const v4 = memory.profileV4;
+  if (v4?.currently) {
+    const cur = v4.currently;
+    if (cur.watching) parts.push(`watching: ${cur.watching}`);
+    if (cur.reading) parts.push(`reading: ${cur.reading}`);
+    if (cur.building) parts.push(`building: ${cur.building}`);
+    if (cur.listening) parts.push(`listening: ${cur.listening}`);
+  }
+
+  const interestEntries = Object.entries(memory.interactionProfile?.interestSignals ?? {})
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3)
+    .map(([topic]) => topic);
+  if (interestEntries.length) parts.push(`interests: ${interestEntries.join(", ")}`);
+
+  return parts.join("\n");
+}
+
+function isValidAiSignal(s: unknown): s is AiGeneratedSignal {
+  if (!s || typeof s !== "object") return false;
+  const sig = s as Record<string, unknown>;
+  return (
+    typeof sig.id === "string" &&
+    typeof sig.type === "string" &&
+    typeof sig.category === "string" &&
+    typeof sig.title === "string" &&
+    typeof sig.prompt === "string" &&
+    Array.isArray(sig.options) &&
+    sig.options.length >= 2
+  );
+}
+
+function normalizeAiSignal(s: AiGeneratedSignal, idx: number): CandorSignal {
+  const validType = SIGNAL_TYPES_LIST.includes(s.type as SignalType)
+    ? (s.type as SignalType)
+    : "vibe_check";
+
+  const validCategory = SIGNAL_CATEGORIES_LIST.includes(s.category as SignalCategory)
+    ? (s.category as SignalCategory)
+    : "relatable";
+
+  const outcomeTypes: SignalOutcomeType[] = [
+    "quick_answer", "community_reveal", "candor_learns", "conversation_worthy"
+  ];
+  const outcomeType = outcomeTypes[idx % outcomeTypes.length];
+
+  const split = s.options.length > 0
+    ? getDeterministicSplit(`ai-${s.id}`, s.options.length)
+    : undefined;
+
+  return {
+    id: `ai-${s.id}-${Date.now()}`,
+    type: validType,
+    category: validCategory,
+    title: s.title.toLowerCase(),
+    prompt: s.prompt,
+    options: s.options.map(o => String(o).toLowerCase()),
+    outcomeType,
+    communitySplit: split,
   };
 }

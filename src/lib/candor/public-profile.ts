@@ -2,6 +2,7 @@ import { getPublicIdentityForCandorUserId, getPublicIdentitiesForCandorUserIds }
 import { buildCandorProfilePresentation } from "@/lib/candor/profile";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getCandorPersonalProfile } from "@/lib/candor/personal-profile";
 
 export async function getOwnPublicProfile(authId: string) {
   const supabaseAdmin = getSupabaseAdmin();
@@ -10,11 +11,13 @@ export async function getOwnPublicProfile(authId: string) {
 
   const identity = await getPublicIdentityForCandorUserId(user.id as string);
   const { data: traits } = await supabaseAdmin.from("candor_traits").select("data").eq("user_id", user.id).maybeSingle();
+  const personalProfile = await getCandorPersonalProfile(user.id as string);
 
   return buildCandorProfilePresentation({
     memory: normalizeMemory(traits?.data ?? createEmptyMemory()),
     username: identity.username,
     handle: identity.handle,
+    personalProfile,
   });
 }
 
@@ -30,11 +33,13 @@ export async function getPublicProfileByHandle(handleParam: string) {
 
   const identity = identities.get(userId);
   const { data: traits } = await supabaseAdmin.from("candor_traits").select("data").eq("user_id", userId).maybeSingle();
+  const personalProfile = await getCandorPersonalProfile(userId);
 
   return buildCandorProfilePresentation({
     memory: normalizeMemory(traits?.data ?? createEmptyMemory()),
     username: identity?.username,
     handle: identity?.handle,
+    personalProfile,
   });
 }
 

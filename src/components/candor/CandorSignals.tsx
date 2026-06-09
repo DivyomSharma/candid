@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, usePathname } from "next/navigation";
 import { Sparkles, Compass, RefreshCw, Check, ArrowRight, Brain, AlertCircle } from "lucide-react";
@@ -18,53 +18,20 @@ export function CandorSignals() {
 
   const [signals, setSignals] = useState<CandorSignal[]>([]);
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [answeringId, setAnsweringId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [startingChatId, setStartingChatId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const observer = useRef<IntersectionObserver | null>(null);
-  
-  const lastElementRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (loading) return;
-      if (observer.current) observer.current.disconnect();
-      
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          loadMoreSignals();
-        }
-      });
-      
-      if (node) observer.current.observe(node);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, hasMore]
-  );
-
-  const fetchSignals = async (reset = false) => {
+  const fetchSignals = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/candor/signals?limit=10`);
+      const res = await fetch(`/api/candor/signals?limit=3`);
       if (res.ok) {
         const data = await res.json();
         if (data.signals && data.signals.length > 0) {
-          if (reset) {
-            setSignals(data.signals);
-          } else {
-            // Filter out duplicates
-            setSignals((prev) => {
-              const prevIds = new Set(prev.map((s) => s.id));
-              const newSignals = data.signals.filter((s: CandorSignal) => !prevIds.has(s.id));
-              return [...prev, ...newSignals];
-            });
-          }
-          if (data.signals.length < 10) {
-            setHasMore(false);
-          }
-        } else {
-          setHasMore(false);
+          setSignals(data.signals);
+          setAnswers({});
         }
       }
     } catch (e) {
@@ -75,12 +42,8 @@ export function CandorSignals() {
   };
 
   useEffect(() => {
-    fetchSignals(true);
+    fetchSignals();
   }, [isSignedIn]);
-
-  const loadMoreSignals = () => {
-    fetchSignals(false);
-  };
 
   const handleSelectOption = async (signal: CandorSignal, option: string) => {
     setAnsweringId(signal.id);
@@ -187,17 +150,16 @@ export function CandorSignals() {
 
           {/* Signals Feed */}
           <div className="flex flex-col gap-4">
-            {signals.map((signal, idx) => {
+            {signals.map((signal) => {
               const answeredOption = answers[signal.id];
-              const isLast = idx === signals.length - 1;
 
               return (
-                <div key={signal.id} ref={isLast ? lastElementRef : null}>
+                <div key={signal.id}>
                   <Card className="surface border border-border/40 bg-card/30 backdrop-blur-md transition-colors hover:border-accent/20">
                     <CardContent className="p-5 flex flex-col gap-4">
                       {/* Top label */}
                       <div className="flex items-center justify-between text-[10px] font-light uppercase tracking-[0.2em] text-accent">
-                        <span>✨ {signal.title}</span>
+                        <span>{signal.title}</span>
                         <span className="text-foreground-secondary/40 text-[9px]">{signal.category}</span>
                       </div>
 
@@ -290,13 +252,23 @@ export function CandorSignals() {
               </Card>
             )}
 
-            {/* Loading Indicator */}
-            {loading && (
+            {/* Refresh / Loading */}
+            {loading ? (
               <div className="flex justify-center items-center py-6 text-foreground-secondary font-light text-xs gap-2">
                 <RefreshCw className="h-4 w-4 animate-spin text-accent" />
-                following more quiet patterns...
+                generating new signals...
               </div>
-            )}
+            ) : signals.length > 0 ? (
+              <div className="flex justify-center pt-2 pb-4">
+                <button
+                  onClick={() => fetchSignals()}
+                  className="flex items-center gap-2 rounded-full border border-border/50 bg-background/30 px-5 py-2.5 text-xs font-light text-foreground-secondary transition-all hover:bg-accent/10 hover:border-accent/40 hover:text-foreground active:scale-[0.98]"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  new signals
+                </button>
+              </div>
+            ) : null}
           </div>
         </section>
         

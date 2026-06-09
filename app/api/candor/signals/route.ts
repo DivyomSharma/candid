@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { createEmptyMemory, normalizeMemory, extractLightMemory, mergeMemory } from "@/lib/candor/memory";
-import { selectSignals, STATIC_SIGNALS, getDeterministicSplit } from "@/lib/candor/scenarios";
+import { selectSignals, generateAiSignals, STATIC_SIGNALS, getDeterministicSplit } from "@/lib/candor/scenarios";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ async function getOrCreateUser(authId: string) {
 export async function GET(request: NextRequest) {
   const authId = await getCurrentUserId();
   const { searchParams } = new URL(request.url);
-  const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? "15")));
+  const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? "3")));
   const excludeId = searchParams.get("excludeId");
 
   if (!authId) {
@@ -51,7 +51,9 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     const memory = normalizeMemory(traits?.data ?? createEmptyMemory());
-    let signals = selectSignals(memory, limit + (excludeId ? 1 : 0));
+    
+    // Use AI-generated signals for authenticated users
+    let signals = await generateAiSignals(memory, limit + (excludeId ? 1 : 0));
     
     if (excludeId) {
       signals = signals.filter((s) => s.id !== excludeId);

@@ -1,8 +1,21 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Compass, RefreshCw, Sparkles, Brain, Check, MessageSquare } from "lucide-react";
+import {
+  ArrowRight,
+  Brain,
+  Check,
+  Cloud,
+  Film,
+  Laptop,
+  Moon,
+  Music,
+  Quote,
+  RefreshCw,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -13,13 +26,66 @@ import { CANDOR_THREAD_ID, candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorSignal } from "@/lib/candor/scenarios";
 
 type PreviewMessage = { role: "user" | "ai"; content: string };
-type AlignPreview = { id: string; username: string; initials: string; tone: string; resonance: string };
+type AlignPreview = { id: string; username: string; initials: string; tone: string; resonance: string; insight: string };
+type MemoryPreview = {
+  profileV4?: {
+    currently?: Partial<Record<"building" | "watching" | "reading" | "listening" | "thinking", string>>;
+    tonight?: string[];
+  };
+  interactionProfile?: { interestSignals?: Record<string, number> };
+};
 
 const defaultInitiativeLine = "i have a feeling your algorithm knows too much about you already";
-const fallbackReflection = "you've been choosing certainty over novelty lately.";
+const fallbackReflection = "you sound lighter after midnight.";
+const heroPrompts = [
+  "what feels unfinished tonight?",
+  "what's quietly staying with you?",
+  "where's your head tonight?",
+  "what keeps returning?",
+  "what's louder than usual tonight?",
+  "what did today leave behind?",
+  "what feels different tonight?",
+];
+const reflectionOpeners = ["this week", "lately", "recently", "small thing"];
+const reflectionFallbacks = [
+  "you kept choosing emotionally steady people.",
+  "you've been recommending films more than music.",
+  "you sound lighter after midnight.",
+  "you've become less guarded lately.",
+];
+const communityAtmosphere = [
+  {
+    label: "tonight on candor",
+    line: "people keep defending voice notes over calls.",
+    detail: "apparently hearing someone pause changes everything.",
+  },
+  {
+    label: "people tonight keep talking about",
+    line: "late trains, old homes, rain, and goodbyes.",
+    detail: "the room feels softer than usual.",
+  },
+  {
+    label: "someone wrote",
+    line: "\"i still reread old chats.\"",
+    detail: "no context. somehow enough context.",
+  },
+  {
+    label: "shared mood",
+    line: "nostalgia, but with better boundaries.",
+    detail: "a strange little weather system.",
+  },
+];
+const surpriseModules = [
+  { label: "tiny opinion", line: "movie recommendations are a love language.", detail: "especially when they come with one weird warning." },
+  { label: "small confession", line: "someone admitted they miss being a regular somewhere.", detail: "a cafe, a class, a person. unclear." },
+  { label: "community thought", line: "the group chat is either medicine or a full-time job.", detail: "tonight, people are split." },
+  { label: "memory", line: "you keep circling back to people who feel calm.", detail: "candor noticed the pattern, quietly." },
+  { label: "today's signal", line: "green flag: they remember the throwaway detail.", detail: "dangerously effective behavior." },
+];
 
 export function CandorHome() {
   const [message, setMessage] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<PreviewMessage | null>(null);
@@ -34,10 +100,19 @@ export function CandorHome() {
   
   const [reflection, setReflection] = useState(fallbackReflection);
   const [isFetchingReflection, setIsFetchingReflection] = useState(false);
+  const [memoryPreview, setMemoryPreview] = useState<MemoryPreview | null>(null);
 
   const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const heroPrompt = useMemo(() => {
+    const bucket = Math.floor(Date.now() / (1000 * 60 * 60 * 3));
+    return heroPrompts[bucket % heroPrompts.length];
+  }, []);
+  const reflectionOpener = useMemo(() => reflectionOpeners[Math.floor(Math.random() * reflectionOpeners.length)], []);
+  const fallbackReflectionLine = useMemo(() => reflectionFallbacks[Math.floor(Math.random() * reflectionFallbacks.length)], []);
+  const atmosphere = useMemo(() => communityAtmosphere[Math.floor(Math.random() * communityAtmosphere.length)], []);
+  const surprise = useMemo(() => surpriseModules[Math.floor(Math.random() * surpriseModules.length)], []);
 
   // Load preview message
   useEffect(() => {
@@ -67,6 +142,7 @@ export function CandorHome() {
     fetchSignal();
     fetchAligns();
     fetchReflection();
+    fetchMemoryPreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, user?.id]);
 
@@ -102,7 +178,8 @@ export function CandorHome() {
             username: a.profile.username,
             initials: a.profile.avatarInitials,
             tone: a.profile.avatarTone,
-            resonance: a.score >= 13 ? "candid" : a.score >= 10 ? "magnetic" : a.score >= 7 ? "natural flow" : "familiar"
+            resonance: a.score >= 13 ? "candid" : a.score >= 10 ? "magnetic" : a.score >= 7 ? "natural flow" : "familiar",
+            insight: alignInsightForScore(a.score),
           }));
           setAligns(list);
         }
@@ -111,6 +188,19 @@ export function CandorHome() {
       console.error(e);
     } finally {
       setIsFetchingAligns(false);
+    }
+  };
+
+  const fetchMemoryPreview = async () => {
+    if (!isSignedIn) return;
+    try {
+      const res = await fetch("/api/candor/me/traits");
+      if (res.ok) {
+        const data = await res.json();
+        setMemoryPreview(data.memory ?? null);
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -219,6 +309,12 @@ export function CandorHome() {
 
   const isInitiativePreview = preview?.content === defaultInitiativeLine;
   const username = user?.firstName?.toLowerCase() || user?.email?.split("@")[0]?.toLowerCase() || "there";
+  const previewTeaser = preview ? teaseLine(preview.content) : "";
+  const current = memoryPreview?.profileV4?.currently ?? {};
+  const interestSignals = memoryPreview?.interactionProfile?.interestSignals ?? {};
+  const youTonightItems = buildYouTonight(current, interestSignals);
+  const primaryAlign = aligns[0];
+  const shownReflection = sanitizeReflection(reflection, fallbackReflectionLine);
 
   return (
     <>
@@ -269,13 +365,19 @@ export function CandorHome() {
             initial={{ opacity: 0, y: 18 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="relative mb-2"
+            className="relative mb-1"
           >
+            <motion.div
+              aria-hidden
+              animate={{ x: [0, 18, 0], opacity: [0.28, 0.42, 0.28] }}
+              transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -left-10 -top-8 h-28 w-28 rounded-full bg-[hsl(var(--accent)/0.11)] blur-3xl"
+            />
             <p className="mb-2.5 text-xs uppercase tracking-[0.15em] font-light text-foreground-secondary/70">
               {isSignedIn ? `hey ${username}` : "the thread continues quietly"}
             </p>
             <h1 className="text-3xl font-light tracking-tight md:text-[3.2rem] leading-[1.05]">
-              what feels alive tonight?
+              {heroPrompt}
             </h1>
           </motion.div>
 
@@ -286,12 +388,18 @@ export function CandorHome() {
               animate={{ opacity: 1, y: 0 }} 
               transition={{ delay: 0.05, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Card className="surface soft-shadow relative overflow-hidden border-accent/20 bg-[linear-gradient(135deg,hsl(var(--accent)/0.06),hsl(var(--card)/0.45))] backdrop-blur-md">
-                <CardContent className="flex flex-col gap-3.5 p-5">
+              <Card className="surface soft-shadow relative overflow-hidden border-accent/20 bg-[linear-gradient(135deg,hsl(var(--accent)/0.07),hsl(var(--card)/0.42))] backdrop-blur-md">
+                <motion.div
+                  aria-hidden
+                  animate={{ opacity: [0.18, 0.34, 0.18] }}
+                  transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute right-6 top-1/2 h-16 w-16 -translate-y-1/2 rounded-full bg-accent/20 blur-2xl"
+                />
+                <CardContent className="relative flex flex-col gap-2.5 p-4">
                   <div className="flex items-center justify-between gap-4 text-xs font-light text-foreground-secondary">
                     <span className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-accent/80 shadow-[0_0_14px_hsl(var(--accent)/0.65)] animate-[candor-breathe_3.2s_ease-in-out_infinite]" />
-                      {isInitiativePreview ? "unread from candor" : "still open between you two"}
+                      {isInitiativePreview ? "unread from candor" : "still open"}
                     </span>
                     {isSignedIn ? (
                       <button
@@ -303,8 +411,8 @@ export function CandorHome() {
                       </button>
                     ) : null}
                   </div>
-                  <p className="max-w-[34rem] text-sm font-light leading-6 text-foreground-secondary break-words">
-                    {preview.content}
+                  <p className="line-clamp-2 max-w-[30rem] text-[15px] font-light leading-6 text-foreground break-words">
+                    {previewTeaser}
                   </p>
                 </CardContent>
               </Card>
@@ -317,22 +425,28 @@ export function CandorHome() {
             animate={{ opacity: 1, y: 0 }} 
             transition={{ delay: 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md min-h-[160px] flex flex-col justify-between">
-              <CardContent className="p-5 flex flex-col gap-3 w-full">
+            <Card className="surface soft-shadow relative flex min-h-[218px] flex-col justify-between overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
+              <motion.div
+                aria-hidden
+                animate={{ rotate: [0, 2, 0], opacity: [0.08, 0.18, 0.08] }}
+                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[hsl(var(--glow)/0.5)] blur-3xl"
+              />
+              <CardContent className="relative flex w-full flex-col gap-5 p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-light uppercase tracking-[0.2em] text-accent">
-                    ✨ {signal?.title || "signal"}
+                  <span className="text-[11px] font-light uppercase tracking-[0.22em] text-accent">
+                    {signal?.title || "signal"}
                   </span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       if (signal) fetchSignal(signal.id);
                     }}
-                    className="p-1 text-foreground-secondary hover:text-foreground hover:bg-background/40 rounded-full transition-colors"
+                    className="rounded-full p-2 text-foreground-secondary transition-colors hover:bg-background/40 hover:text-foreground"
                     title="Next signal"
                     disabled={isFetchingSignal}
                   >
-                    <RefreshCw className={`h-3 w-3 ${isFetchingSignal ? "animate-spin" : ""}`} />
+                    <RefreshCw className={`h-3.5 w-3.5 ${isFetchingSignal ? "animate-spin" : ""}`} />
                   </button>
                 </div>
 
@@ -340,7 +454,7 @@ export function CandorHome() {
                   className="cursor-pointer group flex-1"
                   onClick={() => router.push("/candor/signals")}
                 >
-                  <p className="text-base font-light text-foreground leading-6 pr-4 hover:text-foreground/90 transition-colors">
+                  <p className="pr-2 text-[1.35rem] font-light leading-8 text-foreground transition-colors hover:text-foreground/90">
                     {signal?.prompt || "loading a signal..."}
                   </p>
                 </div>
@@ -348,12 +462,12 @@ export function CandorHome() {
                 {signal && (
                   <div className="mt-3">
                     {!signalAnswered ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-3">
                         {signal.options.map((opt) => (
                           <button
                             key={opt}
                             onClick={() => handleSignalAnswer(opt)}
-                            className="rounded-full border border-border/50 bg-background/20 px-3.5 py-1.5 text-xs font-light text-foreground-secondary transition-all hover:bg-accent/10 hover:border-accent/40 hover:text-foreground active:scale-[0.98]"
+                            className="min-h-11 rounded-full border border-border/50 bg-background/25 px-5 py-2.5 text-sm font-light text-foreground-secondary transition-all hover:border-accent/40 hover:bg-accent/10 hover:text-foreground active:scale-[0.98]"
                           >
                             {opt}
                           </button>
@@ -419,23 +533,23 @@ export function CandorHome() {
           </motion.div>
 
           {/* 4. ALIGNS PREVIEW */}
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }} 
-            animate={{ opacity: 1, y: 0 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-              <CardContent className="p-5 flex flex-col gap-3.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60 flex items-center gap-1.5">
+              <CardContent className="flex flex-col gap-4 p-5">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
                     <Sparkles className="h-3 w-3 text-accent" />
-                    familiar energies
+                    aligns nearby
                   </span>
-                  <button 
+                  <button
                     onClick={() => router.push("/candor/aligns")}
-                    className="text-xs font-light text-foreground-secondary hover:text-accent transition-colors hover:underline"
+                    className="text-xs font-light text-foreground-secondary transition-colors hover:text-accent hover:underline"
                   >
-                    see all →
+                    see all
                   </button>
                 </div>
 
@@ -445,33 +559,40 @@ export function CandorHome() {
                   </p>
                 ) : isFetchingAligns ? (
                   <div className="space-y-2 py-1">
-                    <div className="h-4 w-32 rounded bg-foreground/10 animate-pulse" />
-                    <div className="h-4 w-40 rounded bg-foreground/10 animate-pulse" />
+                    <div className="h-4 w-32 animate-pulse rounded bg-foreground/10" />
+                    <div className="h-4 w-40 animate-pulse rounded bg-foreground/10" />
                   </div>
-                ) : aligns.length > 0 ? (
-                  <div className="space-y-2.5">
-                    {aligns.map((a) => (
-                      <div 
-                        key={a.id} 
-                        onClick={() => router.push(`/candor/aligns/${a.id}`)}
-                        className="flex items-center gap-3 cursor-pointer group p-1.5 rounded-lg hover:bg-background/25 transition-colors"
-                      >
-                        <Avatar className="h-7 w-7 border border-border/60">
-                          <AvatarFallback className="text-[10px] font-light" style={{ background: a.tone }}>
-                            {a.initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-1 items-center justify-between gap-2">
-                          <span className="text-sm font-light text-foreground group-hover:text-accent transition-colors">
-                            {a.username}
-                          </span>
-                          <span className="text-[10px] font-light border border-border/40 rounded-full px-2 py-0.5 text-foreground-secondary/80">
-                            {a.resonance}
-                          </span>
-                        </div>
+                ) : primaryAlign ? (
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/candor/aligns/${primaryAlign.id}`)}
+                    className="group flex w-full items-center gap-4 rounded-xl p-1.5 text-left transition-colors hover:bg-background/20"
+                  >
+                    <motion.div
+                      animate={{ opacity: [0.72, 1, 0.72], scale: [0.98, 1.02, 0.98] }}
+                      transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <Avatar className="h-14 w-14 border border-accent/25 shadow-[0_0_28px_-16px_hsl(var(--accent)/0.9)]">
+                        <AvatarFallback className="text-sm font-light" style={{ background: primaryAlign.tone }}>
+                          {primaryAlign.initials}
+                        </AvatarFallback>
+                      </Avatar>
+                    </motion.div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-base font-light text-foreground transition-colors group-hover:text-accent">
+                          {primaryAlign.username}
+                        </p>
+                        <span className="shrink-0 rounded-full border border-accent/25 px-2.5 py-1 text-[10px] font-light uppercase tracking-[0.12em] text-accent/85">
+                          {primaryAlign.resonance}
+                        </span>
                       </div>
-                    ))}
-                  </div>
+                      <p className="mt-2 line-clamp-2 text-sm font-light leading-6 text-foreground-secondary">
+                        {primaryAlign.insight}
+                      </p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-foreground-secondary transition-transform group-hover:translate-x-0.5 group-hover:text-accent" />
+                  </button>
                 ) : (
                   <p className="text-sm font-light text-foreground-secondary/60">
                     not enough signals yet. keep responding to signals to find overlays.
@@ -481,29 +602,122 @@ export function CandorHome() {
             </Card>
           </motion.div>
 
-          {/* 5. CANDOR REFLECTION */}
+          {/* 5. YOU TONIGHT */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="grid grid-cols-2 gap-3"
+          >
+            <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
+              <CardContent className="flex min-h-[138px] flex-col gap-4 p-4">
+                <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
+                  <Moon className="h-3.5 w-3.5 text-accent" />
+                  tonight
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  {youTonightItems.map((item) => (
+                    <div key={item.label} className="flex items-center gap-2 text-sm font-light text-foreground-secondary">
+                      <item.icon className="h-3.5 w-3.5 text-accent/80" />
+                      <span className="truncate text-foreground">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
+              <CardContent className="flex min-h-[138px] flex-col gap-3 p-4">
+                <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
+                  <Quote className="h-3.5 w-3.5 text-accent" />
+                  {surprise.label}
+                </div>
+                <p className="text-sm font-light leading-6 text-foreground">{surprise.line}</p>
+                <p className="mt-auto text-xs font-light leading-5 text-foreground-secondary/70">{surprise.detail}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* 6. COMMUNITY ATMOSPHERE */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.21, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
+              <motion.div
+                aria-hidden
+                animate={{ opacity: [0.08, 0.2, 0.08], x: [-8, 8, -8] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute bottom-0 right-0 h-24 w-40 rounded-full bg-[hsl(var(--accent)/0.18)] blur-3xl"
+              />
+              <CardContent className="relative flex flex-col gap-3 p-5">
+                <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
+                  <Users className="h-3.5 w-3.5 text-accent" />
+                  {atmosphere.label}
+                </div>
+                <p className="text-xl font-light leading-8 text-foreground">{atmosphere.line}</p>
+                <p className="text-sm font-light leading-6 text-foreground-secondary">{atmosphere.detail}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* 7. WEEKLY REFLECTION */}
           {isSignedIn && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              transition={{ delay: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.24, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md border-l-2 border-l-accent/70">
-                <CardContent className="p-5 flex flex-col gap-2.5">
+              <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md border-l-2 border-l-accent/60">
+                <CardContent className="flex flex-col gap-3 p-5">
                   <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
                     <Brain className="h-3.5 w-3.5 text-accent" />
-                    weekly reflection
+                    {reflectionOpener}
                   </div>
-                  
-                  <p className="text-sm font-light leading-6 text-foreground pr-8">
-                    "candor noticed: {reflection}"
+
+                  <motion.p
+                    key={shownReflection}
+                    initial={{ opacity: 0.3 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8 }}
+                    className="pr-6 text-base font-light leading-7 text-foreground"
+                  >
+                    {shownReflection}
+                  </motion.p>
+
+                  <button
+                    onClick={() => selectPrompt(`let's talk about this pattern: "${shownReflection}"`)}
+                    className="mt-1 flex items-center gap-1 self-start text-xs font-light text-accent hover:underline"
+                  >
+                    open <ArrowRight className="h-3 w-3" />
+                  </button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {!isSignedIn && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.24, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md border-l-2 border-l-accent/50">
+                <CardContent className="flex flex-col gap-3 p-5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
+                    <Brain className="h-3.5 w-3.5 text-accent" />
+                    lately
+                  </div>
+                  <p className="pr-6 text-base font-light leading-7 text-foreground">
+                    candor gets more specific when the thread belongs to you.
                   </p>
 
                   <button
-                    onClick={() => selectPrompt(`let's discuss what you noticed about me: "${reflection}"`)}
-                    className="self-start text-xs font-light text-accent hover:underline flex items-center gap-1 mt-1"
+                    onClick={() => router.push(`/candor/login?next=${encodeURIComponent("/candor/home")}`)}
+                    className="mt-1 flex items-center gap-1 self-start text-xs font-light text-accent hover:underline"
                   >
-                    see reflection <ArrowRight className="h-3 w-3" />
+                    sign in <ArrowRight className="h-3 w-3" />
                   </button>
                 </CardContent>
               </Card>
@@ -527,10 +741,15 @@ export function CandorHome() {
                 type="text"
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
-                placeholder="start with the thing you actually care about"
-                animate={{ paddingRight: message.length > 0 || isStarting ? 60 : 160 }}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
+                placeholder={isInputFocused ? "what's been stuck in your head?" : "start with the thing you actually care about"}
+                animate={{
+                  paddingRight: message.length > 0 || isStarting ? 60 : 160,
+                  scaleX: isInputFocused ? 1.01 : 1,
+                }}
                 transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-                className="h-14 w-full rounded-full border border-border/50 bg-background/45 pl-6 text-base font-light text-foreground placeholder:text-muted-foreground outline-none transition-shadow focus:border-accent/40 focus:ring-1 focus:ring-accent/40 text-ellipsis overflow-hidden whitespace-nowrap"
+                className="h-14 w-full origin-center rounded-full border border-border/50 bg-background/45 pl-6 text-base font-light text-foreground placeholder:text-muted-foreground outline-none transition-shadow focus:border-accent/40 focus:ring-1 focus:ring-accent/40 text-ellipsis overflow-hidden whitespace-nowrap"
               />
 
               <div className="absolute right-1.5 flex items-center">
@@ -542,6 +761,7 @@ export function CandorHome() {
                       width: message.length > 0 || isStarting ? 44 : "auto",
                       paddingLeft: message.length > 0 || isStarting ? 0 : 20,
                       paddingRight: message.length > 0 || isStarting ? 0 : 20,
+                      scale: message.length > 0 ? 0.96 : 1,
                     }}
                     whileHover={(!message.trim() || isStarting) ? {} : { scale: 1.03 }}
                     whileTap={(!message.trim() || isStarting) ? {} : { scale: 0.97 }}
@@ -609,4 +829,57 @@ export function CandorHome() {
       </main>
     </>
   );
+}
+
+function teaseLine(content: string) {
+  const clean = content
+    .replace(/\s+/g, " ")
+    .replace(/^["']|["']$/g, "")
+    .trim();
+
+  if (clean.length <= 92) return clean;
+  const clipped = clean.slice(0, 92);
+  return `${clipped.slice(0, Math.max(0, clipped.lastIndexOf(" ")))}...`;
+}
+
+function sanitizeReflection(reflection: string, fallback: string) {
+  const clean = reflection
+    .replace(/^["']|["']$/g, "")
+    .replace(/^candor noticed:?\s*/i, "")
+    .trim();
+
+  if (!clean) return fallback;
+  const sentence = clean.charAt(0).toLowerCase() + clean.slice(1);
+  const words = sentence.split(/\s+/).slice(0, 12).join(" ");
+  return words.endsWith(".") ? words : `${words}.`;
+}
+
+function alignInsightForScore(score: number) {
+  if (score >= 13) return "Conversation tends to stay around films, creativity, and unusually specific opinions.";
+  if (score >= 10) return "You both disappear when overwhelmed, then return like nothing happened.";
+  if (score >= 7) return "There is a familiar rhythm around taste, quiet ambition, and late replies.";
+  return "A small overlap is forming. Not loud yet, but recognizable.";
+}
+
+function buildYouTonight(
+  currently: NonNullable<MemoryPreview["profileV4"]>["currently"] = {},
+  interestSignals: Record<string, number> = {},
+) {
+  const rankedInterest = Object.entries(interestSignals).sort(([, a], [, b]) => b - a)[0]?.[0];
+  const items = [
+    currently.watching ? { icon: Film, label: `watching ${currently.watching}` } : null,
+    currently.building ? { icon: Laptop, label: `building ${currently.building}` } : null,
+    currently.listening ? { icon: Music, label: `listening to ${currently.listening}` } : null,
+    currently.thinking ? { icon: Cloud, label: `thinking about ${currently.thinking}` } : null,
+  ].filter(Boolean) as Array<{ icon: typeof Moon; label: string }>;
+
+  if (items.length >= 3) return items.slice(0, 3);
+
+  const fallback = [
+    { icon: Moon, label: "awake" },
+    { icon: rankedInterest === "movies" ? Film : Laptop, label: rankedInterest ? `circling ${rankedInterest}` : "building" },
+    { icon: Cloud, label: "thinking" },
+  ];
+
+  return [...items, ...fallback].slice(0, 3);
 }
