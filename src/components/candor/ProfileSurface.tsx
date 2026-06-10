@@ -297,29 +297,30 @@ export function ProfileSurface({
                     <Button
                       type="button"
                       onClick={() => router.push("/candor/session/ongoing?mode=improve")}
-                      className="rounded-full bg-accent text-accent-foreground px-6 font-medium hover:bg-accent/90 h-10 transition-all hover:scale-105 shadow-lg flex items-center gap-2"
+                      className="rounded-full bg-accent text-accent-foreground w-10 h-10 hover:bg-accent/90 transition-all hover:scale-105 shadow-lg flex items-center justify-center p-0"
+                      title="Improve with Candor"
                     >
-                      Improve with Candor
+                      <Sparkles className="h-4 w-4" />
                     </Button>
 
                     <Button
                       type="button"
                       variant="outline"
                       onClick={shareProfile}
-                      className="rounded-full border-border/50 bg-background/50 px-4 font-light backdrop-blur-md hover:bg-accent/10 h-10 transition-all hover:scale-105 flex items-center gap-2"
+                      className="rounded-full border-border/50 bg-background/50 w-10 h-10 backdrop-blur-md hover:bg-accent/10 transition-all hover:scale-105 flex items-center justify-center p-0"
+                      title="Share"
                     >
                       <Share2 className="h-4 w-4" />
-                      share
                     </Button>
 
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => router.push("/memory-controls")}
-                      className="rounded-full border-border/50 bg-background/50 px-4 font-light backdrop-blur-md hover:bg-accent/10 h-10 transition-all hover:scale-105 flex items-center gap-2"
+                      className="rounded-full border-border/50 bg-background/50 w-10 h-10 backdrop-blur-md hover:bg-accent/10 transition-all hover:scale-105 flex items-center justify-center p-0"
+                      title="Settings"
                     >
                       <Settings className="h-4 w-4" />
-                      settings
                     </Button>
                   </>
                 ) : (
@@ -328,10 +329,10 @@ export function ProfileSurface({
                       type="button"
                       variant="outline"
                       onClick={shareProfile}
-                      className="rounded-full border-border/50 bg-background/50 px-4 font-light backdrop-blur-md hover:bg-accent/10 h-10 transition-all hover:scale-105 flex items-center gap-2"
+                      className="rounded-full border-border/50 bg-background/50 w-10 h-10 backdrop-blur-md hover:bg-accent/10 transition-all hover:scale-105 flex items-center justify-center p-0"
+                      title="Share"
                     >
                       <Share2 className="h-4 w-4" />
-                      share
                     </Button>
                   </>
                 )}

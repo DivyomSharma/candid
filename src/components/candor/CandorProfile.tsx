@@ -10,6 +10,7 @@ import { ProfileSurface } from "@/components/candor/ProfileSurface";
 import { PersonalProfileEditor } from "@/components/candor/PersonalProfileEditor";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildCandorProfilePresentation } from "@/lib/candor/profile";
+import { LogOut } from "lucide-react";
 import type { CandorAccessState } from "@/lib/candor/access";
 import type { CandorPersonalProfile } from "@/lib/candor/personal-profile";
 import type { CandorMemory } from "@/lib/candor/types";
@@ -98,9 +99,10 @@ export function CandorProfile() {
               await signOut();
               router.push("/candor");
             }}
-            className="rounded-full border-border/50 bg-background/50 px-5 font-light backdrop-blur-md hover:bg-accent/10"
+            className="rounded-full border-border/50 bg-background/50 w-10 h-10 backdrop-blur-md hover:bg-accent/10 transition-all hover:scale-105 flex items-center justify-center p-0"
+            title="Sign Out"
           >
-            sign out
+            <LogOut className="h-4 w-4" />
           </Button>
         }
       />
