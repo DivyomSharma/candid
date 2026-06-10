@@ -88,7 +88,7 @@ export function CandorProfile() {
       <ProfileSurface
         profile={profile}
         heading="you, in context"
-        subheading={access?.narrative ?? "small signals up front. the rest should arrive naturally, through time and conversation."}
+        subheading={access?.narrative ?? (memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet.")}
         onEditClick={() => setEditorOpen(true)}
         actionSlot={
           <Button

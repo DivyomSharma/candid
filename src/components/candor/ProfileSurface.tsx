@@ -205,7 +205,7 @@ export function ProfileSurface({
 
   const photosList = v4.photos || [];
 
-  const observation = profile.whatCandorNotices?.[0] || "opens up slowly before sharing their deeper rhythm.";
+  const observation = profile.whatCandorNotices?.[0] || "not enough interactions yet.";
 
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-40 pt-16 sm:px-6 sm:pt-20">

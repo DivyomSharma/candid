@@ -109,7 +109,7 @@ export function CandorAligns() {
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">aligns</h1>
           <p className="mt-4 text-sm font-light leading-6 text-foreground-secondary">
-            {isSearching ? "looking for a rhythm that would feel natural, not forced." : data?.language ?? "candor is still learning the shape of you."}
+            {isSearching ? "looking for a rhythm that would feel natural, not forced." : data?.language ?? "not enough interactions yet."}
           </p>
         </motion.div>
 

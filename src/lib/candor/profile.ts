@@ -167,8 +167,8 @@ export function buildCandorProfilePresentation(input: {
       values,
       resonanceIndicators,
     }),
-    conversationalThemes: themes.length ? themes : ["the pattern is still forming"],
-    interests: interests.length ? interests.map(themeLabel) : ["films that stay with you", "internet rabbit holes"],
+    conversationalThemes: themes.length ? themes : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"],
+    interests: interests.length ? interests.map(themeLabel) : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"],
     socialPreferences: socialPreferences.slice(0, 4),
     lifestylePreferences: lifestylePreferences.slice(0, 4),
     resonanceIndicators,
@@ -176,12 +176,12 @@ export function buildCandorProfilePresentation(input: {
     observations: [
       {
         label: "conversational energy",
-        value: interests[0] ? `${themeLabel(interests[0])} comes alive quickly` : "still warming up",
+        value: interests[0] ? `${themeLabel(interests[0])} comes alive quickly` : (memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"),
         meter: clamp(Object.keys(interestLevels).length * 15 + 24, 24, 96),
       },
       {
         label: "social pace",
-        value: socialPreferences[0] ?? "still learning their pace",
+        value: socialPreferences[0] ?? (memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"),
         meter: clamp((memory?.socialPreferences.length ?? 0) * 16 + 20, 22, 92),
       },
       {
@@ -207,7 +207,8 @@ function buildUnderstandingDepth(memory: CandorMemory | null): { phase: "spark" 
   if (turns >= 8 || signalCount >= 7) return { phase: "nuance", line: "the social shape is getting more nuanced" };
   if (turns >= 5 || signalCount >= 4) return { phase: "patterns", line: "patterns are becoming clearer" };
   if (turns >= 2 || signalCount >= 2) return { phase: "rhythm", line: "candor is beginning to understand your rhythm" };
-  return { phase: "spark", line: "the first signal is forming" };
+  if (turns === 0) return { phase: "spark", line: "waiting for your first interaction" };
+  return { phase: "spark", line: "not enough interactions yet" };
 }
 
 function buildCoreIdentity(input: {
@@ -234,11 +235,11 @@ function buildCoreIdentity(input: {
 
   return {
     lines: [input.handle, input.username, meta].filter(Boolean) as string[],
-    fragments: fragments.length ? fragments : ["still unfolding in conversation"],
+    fragments: fragments.length ? fragments : [input.turns === 0 ? "waiting for your first interaction" : "not enough interactions yet"],
     note:
       input.turns >= 3
         ? "the rest gets learned sideways, in actual conversation."
-        : "candor keeps this light at first. the rest gets learned in conversation.",
+        : (input.turns === 0 ? "candor hasn't learned anything yet. start a conversation." : "not enough interactions yet. the rest gets learned in conversation."),
   };
 }
 
@@ -295,7 +296,7 @@ function buildNotices(memory: CandorMemory | null, values: string[], needs: stri
     memory?.softSpots[0] ? `still go quiet around ${memory.softSpots[0]}` : "",
   ]).filter(Boolean);
 
-  return pool.slice(0, 4);
+  return pool.length ? pool.slice(0, 4) : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"];
 }
 
 function buildResonance(memory: CandorMemory | null, socialPreferences: string[], interests: string[]) {
@@ -306,12 +307,12 @@ function buildResonance(memory: CandorMemory | null, socialPreferences: string[]
     memory?.lifestylePreferences[0] ? soften(memory.lifestylePreferences[0]) : "",
   ]).filter(Boolean);
 
-  return pool.slice(0, 4);
+  return pool.length ? pool.slice(0, 4) : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"];
 }
 
 function buildAlignmentStyle(value?: string, need?: string, social?: string, interest?: string) {
   const parts = [value ? `more into ${value}` : "", need ? `opens best with ${softPhrase(need)}` : "", social ? soften(social) : "", interest ? `conversation leans toward ${themeLabel(interest)}` : ""].filter(Boolean);
-  return parts.slice(0, 2).join(". ").replace(/\.$/, "") || "still becoming clearer";
+  return parts.slice(0, 2).join(". ").replace(/\.$/, "") || "not enough interactions yet";
 }
 
 function buildShareCards(input: {
@@ -337,22 +338,22 @@ function buildShareCards(input: {
       kind: "post" as const,
       title: "energy",
       lines: [
-        interests[0] ? `probably disappears into ${themeLabel(interests[0])}` : `probably disappears into rabbit holes`,
-        values[0] ? `and still cares about ${values[0]}` : `and still wants something real`,
-      ],
+        interests[0] ? `probably disappears into ${themeLabel(interests[0])}` : `not enough interactions yet`,
+        values[0] ? `and still cares about ${values[0]}` : ``,
+      ].filter(Boolean) as string[],
     },
     {
       kind: "x" as const,
       title: "social read",
       lines: [
-        socialPreferences[0] ?? `texting rhythm means more than it should`,
-        needs[0] ? `opens better with ${softPhrase(needs[0])}` : `opens better when things feel clear`,
-      ],
+        socialPreferences[0] ?? `not enough interactions yet`,
+        needs[0] ? `opens better with ${softPhrase(needs[0])}` : ``,
+      ].filter(Boolean) as string[],
     },
     {
       kind: "banner" as const,
       title: "alignment",
-      lines: [resonanceIndicators[0] ?? "conversation may feel unusually natural"],
+      lines: [resonanceIndicators[0] ?? "not enough interactions yet"],
     },
   ];
 }
@@ -364,7 +365,7 @@ function derivedSocialPreferences(memory: CandorMemory | null) {
     `texting rhythm probably matters`,
   ]).filter(Boolean);
 
-  return pool.length ? pool : ["texting rhythm probably matters"];
+  return pool.length ? pool : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"];
 }
 
 function derivedLifestylePreferences(memory: CandorMemory | null, interests: string[]) {
@@ -375,7 +376,7 @@ function derivedLifestylePreferences(memory: CandorMemory | null, interests: str
     interests[0] === "games" ? "likes worlds they can disappear into for hours" : "",
   ]).filter(Boolean);
 
-  return pool.length ? pool : ["routine is still becoming legible"];
+  return pool.length ? pool : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"];
 }
 
 function themeLabel(value: string) {
