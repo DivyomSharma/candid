@@ -207,6 +207,9 @@ export function ProfileSurface({
 
   const observation = profile.whatCandorNotices?.[0] || "not enough interactions yet.";
 
+  const turnCount = profile.alignmentAndDepth?.meaningfulConversations ?? 0;
+  const isProfileLocked = turnCount < 2;
+
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-40 pt-16 sm:px-6 sm:pt-20">
       <AmbientGlow />
@@ -343,6 +346,34 @@ export function ProfileSurface({
           </Card>
         </motion.div>
 
+        {isProfileLocked && !publicMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center justify-center text-center py-20 px-6"
+          >
+            <div className="relative mb-8">
+              <span className="absolute inset-0 rounded-full bg-accent/20 blur-xl animate-[candor-breathe_2.8s_ease-in-out_infinite]" style={{ width: 48, height: 48, margin: 'auto' }} />
+              <div className="relative h-12 w-12 rounded-full border border-accent/30 bg-background/60 backdrop-blur-md flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 text-accent/70" />
+              </div>
+            </div>
+            <h3 className="text-xl font-light text-foreground mb-3">your profile is still forming</h3>
+            <p className="text-sm font-light text-foreground-secondary/70 max-w-sm leading-relaxed mb-8">
+              talk to candor. answer signals. the more it understands, the more this space reveals.
+            </p>
+            <Button
+              type="button"
+              onClick={() => router.push("/candor/session/ongoing")}
+              className="rounded-full bg-accent px-6 text-primary-foreground hover:bg-accent/90 font-light flex items-center gap-2"
+            >
+              start a conversation <ArrowRight className="h-4 w-4" />
+            </Button>
+          </motion.div>
+        )}
+
+        {!isProfileLocked && (<>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           <div className="space-y-6 flex flex-col">
@@ -730,6 +761,7 @@ export function ProfileSurface({
             </Button>
           </div>
         )}
+        </>)}
 
       </section>
       {showBottomNav && <BottomNav />}

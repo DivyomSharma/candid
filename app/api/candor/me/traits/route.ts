@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { getAlignmentPreview } from "@/lib/candor/alignment";
 import { getCandorAccess, normalizeCandorAccess } from "@/lib/candor/access";
 import { getPublicIdentityForCandorUserId } from "@/lib/candor/identity";
@@ -30,7 +32,7 @@ export async function GET() {
         identity: { username: null, handle: null },
         personalProfile: emptyCandorPersonalProfile,
         access: normalizeCandorAccess(null),
-      });
+      }, { headers: { "Cache-Control": "no-store" } });
     }
 
     const { data: traits } = await supabaseAdmin
@@ -50,7 +52,7 @@ export async function GET() {
       identity,
       personalProfile,
       access,
-    });
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Traits fetch failed:", error);
     const memory = createEmptyMemory();
@@ -60,6 +62,6 @@ export async function GET() {
       identity: { username: null, handle: null },
       personalProfile: emptyCandorPersonalProfile,
       access: normalizeCandorAccess(null),
-    });
+    }, { headers: { "Cache-Control": "no-store" } });
   }
 }

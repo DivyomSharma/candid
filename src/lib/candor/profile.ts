@@ -167,29 +167,29 @@ export function buildCandorProfilePresentation(input: {
       values,
       resonanceIndicators,
     }),
-    conversationalThemes: themes.length ? themes : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"],
-    interests: interests.length ? interests.map(themeLabel) : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"],
+    conversationalThemes: themes.length ? themes : [],
+    interests: interests.length ? interests.map(themeLabel) : [],
     socialPreferences: socialPreferences.slice(0, 4),
     lifestylePreferences: lifestylePreferences.slice(0, 4),
     resonanceIndicators,
     alignmentStyle,
     observations: [
-      {
+      interests[0] ? {
         label: "conversational energy",
-        value: interests[0] ? `${themeLabel(interests[0])} comes alive quickly` : (memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"),
+        value: `${themeLabel(interests[0])} comes alive quickly`,
         meter: clamp(Object.keys(interestLevels).length * 15 + 24, 24, 96),
-      },
-      {
+      } : null,
+      socialPreferences[0] ? {
         label: "social pace",
-        value: socialPreferences[0] ?? (memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"),
+        value: socialPreferences[0],
         meter: clamp((memory?.socialPreferences.length ?? 0) * 16 + 20, 22, 92),
-      },
-      {
+      } : null,
+      (memory?.turnCount ?? 0) >= 2 ? {
         label: "alignment style",
         value: alignmentStyle,
         meter: clamp((memory?.turnCount ?? 0) * 8 + 18, 18, 94),
-      },
-    ],
+      } : null,
+    ].filter(Boolean) as Array<{ label: string; value: string; meter: number }>,
     shareCards: buildShareCards({ username, values, interests, socialPreferences, needs, resonanceIndicators }),
   };
 }
@@ -296,18 +296,17 @@ function buildNotices(memory: CandorMemory | null, values: string[], needs: stri
     memory?.softSpots[0] ? `still go quiet around ${memory.softSpots[0]}` : "",
   ]).filter(Boolean);
 
-  return pool.length ? pool.slice(0, 4) : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"];
+  return pool.length ? pool.slice(0, 4) : [];
 }
 
 function buildResonance(memory: CandorMemory | null, socialPreferences: string[], interests: string[]) {
   const pool = dedupe([
-    `conversation may feel unusually natural`,
     interests[0] ? `seems to stay longer when the topic turns to ${themeLabel(interests[0])}` : "",
     socialPreferences[0] ? soften(socialPreferences[0]) : "",
     memory?.lifestylePreferences[0] ? soften(memory.lifestylePreferences[0]) : "",
   ]).filter(Boolean);
 
-  return pool.length ? pool.slice(0, 4) : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"];
+  return pool.length ? pool.slice(0, 4) : [];
 }
 
 function buildAlignmentStyle(value?: string, need?: string, social?: string, interest?: string) {
@@ -362,21 +361,17 @@ function derivedSocialPreferences(memory: CandorMemory | null) {
   const pool = dedupe([
     memory?.communicationNeeds[0] ? `does better with ${softPhrase(memory.communicationNeeds[0])}` : "",
     memory?.relationalPatterns[0] ? soften(memory.relationalPatterns[0]) : "",
-    `texting rhythm probably matters`,
   ]).filter(Boolean);
 
-  return pool.length ? pool : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"];
+  return pool;
 }
 
 function derivedLifestylePreferences(memory: CandorMemory | null, interests: string[]) {
   const pool = dedupe([
     memory?.lifeThemes[0] ? soften(memory.lifeThemes[0]) : "",
-    interests[0] === "movies" ? "could lose an evening to films that stay with them" : "",
-    interests[0] === "music" ? "lets music set the mood more than they admit" : "",
-    interests[0] === "games" ? "likes worlds they can disappear into for hours" : "",
   ]).filter(Boolean);
 
-  return pool.length ? pool : [memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet"];
+  return pool;
 }
 
 function themeLabel(value: string) {
