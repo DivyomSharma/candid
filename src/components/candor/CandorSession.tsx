@@ -271,10 +271,20 @@ export function CandorSession({ id }: { id: string }) {
     );
   }
 
+  const promptChips = [
+    "talk",
+    "voice",
+    "movie",
+    "music",
+    "continue",
+    "reflection",
+    "memory",
+  ];
+
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-48 pt-16">
       <AmbientGlow />
-      <section className="relative z-10 mx-auto flex max-w-[600px] flex-col gap-12">
+      <section className="relative z-10 mx-auto flex max-w-[1100px] flex-col gap-12">
         <div className="pt-8 flex items-center justify-between">
           {isImproveMode ? (
             <button
@@ -291,6 +301,38 @@ export function CandorSession({ id }: { id: string }) {
               profile refinement
             </span>
           )}
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="rounded-[2rem] border border-border/35 bg-[linear-gradient(135deg,hsl(var(--card)/0.30),hsl(var(--background)/0.16))] px-6 py-7 backdrop-blur-md sm:px-8">
+            <p className="text-xs font-light uppercase tracking-[0.18em] text-foreground-secondary/60">
+              {isImproveMode ? "improve with candor" : "candor"}
+            </p>
+            <h1 className="mt-3 max-w-2xl text-3xl font-light leading-[1.08] tracking-tight text-foreground sm:text-4xl">
+              {isImproveMode ? "make this feel more like you." : "the relationship stays in one thread."}
+            </h1>
+            <p className="mt-4 max-w-2xl text-sm font-light leading-6 text-foreground-secondary">
+              {isImproveMode
+                ? "candor should refine profile details conversationally, not through forms."
+                : "no assistant chrome. no dashboard posture. just the part of candor that remembers where you were."}
+            </p>
+          </div>
+
+          <div className="rounded-[2rem] border border-border/35 bg-card/30 p-5 backdrop-blur-md">
+            <p className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/60">keep nearby</p>
+            <div className="mt-4 flex flex-wrap gap-2.5">
+              {promptChips.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => setDraft((current) => (current ? `${current} ${chip}` : chip))}
+                  className="rounded-full border border-border/45 bg-background/20 px-4 py-2 text-xs font-light text-foreground-secondary transition-colors hover:border-accent/35 hover:bg-accent/10 hover:text-foreground"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div
@@ -343,7 +385,7 @@ export function CandorSession({ id }: { id: string }) {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="mt-3 overflow-hidden rounded-2xl border border-accent/20 bg-accent/5 p-4 max-w-[400px] space-y-3 shadow-md backdrop-blur-md text-left"
+                    className="mt-3 max-w-[430px] space-y-3 overflow-hidden rounded-2xl border border-accent/20 bg-accent/5 p-4 text-left shadow-md backdrop-blur-md"
                   >
                     <div className="flex items-start gap-2.5">
                       <Sparkles className="h-4 w-4 text-accent shrink-0 mt-0.5" />
@@ -416,7 +458,7 @@ export function CandorSession({ id }: { id: string }) {
         <form
           ref={composerRef}
           onSubmit={submit}
-          className="fixed inset-x-0 bottom-24 z-30 mx-auto flex max-w-[600px] gap-3 px-6"
+          className="fixed inset-x-0 bottom-24 z-30 mx-auto flex max-w-[900px] gap-3 px-6"
           style={{ bottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}
         >
           <Textarea

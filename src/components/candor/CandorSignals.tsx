@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter, usePathname } from "next/navigation";
-import { Sparkles, Compass, RefreshCw, Check, ArrowRight, Brain, AlertCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertCircle, ArrowRight, Brain, Check, RefreshCw } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
+import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { useAuth } from "@/contexts/AuthContext";
 import { CANDOR_THREAD_ID, candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorSignal } from "@/lib/candor/scenarios";
 
 export function CandorSignals() {
-  const { isSignedIn, isLoaded, user } = useAuth();
+  const { isSignedIn, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -23,16 +23,19 @@ export function CandorSignals() {
   const [startingChatId, setStartingChatId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    void fetchSignals();
+  }, [isSignedIn]);
+
   const fetchSignals = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/candor/signals?limit=3`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.signals && data.signals.length > 0) {
-          setSignals(data.signals);
-          setAnswers({});
-        }
+      const res = await fetch("/api/candor/signals?limit=12");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.signals?.length) {
+        setSignals(data.signals);
+        setAnswers({});
       }
     } catch (e) {
       console.error(e);
@@ -40,10 +43,6 @@ export function CandorSignals() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchSignals();
-  }, [isSignedIn]);
 
   const handleSelectOption = async (signal: CandorSignal, option: string) => {
     setAnsweringId(signal.id);
@@ -54,28 +53,25 @@ export function CandorSignals() {
         const res = await fetch("/api/candor/signals", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ signalId: signal.id, option })
+          body: JSON.stringify({ signalId: signal.id, option }),
         });
-        
-        if (res.ok) {
-          if (signal.outcomeType === "candor_learns") {
-            showToast("✓ added to your rhythm");
-          }
+
+        if (res.ok && signal.outcomeType === "candor_learns") {
+          showToast("added to your rhythm");
         }
       } catch (e) {
         console.error(e);
       }
-    } else {
-      if (signal.outcomeType === "candor_learns") {
-        showToast("✓ choice captured locally");
-      }
+    } else if (signal.outcomeType === "candor_learns") {
+      showToast("choice captured locally");
     }
+
     setAnsweringId(null);
   };
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    window.setTimeout(() => {
       setToastMessage(null);
     }, 2500);
   };
@@ -88,7 +84,7 @@ export function CandorSignals() {
 
     setStartingChatId(signal.id);
     const context = `[system: user responded "${option}" to "${signal.prompt}"]`;
-    
+
     try {
       const response = await fetch("/api/candor/conversations", {
         method: "POST",
@@ -96,23 +92,27 @@ export function CandorSignals() {
         body: JSON.stringify({ message: context, currentScreen: pathname }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.persisted === false && user?.id) {
-          const initialMessages = [
-            { id: crypto.randomUUID(), role: "user" as const, content: context },
-            ...(data.message ? [data.message] : []),
-          ];
-          window.localStorage.setItem(candorThreadStorageKey(user.id), JSON.stringify(initialMessages));
-        }
-        router.push(`/candor/session/${data.id || CANDOR_THREAD_ID}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.persisted === false && user?.id) {
+        const initialMessages = [
+          { id: crypto.randomUUID(), role: "user" as const, content: context },
+          ...(data.message ? [data.message] : []),
+        ];
+        window.localStorage.setItem(candorThreadStorageKey(user.id), JSON.stringify(initialMessages));
       }
+      router.push(`/candor/session/${data.id || CANDOR_THREAD_ID}`);
     } catch (e) {
       console.error(e);
     } finally {
       setStartingChatId(null);
     }
   };
+
+  const orderedSignals = useMemo(
+    () => [...signals].sort((a, b) => weightSignal(b) - weightSignal(a)),
+    [signals],
+  );
 
   return (
     <>
@@ -123,84 +123,70 @@ export function CandorSignals() {
           <div className="absolute bottom-28 right-[15%] h-56 w-56 rounded-full bg-[hsl(var(--accent)/0.06)] blur-3xl" />
         </div>
 
-        <section className="relative z-10 mx-auto flex max-w-[600px] flex-col gap-8">
-          {/* Header */}
+        <section className="relative z-10 mx-auto flex max-w-[1400px] flex-col gap-8">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl flex items-center gap-2">
-              signals
-            </h1>
-            <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary">
-              candor's social playground. small reveals, values, and humor.
+            <h1 className="text-3xl font-light leading-tight tracking-tight md:text-5xl">signals</h1>
+            <p className="mt-3 max-w-2xl text-sm font-light leading-6 text-foreground-secondary">
+              not a feed. a wall of prompt energy. candor should keep surfacing the kinds of questions that actually belong near you.
             </p>
           </motion.div>
 
-          {/* Toast Notification */}
           <AnimatePresence>
-            {toastMessage && (
+            {toastMessage ? (
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="fixed top-6 left-1/2 -translate-x-1/2 z-[150] surface border border-accent/30 bg-card/70 px-4 py-2.5 rounded-full text-xs font-light text-accent shadow-lg backdrop-blur-md"
+                className="fixed left-1/2 top-6 z-[150] -translate-x-1/2 rounded-full border border-accent/30 bg-card/70 px-4 py-2.5 text-xs font-light text-accent shadow-lg backdrop-blur-md"
               >
                 {toastMessage}
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
 
-          {/* Signals Feed */}
-          <div className="flex flex-col gap-4">
-            {signals.map((signal) => {
+          <div className="candor-desktop-wall">
+            {orderedSignals.map((signal, index) => {
               const answeredOption = answers[signal.id];
-
               return (
-                <div key={signal.id}>
-                  <Card className="surface border border-border/40 bg-card/30 backdrop-blur-md transition-colors hover:border-accent/20">
-                    <CardContent className="p-5 flex flex-col gap-4">
-                      {/* Top label */}
+                <motion.div
+                  key={signal.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.02, duration: 0.45 }}
+                  className="candor-wall-card"
+                >
+                  <Card className={`surface overflow-hidden border border-border/40 bg-card/30 backdrop-blur-md transition-colors hover:border-accent/20 ${signalCardHeight(signal)}`}>
+                    <CardContent className="flex h-full flex-col gap-4 p-5">
                       <div className="flex items-center justify-between text-[10px] font-light uppercase tracking-[0.2em] text-accent">
                         <span>{signal.title}</span>
-                        <span className="text-foreground-secondary/40 text-[9px]">{signal.category}</span>
+                        <span className="text-[9px] text-foreground-secondary/40">{signal.category}</span>
                       </div>
 
-                      {/* Question */}
-                      <p className="text-base font-light leading-7 text-foreground">
+                      <p className={`font-light text-foreground ${signalTextSize(signal)}`}>
                         {signal.prompt}
                       </p>
 
-                      {/* Interaction Area */}
-                      <div className="mt-1">
+                      <div className="mt-auto">
                         {!answeredOption ? (
-                          <div className="flex flex-wrap gap-2">
-                            {signal.options.map((opt) => (
+                          <div className="flex flex-wrap gap-3">
+                            {signal.options.map((option) => (
                               <button
-                                key={opt}
+                                key={option}
                                 disabled={answeringId === signal.id}
-                                onClick={() => handleSelectOption(signal, opt)}
-                                className="rounded-full border border-border/50 bg-background/25 px-4 py-2 text-xs font-light text-foreground-secondary transition-all hover:bg-accent/10 hover:border-accent/40 hover:text-foreground active:scale-[0.98] disabled:opacity-50"
+                                onClick={() => void handleSelectOption(signal, option)}
+                                className="min-h-11 rounded-full border border-border/50 bg-background/25 px-5 py-2.5 text-sm font-light text-foreground-secondary transition-all hover:border-accent/40 hover:bg-accent/10 hover:text-foreground active:scale-[0.98] disabled:opacity-50"
                               >
-                                {opt}
+                                {option}
                               </button>
                             ))}
                           </div>
                         ) : (
-                          <motion.div 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
-                            className="space-y-3"
-                          >
-                            {/* Outcome Reveals */}
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                             {signal.outcomeType === "community_reveal" && signal.communitySplit ? (
                               <div className="space-y-2">
                                 <div className="flex h-2 w-full overflow-hidden rounded-full bg-border/20">
-                                  <div 
-                                    className="bg-accent transition-all duration-1000" 
-                                    style={{ width: `${signal.communitySplit[0]}%` }} 
-                                  />
-                                  <div 
-                                    className="bg-foreground-secondary/30 transition-all duration-1000" 
-                                    style={{ width: `${100 - signal.communitySplit[0]}%` }} 
-                                  />
+                                  <div className="bg-accent transition-all duration-1000" style={{ width: `${signal.communitySplit[0]}%` }} />
+                                  <div className="bg-foreground-secondary/30 transition-all duration-1000" style={{ width: `${100 - signal.communitySplit[0]}%` }} />
                                 </div>
                                 <div className="flex justify-between text-xs font-light text-foreground-secondary/80">
                                   <span>{signal.communitySplit[0]}% chose "{signal.options[0]}"</span>
@@ -214,21 +200,19 @@ export function CandorSignals() {
                               </div>
                             ) : signal.outcomeType === "conversation_worthy" ? (
                               <div className="flex flex-col gap-2.5">
-                                <p className="text-xs font-light text-accent flex items-center gap-1">
+                                <p className="flex items-center gap-1 text-xs font-light text-accent">
                                   <Brain className="h-3.5 w-3.5" /> i didn't expect that answer.
                                 </p>
                                 <button
                                   disabled={startingChatId === signal.id}
-                                  onClick={() => handleContinueWithCandor(signal, answeredOption)}
-                                  className="self-start rounded-full bg-accent px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-accent/90 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-1"
+                                  onClick={() => void handleContinueWithCandor(signal, answeredOption)}
+                                  className="self-start rounded-full bg-accent px-4 py-2 text-xs font-medium text-primary-foreground transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-50"
                                 >
                                   {startingChatId === signal.id ? "connecting thread..." : "continue with candor"}
-                                  <ArrowRight className="h-3 w-3" />
                                 </button>
                               </div>
                             ) : (
-                              // TYPE A: quick_answer
-                              <div className="text-xs font-light text-foreground-secondary/70 flex items-center gap-1">
+                              <div className="flex items-center gap-1 text-xs font-light text-foreground-secondary/70">
                                 <Check className="h-3.5 w-3.5 text-accent" />
                                 <span>saved.</span>
                               </div>
@@ -238,42 +222,57 @@ export function CandorSignals() {
                       </div>
                     </CardContent>
                   </Card>
-                </div>
+                </motion.div>
               );
             })}
-
-            {/* Empty State */}
-            {!loading && signals.length === 0 && (
-              <Card className="surface border border-border/40 bg-card/30 backdrop-blur-md">
-                <CardContent className="p-5 text-center text-foreground-secondary font-light text-sm py-12 flex flex-col items-center gap-3">
-                  <AlertCircle className="h-6 w-6 text-accent/60" />
-                  No signals available right now. Check back later!
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Refresh / Loading */}
-            {loading ? (
-              <div className="flex justify-center items-center py-6 text-foreground-secondary font-light text-xs gap-2">
-                <RefreshCw className="h-4 w-4 animate-spin text-accent" />
-                generating new signals...
-              </div>
-            ) : signals.length > 0 ? (
-              <div className="flex justify-center pt-2 pb-4">
-                <button
-                  onClick={() => fetchSignals()}
-                  className="flex items-center gap-2 rounded-full border border-border/50 bg-background/30 px-5 py-2.5 text-xs font-light text-foreground-secondary transition-all hover:bg-accent/10 hover:border-accent/40 hover:text-foreground active:scale-[0.98]"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  new signals
-                </button>
-              </div>
-            ) : null}
           </div>
+
+          {!loading && orderedSignals.length === 0 ? (
+            <Card className="surface border border-border/40 bg-card/30 backdrop-blur-md">
+              <CardContent className="flex flex-col items-center gap-3 py-12 text-center text-sm font-light text-foreground-secondary">
+                <AlertCircle className="h-6 w-6 text-accent/60" />
+                no signals available right now. check back later.
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-6 text-xs font-light text-foreground-secondary">
+              <RefreshCw className="h-4 w-4 animate-spin text-accent" />
+              generating new signals...
+            </div>
+          ) : orderedSignals.length > 0 ? (
+            <div className="flex justify-center pt-2 pb-4">
+              <button
+                onClick={() => void fetchSignals()}
+                className="flex items-center gap-2 rounded-full border border-border/50 bg-background/30 px-5 py-2.5 text-xs font-light text-foreground-secondary transition-all hover:border-accent/40 hover:bg-accent/10 hover:text-foreground active:scale-[0.98]"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                new signals
+              </button>
+            </div>
+          ) : null}
         </section>
-        
+
         <BottomNav />
       </main>
     </>
   );
+}
+
+function weightSignal(signal: CandorSignal) {
+  const titleWeight = signal.title.includes("too real") ? 6 : signal.title.includes("hear me out") ? 5 : 3;
+  const categoryWeight = signal.category === "emotional" ? 5 : signal.category === "flirty" ? 4 : signal.category === "funny" ? 3 : 2;
+  return titleWeight + categoryWeight + signal.options.length;
+}
+
+function signalCardHeight(signal: CandorSignal) {
+  if (signal.outcomeType === "conversation_worthy" || signal.options.length >= 4) return "min-h-[290px]";
+  if (signal.category === "emotional" || signal.category === "deep") return "min-h-[260px]";
+  return "min-h-[220px]";
+}
+
+function signalTextSize(signal: CandorSignal) {
+  if (signal.category === "emotional" || signal.category === "deep") return "text-[1.2rem] leading-8";
+  return "text-lg leading-8";
 }
