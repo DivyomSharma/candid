@@ -209,6 +209,8 @@ export function ProfileSurface({
 
   const turnCount = profile.alignmentAndDepth?.meaningfulConversations ?? 0;
   const isProfileLocked = turnCount < 2;
+  const primaryMeta = [profile.age, profile.city].filter(Boolean);
+  const secondaryMeta = [profile.occupation, profile.education].filter(Boolean);
 
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-40 pt-16 sm:px-6 sm:pt-20">
@@ -222,12 +224,18 @@ export function ProfileSurface({
           animate={{ opacity: 1, y: 0 }} 
           transition={{ duration: 0.4 }}
         >
-          <Card className="surface overflow-hidden border-border/40 bg-card/30 backdrop-blur-md relative">
+          <Card className="surface relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
             <div className="absolute inset-0 pointer-events-none opacity-40" style={{ background: profile.bannerTone }} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none" />
             
-            <CardContent className="p-6 md:p-8 relative z-10 flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
-              <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
+            <CardContent className="relative z-10 flex min-h-[280px] flex-col gap-8 px-6 py-8 sm:px-8 md:min-h-[280px] md:flex-row md:items-start md:gap-10 md:pb-24 lg:px-10">
+              {actionSlot && (
+                <div className="absolute right-5 top-5 z-20 flex items-center justify-end sm:right-7 sm:top-7">
+                  {actionSlot}
+                </div>
+              )}
+
+              <div className="flex min-w-0 flex-col items-center gap-6 text-center md:flex-row md:items-start md:text-left">
                 <div className="relative group shrink-0">
                   <motion.div
                     animate={{
@@ -242,31 +250,31 @@ export function ProfileSurface({
                     className="absolute inset-0 rounded-full bg-accent blur-md"
                     style={{ scale: 1.15 }}
                   />
-                  <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-2 border-border/80 bg-background/90 shadow-2xl relative z-10">
-                    <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]">
+                  <Avatar className="relative z-10 h-24 w-24 border-2 border-border/80 bg-background/90 shadow-2xl sm:h-28 sm:w-28">
+                    <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] sm:text-4xl">
                       {profile.initials}
                     </AvatarFallback>
                   </Avatar>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center flex-wrap justify-center md:justify-start gap-3">
-                    <h2 className="text-3xl font-light tracking-tight">{profile.username}</h2>
+                <div className="min-w-0 space-y-3 md:max-w-[430px] lg:max-w-[520px]">
+                  <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start">
+                    <h2 className="min-w-0 break-words text-3xl font-light leading-tight tracking-tight sm:text-4xl">{profile.username}</h2>
                     {visibleBadges.map((b) => (
                       <span key={b} className="rounded-full bg-accent/10 border border-accent/20 px-2.5 py-0.5 text-[10px] font-medium text-accent tracking-wide uppercase">
                         {b}
                       </span>
                     ))}
                   </div>
-                  <p className="text-xs font-light uppercase tracking-[0.24em] text-accent">{profile.handle}</p>
+                  <p className="break-all text-xs font-light uppercase tracking-[0.24em] text-accent">{profile.handle}</p>
                   
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1.5 text-sm font-light text-foreground-secondary/90">
-                    <span>{[profile.age, profile.city].filter(Boolean).join(" • ")}</span>
-                    <span className="opacity-40">•</span>
-                    <span>{[profile.occupation, profile.education].filter(Boolean).join(" • ")}</span>
+                    {primaryMeta.length > 0 && <span>{primaryMeta.join(" • ")}</span>}
+                    {primaryMeta.length > 0 && secondaryMeta.length > 0 && <span className="opacity-40">•</span>}
+                    {secondaryMeta.length > 0 && <span>{secondaryMeta.join(" • ")}</span>}
                   </div>
 
-                  <div className="h-6 mt-2 overflow-hidden flex items-center justify-center md:justify-start">
+                  <div className="mt-3 flex min-h-[3.75rem] items-start justify-center overflow-visible md:justify-start">
                     <AnimatePresence mode="wait">
                       {statuses.length > 0 ? (
                         <motion.p
@@ -275,7 +283,7 @@ export function ProfileSurface({
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -5 }}
                           transition={{ duration: 0.3 }}
-                          className="text-sm font-light text-foreground/80 italic max-w-md"
+                          className="max-w-[36rem] text-sm font-light italic leading-6 text-foreground/80"
                         >
                           <span className="text-accent not-italic font-normal mr-1.5">{statuses[statusIndex].label}:</span>
                           "{statuses[statusIndex].value}"
@@ -284,7 +292,7 @@ export function ProfileSurface({
                         <motion.p
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="text-sm font-light text-foreground/80 italic max-w-md"
+                          className="max-w-[36rem] text-sm font-light italic leading-6 text-foreground/80"
                         >
                           "{profile.bio}"
                         </motion.p>
@@ -294,24 +302,24 @@ export function ProfileSurface({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="flex shrink-0 flex-wrap items-center justify-center gap-3 md:absolute md:bottom-8 md:right-8 md:justify-end lg:right-10">
                 {!publicMode ? (
                   <>
                     <Button
                       type="button"
                       onClick={() => router.push("/candor/session/ongoing?mode=improve")}
-                      className="rounded-full bg-accent text-accent-foreground px-6 font-medium hover:bg-accent/90 h-10 transition-all hover:scale-105 shadow-lg flex items-center gap-2"
+                      className="flex h-11 items-center gap-2 rounded-full bg-accent px-5 text-accent-foreground shadow-lg transition-all hover:scale-105 hover:bg-accent/90 sm:px-7"
                       title="Improve with Candor"
                     >
                       <Sparkles className="h-4 w-4" />
-                      Improve with Candor
+                      <span className="hidden sm:inline">Improve with Candor</span>
                     </Button>
 
                     <Button
                       type="button"
                       variant="outline"
                       onClick={shareProfile}
-                      className="rounded-full border-border/50 bg-background/50 w-10 h-10 backdrop-blur-md hover:bg-accent/10 transition-all hover:scale-105 flex items-center justify-center p-0"
+                      className="flex h-11 w-11 items-center justify-center rounded-full border-border/50 bg-background/50 p-0 backdrop-blur-md transition-all hover:scale-105 hover:bg-accent/10"
                       title="Share"
                     >
                       <Share2 className="h-4 w-4" />
@@ -321,7 +329,7 @@ export function ProfileSurface({
                       type="button"
                       variant="outline"
                       onClick={() => router.push("/memory-controls")}
-                      className="rounded-full border-border/50 bg-background/50 w-10 h-10 backdrop-blur-md hover:bg-accent/10 transition-all hover:scale-105 flex items-center justify-center p-0"
+                      className="flex h-11 w-11 items-center justify-center rounded-full border-border/50 bg-background/50 p-0 backdrop-blur-md transition-all hover:scale-105 hover:bg-accent/10"
                       title="Settings"
                     >
                       <Settings className="h-4 w-4" />
@@ -333,14 +341,13 @@ export function ProfileSurface({
                       type="button"
                       variant="outline"
                       onClick={shareProfile}
-                      className="rounded-full border-border/50 bg-background/50 w-10 h-10 backdrop-blur-md hover:bg-accent/10 transition-all hover:scale-105 flex items-center justify-center p-0"
+                      className="flex h-11 w-11 items-center justify-center rounded-full border-border/50 bg-background/50 p-0 backdrop-blur-md transition-all hover:scale-105 hover:bg-accent/10"
                       title="Share"
                     >
                       <Share2 className="h-4 w-4" />
                     </Button>
                   </>
                 )}
-                {actionSlot}
               </div>
             </CardContent>
           </Card>

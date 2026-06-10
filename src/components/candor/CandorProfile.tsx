@@ -99,7 +99,7 @@ export function CandorProfile() {
               await signOut();
               router.push("/candor");
             }}
-            className="rounded-full border-border/50 bg-background/50 w-10 h-10 backdrop-blur-md hover:bg-accent/10 transition-all hover:scale-105 flex items-center justify-center p-0"
+            className="flex h-11 w-11 items-center justify-center rounded-full border-border/50 bg-background/50 p-0 backdrop-blur-md transition-all hover:scale-105 hover:bg-accent/10"
             title="Sign Out"
           >
             <LogOut className="h-4 w-4" />
