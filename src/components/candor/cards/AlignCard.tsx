@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
-import { CoffeeArt } from "@/components/candor/art";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface AlignCardProps {
   username: string;
@@ -22,16 +22,39 @@ export function AlignCard({ username, initials, tier, observation, avatarTone, c
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className={cn("group cursor-pointer h-full", className)}
+      className={cn("group cursor-pointer", className)}
       onClick={onClick}
     >
-      <Card className="glass-card overflow-hidden border border-border/40 bg-card/30 backdrop-blur-3xl transition-colors hover:border-accent/30 shadow-xl p-6 flex flex-col items-center justify-center text-center gap-4 min-h-[280px] h-full">
-        <CoffeeArt state={1} width={80} height={80} className="text-accent mb-2" />
-        <h4 className="text-xl font-light text-foreground tracking-widest uppercase leading-tight drop-shadow-md">align with {username}</h4>
-        <div className="w-8 h-[1px] bg-border/50 mx-auto" />
-        <p className="text-xs font-light text-foreground-secondary italic leading-relaxed max-w-[220px] mx-auto drop-shadow-sm">
-          {observation}
-        </p>
+      <Card className="overflow-hidden border-none shadow-none bg-transparent relative flex flex-col items-center justify-center text-center p-8">
+        <div 
+          className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-1000 blur-3xl rounded-full" 
+          style={{ background: `radial-gradient(circle at center, ${avatarTone} 0%, transparent 70%)` }} 
+        />
+        
+        <CardContent className="p-0 relative z-10 flex flex-col items-center gap-6">
+          <div className="relative">
+            <div 
+              className="absolute inset-0 rounded-full blur-xl opacity-50 group-hover:opacity-80 transition-opacity duration-700 animate-[candor-breathe_3s_ease-in-out_infinite]" 
+              style={{ background: avatarTone, transform: 'scale(1.5)' }} 
+            />
+            <Avatar className="h-24 w-24 border-none relative z-10">
+              <AvatarFallback className="font-light text-2xl bg-card/20 backdrop-blur-md text-foreground shadow-lg">{initials}</AvatarFallback>
+            </Avatar>
+          </div>
+          
+          <div className="flex flex-col items-center gap-2 mt-2">
+            <span className="text-lg font-light text-foreground tracking-wide">
+              {username}
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-foreground-secondary/70 font-light">
+              {tier}
+            </span>
+          </div>
+          
+          <p className="text-sm font-light text-foreground-secondary/70 italic mt-2 max-w-[200px] leading-relaxed">
+            {observation}
+          </p>
+        </CardContent>
       </Card>
     </motion.div>
   );

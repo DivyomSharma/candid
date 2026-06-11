@@ -321,33 +321,37 @@ export function CandorHome() {
               {/* MASONRY CARDS */}
               <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
                 {[
-                  { kind: "align" },
-                  { kind: "memory" },
-                  { kind: "signal" },
-                  { kind: "soundtrack" },
-                  { kind: "movie" },
-                  { kind: "mood_collage" },
-                  { kind: "reflection" },
-                  { kind: "thought" },
-                ].map((spec, i) => {
-                  const cardEl = renderHomeCard({ 
-                    card: { ...spec, priority: 1 } as CandorHomeCardSpec & { artType?: string }, 
-                    isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
-                  });
-                  
-                  if (!cardEl || cardEl.props.className === "hidden") return null;
+                  [{ kind: "art", artType: "coffee" }, { kind: "align" }],
+                  [{ kind: "memory" }],
+                  [{ kind: "signal" }],
+                  [{ kind: "art", artType: "vinyl" }, { kind: "soundtrack" }],
+                  [{ kind: "art", artType: "projector" }, { kind: "movie" }],
+                  [{ kind: "mood_collage" }],
+                  [{ kind: "art", artType: "plant" }, { kind: "reflection" }, { kind: "thought" }],
+                ].map((group, i) => {
+                  const renderedCards = group.map((spec) => {
+                    const cardEl = renderHomeCard({ 
+                      card: { ...spec, priority: 1 } as CandorHomeCardSpec & { artType?: string }, 
+                      isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
+                    });
+                    return cardEl?.props.className !== "hidden" ? cardEl : null;
+                  }).filter(Boolean);
+
+                  if (renderedCards.length === 0) return null;
 
                   return (
                     <motion.div 
-                      key={`${spec.kind}-${i}`} 
-                      className="break-inside-avoid relative group"
+                      key={`group-${i}`} 
+                      className="break-inside-avoid relative group flex flex-col gap-6 mb-6"
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05, duration: 0.5 }}
                     >
-                      <div className="transition-all duration-700 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_-15px_hsl(var(--accent)/0.15)] group-hover:scale-[1.01] rounded-3xl">
-                        {cardEl}
-                      </div>
+                      {renderedCards.map((card, idx) => (
+                        <div key={idx} className="transition-all duration-700 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_-15px_hsl(var(--accent)/0.15)] group-hover:scale-[1.01] rounded-3xl">
+                          {card}
+                        </div>
+                      ))}
                     </motion.div>
                   );
                 })}
