@@ -39,21 +39,21 @@ export function SoundtrackCard({ title, artist, reason, coverUrl, onPlay, classN
       whileHover={{ y: -4 }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={cn("group cursor-pointer", className)}
+      className={cn("group cursor-pointer h-full", className)}
       onClick={onPlay}
     >
-      <Card className="relative overflow-hidden border-0 bg-transparent min-h-[256px]">
-        {/* Background Image with blur */}
+      <Card className="relative overflow-hidden border-0 bg-black/40 h-full min-h-[300px]">
+        {/* Background Image with heavy blur for Apple Music feel */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
+          className="absolute inset-[-50%] bg-cover bg-center bg-no-repeat opacity-40 blur-3xl saturate-200 transition-transform duration-1000 group-hover:scale-110 group-hover:opacity-60"
           style={{ backgroundImage: `url(${displayCover})` }}
         />
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-xl" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         
-        <CardContent className="relative p-6 h-full flex flex-col justify-between z-10 min-h-[256px]">
-          <div className="flex items-center justify-between">
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/20 to-transparent" />
+        
+        <CardContent className="relative p-8 h-full flex flex-col z-10">
+          <div className="flex items-center justify-between mb-auto">
             <div className="flex items-center gap-2 text-white/80">
               <Music className="h-3.5 w-3.5 animate-[candor-breathe_3s_ease-in-out_infinite]" />
               <span className="text-[10px] uppercase tracking-widest font-light">
@@ -81,20 +81,25 @@ export function SoundtrackCard({ title, artist, reason, coverUrl, onPlay, classN
             </div>
           </div>
           
-          <div className="space-y-4 mt-8">
-            <div className="flex justify-between items-end">
+          <div className="flex items-end gap-6 mt-8">
+            {/* Crisp Album Art */}
+            <div className="shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden shadow-2xl shadow-black/60 relative group-hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-shadow duration-500">
+              <img src={displayCover} alt={title} className="w-full h-full object-cover" />
+            </div>
+
+            <div className="flex-1 min-w-0 flex justify-between items-end pb-2">
               <div className="space-y-1">
-                <h4 className="text-xl font-light text-white tracking-wide">{title}</h4>
-                <p className="text-sm font-light text-white/70">{artist}</p>
+                <h4 className="text-xl sm:text-2xl font-light text-white tracking-wide truncate">{title}</h4>
+                <p className="text-sm sm:text-base font-light text-white/70 truncate">{artist}</p>
+                
+                <p className="text-xs font-light text-white/50 italic leading-relaxed pt-3 hidden sm:block">
+                  "{reason}"
+                </p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center pl-0.5 transform opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg shadow-black/20">
-                <Play className="h-4 w-4 fill-current" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center pl-1 transform opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg shadow-black/20 shrink-0">
+                <Play className="h-4 w-4 sm:h-5 sm:w-5 fill-current" />
               </div>
             </div>
-            
-            <p className="text-xs font-light text-white/60 italic leading-relaxed pt-2 border-t border-white/10">
-              "{reason}"
-            </p>
           </div>
         </CardContent>
       </Card>

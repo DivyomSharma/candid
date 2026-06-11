@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Film } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,18 +14,37 @@ interface MovieCardProps {
 }
 
 export function MovieCard({ title, reason, posterUrl, className }: MovieCardProps) {
+  const [fetchedPoster, setFetchedPoster] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!title) return;
+    const query = encodeURIComponent(title);
+    fetch(`https://itunes.apple.com/search?term=${query}&entity=movie&limit=1`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.results && data.results.length > 0) {
+          // Replace 100x100 with higher res
+          const highResUrl = data.results[0].artworkUrl100.replace("100x100bb.jpg", "1000x1000bb.jpg");
+          setFetchedPoster(highResUrl);
+        }
+      })
+      .catch(console.error);
+  }, [title]);
+
+  const displayPoster = fetchedPoster || posterUrl;
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={cn("group cursor-pointer", className)}
+      className={cn("group cursor-pointer h-full", className)}
     >
-      <Card className="relative overflow-hidden border-0 bg-transparent min-h-[350px] aspect-[2/3] mx-auto max-w-sm shadow-2xl">
+      <Card className="relative overflow-hidden border-0 bg-transparent h-full min-h-[400px] w-full shadow-2xl">
         {/* Background Poster */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 group-hover:scale-105"
-          style={{ backgroundImage: `url(${posterUrl})` }}
+          style={{ backgroundImage: `url(${displayPoster})` }}
         />
         
         {/* Vignette Overlay */}
@@ -37,7 +57,7 @@ export function MovieCard({ title, reason, posterUrl, className }: MovieCardProp
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
         />
         
-        <CardContent className="relative p-6 h-full flex flex-col justify-between z-10 text-center min-h-[350px]">
+        <CardContent className="relative p-8 h-full flex flex-col justify-between z-10 text-center">
           <div className="flex justify-center w-full mt-2">
             <div className="flex items-center gap-2 text-white/60 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md">
               <Film className="h-3 w-3 animate-[candor-breathe_3s_ease-in-out_infinite]" />
