@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Film } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,28 @@ interface MovieCardProps {
 }
 
 export function MovieCard({ title, reason, posterUrl, className }: MovieCardProps) {
+  const [fetchedPoster, setFetchedPoster] = useState<string | null>(null);
+
+  useEffect(() => {
+    // If a high-quality TMDB poster is explicitly provided, skip dynamic fetching
+    if (!title || (posterUrl && posterUrl.includes("tmdb.org"))) return;
+
+    const query = encodeURIComponent(title);
+    fetch(`https://itunes.apple.com/search?term=${query}&entity=movie&limit=3`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.results && data.results.length > 0) {
+          // Try to find exact match to avoid random wrong posters, or fallback to first
+          const match = data.results.find((r: { trackName?: string; artworkUrl100: string }) => r.trackName?.toLowerCase() === title.toLowerCase()) || data.results[0];
+          const highResUrl = match.artworkUrl100.replace("100x100bb.jpg", "1000x1000bb.jpg");
+          setFetchedPoster(highResUrl);
+        }
+      })
+      .catch(console.error);
+  }, [title, posterUrl]);
+
+  const displayPoster = fetchedPoster || posterUrl;
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -24,7 +47,7 @@ export function MovieCard({ title, reason, posterUrl, className }: MovieCardProp
         {/* Background Poster */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 group-hover:scale-105"
-          style={{ backgroundImage: `url(${posterUrl})` }}
+          style={{ backgroundImage: `url(${displayPoster})` }}
         />
         
         {/* Vignette Overlay */}
