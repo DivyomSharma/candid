@@ -126,7 +126,7 @@ export function CandorSignals() {
         </div>
         
         {/* Ambient Line Art Background */}
-        <AmbientGlyph icon={Compass} />
+        <AmbientGlyph icon={Compass} isCompass />
 
         <section className="relative z-10 mx-auto flex max-w-[1400px] flex-col gap-8">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
