@@ -93,3 +93,29 @@ export function FountainPenArt(props: Omit<LineArtProps, "children">) {
     </LineArt>
   );
 }
+
+export function CandorLogoArt(props: Omit<LineArtProps, "children">) {
+  return (
+    <LineArt {...props}>
+      <LineArtPath d="M80 30 C60 10, 20 20, 20 60 C20 100, 60 110, 80 90" state={props.state} delay={0} />
+    </LineArt>
+  );
+}
+
+export function StarArt(props: Omit<LineArtProps, "children">) {
+  return (
+    <LineArt {...props}>
+      <LineArtPath d="M60 20 L65 50 L95 55 L65 60 L60 90 L55 60 L25 55 L55 50 Z" state={props.state} delay={0} />
+      <LineArtPath d="M60 35 L62 52 L78 55 L62 58 L60 75 L58 58 L42 55 L58 52 Z" state={props.state} delay={0.4} />
+    </LineArt>
+  );
+}
+
+export function PersonArt(props: Omit<LineArtProps, "children">) {
+  return (
+    <LineArt {...props}>
+      <LineArtPath d="M60 20 C75 20 75 45 60 45 C45 45 45 20 60 20 Z" state={props.state} delay={0} />
+      <LineArtPath d="M25 90 C25 70 45 60 60 60 C75 60 95 70 95 90" state={props.state} delay={0.4} />
+    </LineArt>
+  );
+}

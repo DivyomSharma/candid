@@ -26,7 +26,8 @@ import { VisualMemoryCard } from "@/components/candor/cards/VisualMemoryCard";
 import { MoodCollageCard } from "@/components/candor/cards/MoodCollageCard";
 import { RandomObjectCard } from "@/components/candor/cards/RandomObjectCard";
 import { TruthCard } from "@/components/candor/cards/TruthCard";
-import { MoonArt, ProjectorArt, CoffeeArt, PlantArt, VinylArt } from "@/components/candor/art";
+import { CandorLogoArt, MoonArt, ProjectorArt, CoffeeArt, PlantArt, VinylArt } from "@/components/candor/art";
+import { Card } from "@/components/ui/card";
 
 type PreviewMessage = { role: "user" | "ai"; content: string };
 type AlignPreview = {
@@ -291,7 +292,7 @@ export function CandorHome() {
         <AmbientGlow />
         
         <div className="fixed top-[-5%] right-[-5%] pointer-events-none z-0">
-          <MoonArt state={1} width={1000} height={1000} className="opacity-[0.03]" />
+          <CandorLogoArt state={1} width={1000} height={1000} className="opacity-[0.03]" />
         </div>
 
         <section className="relative z-10 mx-auto w-full max-w-[1600px] flex flex-col gap-10">
@@ -317,28 +318,25 @@ export function CandorHome() {
                 </div>
               </div>
 
-              {/* AMBIENT WHITESPACE */}
-              <div className="flex justify-between px-20 py-4 opacity-10 pointer-events-none text-accent">
-                <CoffeeArt state={1} width={80} height={80} />
-                <PlantArt state={1} width={100} height={100} className="translate-y-8" />
-                <ProjectorArt state={1} width={120} height={120} className="-translate-y-4" />
-              </div>
-
               {/* MASONRY CARDS */}
               <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
                 {[
-                  { kind: "continue", size: "medium" },
-                  { kind: "align", size: "medium" },
-                  { kind: "memory", size: "small" },
-                  { kind: "signal", size: "large" },
-                  { kind: "soundtrack", size: "medium" },
-                  { kind: "movie", size: "tall" },
-                  { kind: "mood_collage", size: "wide" },
-                  { kind: "reflection", size: "small" },
-                  { kind: "thought", size: "small" }
+                  { kind: "continue" },
+                  { kind: "align" },
+                  { kind: "art", artType: "coffee" },
+                  { kind: "memory" },
+                  { kind: "signal" },
+                  { kind: "art", artType: "projector" },
+                  { kind: "soundtrack" },
+                  { kind: "movie" },
+                  { kind: "mood_collage" },
+                  { kind: "art", artType: "plant" },
+                  { kind: "reflection" },
+                  { kind: "thought" },
+                  { kind: "art", artType: "vinyl" }
                 ].map((spec, i) => {
                   const cardEl = renderHomeCard({ 
-                    card: { ...spec, priority: 1 } as CandorHomeCardSpec, 
+                    card: { ...spec, priority: 1 } as CandorHomeCardSpec & { artType?: string }, 
                     isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
                   });
                   
@@ -346,7 +344,7 @@ export function CandorHome() {
 
                   return (
                     <motion.div 
-                      key={spec.kind} 
+                      key={`${spec.kind}-${i}`} 
                       className="break-inside-avoid relative group"
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -358,10 +356,6 @@ export function CandorHome() {
                     </motion.div>
                   );
                 })}
-              </div>
-              
-              <div className="flex justify-center py-10 opacity-10 pointer-events-none text-accent">
-                 <VinylArt state={1} width={150} height={150} />
               </div>
             </div>
           )}
@@ -472,6 +466,18 @@ function renderHomeCard(input: {
     handleSignalAnswer,
     selectPrompt,
   } = input;
+
+  if (card.kind === "art") {
+    const artType = (card as any).artType;
+    return (
+      <Card className="glass-card overflow-hidden border border-border/40 bg-card/30 backdrop-blur-3xl transition-colors hover:border-accent/30 shadow-xl flex items-center justify-center p-8 min-h-[220px]">
+        {artType === "coffee" && <CoffeeArt state={1} width={90} height={90} />}
+        {artType === "projector" && <ProjectorArt state={1} width={110} height={110} />}
+        {artType === "vinyl" && <VinylArt state={1} width={110} height={110} />}
+        {artType === "plant" && <PlantArt state={1} width={100} height={100} />}
+      </Card>
+    );
+  }
 
   if (card.kind === "continue" && preview) {
     const initiativePreview = preview.content === defaultInitiativeLine;

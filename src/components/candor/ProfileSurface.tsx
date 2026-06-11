@@ -32,6 +32,7 @@ import { BottomNav } from "@/components/candor/BottomNav";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import type { CandorProfilePresentation } from "@/lib/candor/profile";
 import type { CandorMemory, CandorBadge } from "@/lib/candor/types";
+import { PersonArt } from "@/components/candor/art";
 
 // Custom premium brand SVG icons
 const SpotifyIcon = () => (
@@ -215,10 +216,13 @@ export function ProfileSurface({
   return (
     <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-40 pt-16 sm:px-6 sm:pt-20">
       <AmbientGlow />
+      
+      {/* Ambient Line Art Background */}
+      <div className="fixed top-[15%] right-[-10%] pointer-events-none z-0">
+        <PersonArt state={1} width={800} height={800} className="opacity-[0.03]" />
+      </div>
+
       <section className="relative z-10 mx-auto flex max-w-[900px] flex-col gap-8">
-        
-
-
         <motion.div 
           initial={{ opacity: 0, y: 10 }} 
           animate={{ opacity: 1, y: 0 }} 
