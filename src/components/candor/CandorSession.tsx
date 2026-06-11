@@ -351,7 +351,7 @@ export function CandorSession({ id }: { id: string }) {
           )}
 
           {messages.map((message, index) => {
-            const isSystemText = message.role === "user" && message.content.startsWith("[System:");
+            const isSystemText = message.role === "user" && message.content.toLowerCase().startsWith("[system:");
             if (isSystemText) return null;
 
             const { cleanContent, proposal } = message.role === "ai" 
