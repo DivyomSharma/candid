@@ -313,7 +313,7 @@ export function CandorHome() {
               </div>
 
               {/* CONTINUE CHAT SECTION */}
-              <div className="w-full max-w-3xl mx-auto flex justify-center pt-0 pb-12">
+              <div className="w-full max-w-3xl mx-auto flex justify-center pt-0 pb-24">
                 {renderHomeCard({ 
                   card: { kind: "continue", priority: 1, size: "wide" }, 
                   isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
@@ -328,6 +328,8 @@ export function CandorHome() {
                   [{ kind: "signal" }],
                   [{ kind: "art", artType: "vinyl" }, { kind: "soundtrack" }],
                   [{ kind: "art", artType: "projector" }, { kind: "movie" }],
+                  [{ kind: "art", artType: "cloud" }, { kind: "environment" }],
+                  [{ kind: "art", artType: "book" }, { kind: "reading" }],
                   [{ kind: "mood_collage" }],
                   [{ kind: "art", artType: "plant" }, { kind: "reflection" }, { kind: "thought" }],
                 ].map((group, i) => {
