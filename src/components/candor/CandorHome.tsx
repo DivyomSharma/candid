@@ -313,7 +313,7 @@ export function CandorHome() {
               {/* CONTINUE CHAT SECTION */}
               <div className="w-full max-w-3xl mx-auto flex justify-center py-4">
                 {renderHomeCard({ 
-                  card: { kind: "continue", priority: 1, size: 1 }, 
+                  card: { kind: "continue", priority: 1, size: "wide" }, 
                   isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
                 })}
               </div>
