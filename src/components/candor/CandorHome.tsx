@@ -318,7 +318,7 @@ export function CandorHome() {
               </div>
 
               {/* AMBIENT WHITESPACE */}
-              <div className="flex justify-between px-20 py-4 opacity-30 pointer-events-none">
+              <div className="flex justify-between px-20 py-4 opacity-10 pointer-events-none text-accent">
                 <CoffeeArt state={1} width={80} height={80} />
                 <PlantArt state={1} width={100} height={100} className="translate-y-8" />
                 <ProjectorArt state={1} width={120} height={120} className="-translate-y-4" />
@@ -360,7 +360,7 @@ export function CandorHome() {
                 })}
               </div>
               
-              <div className="flex justify-center py-10 opacity-20 pointer-events-none">
+              <div className="flex justify-center py-10 opacity-10 pointer-events-none text-accent">
                  <VinylArt state={1} width={150} height={150} />
               </div>
             </div>
