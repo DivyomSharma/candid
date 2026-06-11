@@ -15,7 +15,7 @@ export function HeroCard({ question, subtext = "quiet. unfinished. cinematic.", 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className={cn(
-        "relative flex flex-col items-start justify-center py-24 md:py-32 w-full",
+        "relative flex flex-col items-start justify-center pt-24 pb-8 md:pt-32 md:pb-12 w-full",
         className
       )}
     >

@@ -291,7 +291,7 @@ export function CandorHome() {
         ) : null}
       </AnimatePresence>
 
-      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-40 pt-6 sm:px-6 md:pt-10">
+      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-56 pt-6 sm:px-6 md:pt-10">
         <AmbientGlow />
         
         <AmbientGlyph icon={Home} />
@@ -313,7 +313,7 @@ export function CandorHome() {
               </div>
 
               {/* CONTINUE CHAT SECTION */}
-              <div className="w-full max-w-3xl mx-auto flex justify-center py-4">
+              <div className="w-full max-w-3xl mx-auto flex justify-center pt-0 pb-12">
                 {renderHomeCard({ 
                   card: { kind: "continue", priority: 1, size: "wide" }, 
                   isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
