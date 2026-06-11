@@ -468,7 +468,7 @@ function renderHomeCard(input: {
   } = input;
 
   if (card.kind === "art") {
-    const artType = (card as any).artType;
+    const artType = (card as CandorHomeCardSpec & { artType?: string }).artType;
     return (
       <Card className="glass-card overflow-hidden border border-border/40 bg-card/30 backdrop-blur-3xl transition-colors hover:border-accent/30 shadow-xl flex items-center justify-center p-8 min-h-[220px]">
         {artType === "coffee" && <CoffeeArt state={1} width={90} height={90} />}
