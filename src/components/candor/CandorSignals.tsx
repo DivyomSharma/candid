@@ -10,6 +10,7 @@ import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { useAuth } from "@/contexts/AuthContext";
 import { CANDOR_THREAD_ID, candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorSignal } from "@/lib/candor/scenarios";
+import { CompassArt, PaperAirplaneArt } from "@/components/candor/art";
 
 export function CandorSignals() {
   const { isSignedIn, user } = useAuth();
@@ -122,6 +123,11 @@ export function CandorSignals() {
           <div className="absolute left-[15%] top-24 h-48 w-48 rounded-full bg-[hsl(var(--glow)/0.08)] blur-3xl" />
           <div className="absolute bottom-28 right-[15%] h-56 w-56 rounded-full bg-[hsl(var(--accent)/0.06)] blur-3xl" />
         </div>
+        
+        {/* Ambient Line Art Background */}
+        <div className="fixed top-[20%] right-[-10%] pointer-events-none z-0">
+          <CompassArt state={1} width={800} height={800} className="opacity-10" />
+        </div>
 
         <section className="relative z-10 mx-auto flex max-w-[1400px] flex-col gap-8">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
@@ -144,7 +150,7 @@ export function CandorSignals() {
             ) : null}
           </AnimatePresence>
 
-          <div className="candor-desktop-wall">
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
             {orderedSignals.map((signal, index) => {
               const answeredOption = answers[signal.id];
               return (
@@ -153,12 +159,15 @@ export function CandorSignals() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.02, duration: 0.45 }}
-                  className="candor-wall-card"
+                  className="break-inside-avoid relative group"
                 >
-                  <Card className={`surface overflow-hidden border border-border/40 bg-card/30 backdrop-blur-md transition-colors hover:border-accent/20 ${signalCardHeight(signal)}`}>
+                  <Card className={`glass-card overflow-hidden border border-border/40 bg-card/30 backdrop-blur-3xl transition-colors hover:border-accent/30 shadow-xl ${signalCardHeight(signal)}`}>
                     <CardContent className="flex h-full flex-col gap-4 p-5">
                       <div className="flex items-center justify-between text-[10px] font-light uppercase tracking-[0.2em] text-accent">
-                        <span>{signal.title}</span>
+                        <div className="flex items-center gap-2">
+                          {signal.category === 'flirty' ? <PaperAirplaneArt state={1} width={16} height={16} className="text-accent" /> : <CompassArt state={1} width={16} height={16} className="text-accent" />}
+                          <span>{signal.title}</span>
+                        </div>
                         <span className="text-[9px] text-foreground-secondary/40">{signal.category}</span>
                       </div>
 

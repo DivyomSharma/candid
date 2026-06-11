@@ -26,6 +26,7 @@ import { VisualMemoryCard } from "@/components/candor/cards/VisualMemoryCard";
 import { MoodCollageCard } from "@/components/candor/cards/MoodCollageCard";
 import { RandomObjectCard } from "@/components/candor/cards/RandomObjectCard";
 import { TruthCard } from "@/components/candor/cards/TruthCard";
+import { MoonArt, ProjectorArt, CoffeeArt, PlantArt, VinylArt } from "@/components/candor/art";
 
 type PreviewMessage = { role: "user" | "ai"; content: string };
 type AlignPreview = {
@@ -289,58 +290,78 @@ export function CandorHome() {
       <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 md:px-8 pb-48 pt-16">
         <AmbientGlow />
         
-        <section className="relative z-10 mx-auto w-full max-w-[1400px] flex flex-col items-center">
+        <div className="fixed top-[-5%] right-[-5%] pointer-events-none z-0">
+          <MoonArt state={1} width={1000} height={1000} className="opacity-[0.03]" />
+        </div>
+
+        <section className="relative z-10 mx-auto w-full max-w-[1600px] flex flex-col gap-10">
           {!adaptiveHome.hasSufficientData ? (
-            <div className="mt-20 candor-wall-card md:col-span-12">
-              <TruthCard />
+            <div className="mt-20 flex justify-center w-full">
+              <div className="max-w-2xl w-full">
+                <TruthCard />
+              </div>
             </div>
           ) : (
-            <div className="candor-desktop-wall w-full auto-rows-min">
-              {/* ROW 1: Hero & Tonight */}
-              <div className="candor-wall-card md:col-span-8 flex h-full">
-                <HeroCard question={adaptiveHome.heroPrompt} />
-              </div>
-              <div className="candor-wall-card md:col-span-4 flex h-full pt-16 md:pt-32">
-                <CommunityAtmosphereCard 
-                  title="Tonight on Candor"
-                  items={tonightItems.map(t => ({ icon: t.icon, label: t.label }))}
-                  className="w-full"
-                />
-              </div>
-
-              {/* ROW 2: Continue, Align, Memory */}
-              <div className="candor-wall-card md:col-span-4 flex">
-                <div className="w-full">{renderHomeCard({ card: { kind: "continue", size: "medium", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
-              </div>
-              <div className="candor-wall-card md:col-span-4 flex">
-                <div className="w-full">{renderHomeCard({ card: { kind: "align", size: "medium", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
-              </div>
-              <div className="candor-wall-card md:col-span-4 flex">
-                <div className="w-full">{renderHomeCard({ card: { kind: "memory", size: "small", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+            <div className="flex flex-col gap-8 w-full">
+              {/* HERO SECTION - Top */}
+              <div className="flex flex-col md:flex-row gap-6 w-full">
+                <div className="flex-1 min-w-[60%]">
+                  <HeroCard question={adaptiveHome.heroPrompt} />
+                </div>
+                <div className="flex-none md:w-[350px] pt-4 md:pt-16">
+                  <CommunityAtmosphereCard 
+                    title="Tonight on Candor"
+                    items={tonightItems.map(t => ({ icon: t.icon, label: t.label }))}
+                    className="w-full h-full"
+                  />
+                </div>
               </div>
 
-              {/* ROW 3: Signal, Soundtrack */}
-              <div className="candor-wall-card md:col-span-6 flex">
-                <div className="w-full">{renderHomeCard({ card: { kind: "signal", size: "large", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
-              </div>
-              <div className="candor-wall-card md:col-span-6 flex">
-                <div className="w-full">{renderHomeCard({ card: { kind: "soundtrack", size: "medium", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
-              </div>
-
-              {/* ROW 4: Movie, Mood Collage */}
-              <div className="candor-wall-card md:col-span-5 flex">
-                <div className="w-full">{renderHomeCard({ card: { kind: "movie", size: "tall", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
-              </div>
-              <div className="candor-wall-card md:col-span-7 flex">
-                <div className="w-full">{renderHomeCard({ card: { kind: "mood_collage", size: "wide", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              {/* AMBIENT WHITESPACE */}
+              <div className="flex justify-between px-20 py-4 opacity-30 pointer-events-none">
+                <CoffeeArt state={1} width={80} height={80} />
+                <PlantArt state={1} width={100} height={100} className="translate-y-8" />
+                <ProjectorArt state={1} width={120} height={120} className="-translate-y-4" />
               </div>
 
-              {/* ROW 5: Reflection, Thought */}
-              <div className="candor-wall-card md:col-span-6 flex">
-                <div className="w-full">{renderHomeCard({ card: { kind: "reflection", size: "small", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              {/* MASONRY CARDS */}
+              <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
+                {[
+                  { kind: "continue", size: "medium" },
+                  { kind: "align", size: "medium" },
+                  { kind: "memory", size: "small" },
+                  { kind: "signal", size: "large" },
+                  { kind: "soundtrack", size: "medium" },
+                  { kind: "movie", size: "tall" },
+                  { kind: "mood_collage", size: "wide" },
+                  { kind: "reflection", size: "small" },
+                  { kind: "thought", size: "small" }
+                ].map((spec, i) => {
+                  const cardEl = renderHomeCard({ 
+                    card: { ...spec, priority: 1 } as CandorHomeCardSpec, 
+                    isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
+                  });
+                  
+                  if (!cardEl || cardEl.props.className === "hidden") return null;
+
+                  return (
+                    <motion.div 
+                      key={spec.kind} 
+                      className="break-inside-avoid relative group"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05, duration: 0.5 }}
+                    >
+                      <div className="transition-all duration-700 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_-15px_hsl(var(--accent)/0.15)] group-hover:scale-[1.01] rounded-3xl">
+                        {cardEl}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
-              <div className="candor-wall-card md:col-span-6 flex">
-                <div className="w-full">{renderHomeCard({ card: { kind: "thought", size: "small", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              
+              <div className="flex justify-center py-10 opacity-20 pointer-events-none">
+                 <VinylArt state={1} width={150} height={150} />
               </div>
             </div>
           )}
