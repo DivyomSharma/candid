@@ -57,6 +57,10 @@ export async function orchestrateCandorText(payload: OrchestratorPayload): Promi
         attempt.model,
       );
 
+      if (!result.text || !result.text.trim()) {
+        throw new Error("empty_response_generated");
+      }
+
       const finalResult: CandorOrchestrationResult = {
         ...result,
         fallbackTriggered: index > 0,
