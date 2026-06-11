@@ -30,7 +30,7 @@ export function CandorSignals() {
   const fetchSignals = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/candor/signals?limit=12");
+      const res = await fetch("/api/candor/signals?limit=4");
       if (!res.ok) return;
       const data = await res.json();
       if (data.signals?.length) {

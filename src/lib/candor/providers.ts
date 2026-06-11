@@ -155,10 +155,13 @@ export const candorProviders: Record<CandorProviderName, CandorProviderAdapter> 
       const firstChoice = choices[0] as JsonRecord | undefined;
       const message = (firstChoice?.message as JsonRecord | undefined) ?? undefined;
       const usage = (data.usage as JsonRecord | undefined) ?? undefined;
+      const text = typeof message?.content === "string" ? message.content.trim() : "";
+      if (!text) throw new Error("empty_response_generated");
+
       return {
         provider: "groq",
         model,
-        text: typeof message?.content === "string" ? message.content.trim() : "",
+        text,
         usage: {
           inputTokens: typeof usage?.prompt_tokens === "number" ? usage.prompt_tokens : undefined,
           outputTokens: typeof usage?.completion_tokens === "number" ? usage.completion_tokens : undefined,
@@ -200,10 +203,13 @@ export const candorProviders: Record<CandorProviderName, CandorProviderAdapter> 
       const firstChoice = choices[0] as JsonRecord | undefined;
       const message = (firstChoice?.message as JsonRecord | undefined) ?? undefined;
       const usage = (data.usage as JsonRecord | undefined) ?? undefined;
+      const text = typeof message?.content === "string" ? message.content.trim() : "";
+      if (!text) throw new Error("empty_response_generated");
+
       return {
         provider: "openrouter",
         model,
-        text: typeof message?.content === "string" ? message.content.trim() : "",
+        text,
         usage: {
           inputTokens: typeof usage?.prompt_tokens === "number" ? usage.prompt_tokens : undefined,
           outputTokens: typeof usage?.completion_tokens === "number" ? usage.completion_tokens : undefined,
