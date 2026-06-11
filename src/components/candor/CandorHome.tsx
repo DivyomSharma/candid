@@ -26,7 +26,8 @@ import { VisualMemoryCard } from "@/components/candor/cards/VisualMemoryCard";
 import { MoodCollageCard } from "@/components/candor/cards/MoodCollageCard";
 import { RandomObjectCard } from "@/components/candor/cards/RandomObjectCard";
 import { TruthCard } from "@/components/candor/cards/TruthCard";
-import { CandorLogoArt, MoonArt, ProjectorArt, CoffeeArt, PlantArt, VinylArt } from "@/components/candor/art";
+import { AmbientLogo } from "@/components/candor/art/AmbientLogo";
+import { MoonArt, ProjectorArt, CoffeeArt, PlantArt, VinylArt } from "@/components/candor/art";
 import { Card } from "@/components/ui/card";
 
 type PreviewMessage = { role: "user" | "ai"; content: string };
@@ -288,12 +289,10 @@ export function CandorHome() {
         ) : null}
       </AnimatePresence>
 
-      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 md:px-8 pb-48 pt-16">
+      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-40 pt-6 sm:px-6 md:pt-10">
         <AmbientGlow />
         
-        <div className="fixed top-[-5%] right-[-5%] pointer-events-none z-0">
-          <CandorLogoArt state={1} width={1000} height={1000} className="opacity-[0.03]" />
-        </div>
+        <AmbientLogo />
 
         <section className="relative z-10 mx-auto w-full max-w-[1600px] flex flex-col gap-10">
           {!adaptiveHome.hasSufficientData ? (

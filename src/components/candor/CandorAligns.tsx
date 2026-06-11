@@ -12,7 +12,7 @@ import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { useAuth } from "@/contexts/AuthContext";
 import { resonanceLabel } from "@/lib/candor/matching";
 import { cn } from "@/lib/utils";
-import { StarArt } from "@/components/candor/art";
+import { AmbientLogo } from "@/components/candor/art/AmbientLogo";
 
 type Align = {
   id: string;
@@ -103,9 +103,7 @@ export function CandorAligns() {
       <AmbientGlow />
       
       {/* Ambient Line Art Background */}
-      <div className="fixed top-[15%] right-[-10%] pointer-events-none z-0">
-        <StarArt state={1} width={800} height={800} className="opacity-[0.03]" />
-      </div>
+      <AmbientLogo />
 
       <section className="relative z-10 mx-auto w-full max-w-[1000px] flex flex-col gap-10">
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
