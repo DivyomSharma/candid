@@ -124,14 +124,14 @@ const TOPIC_SOUNDTRACKS: Record<string, { title: string; artist: string; note: s
 };
 
 const TOPIC_MOVIES: Record<string, { title: string; note: string; context: string; posterUrl?: string }> = {
-  movies: { title: "Past Lives", note: "because unfinished conversations seem to stay with you.", context: "tonight's movie" },
-  music: { title: "Inside Llewyn Davis", note: "for the beautiful kind of emotional drift.", context: "tonight's movie" },
-  design: { title: "Columbus", note: "stillness, architecture, and people circling what matters.", context: "quiet recommendation" },
-  startups: { title: "The Social Network", note: "ambition with sharper edges than people admit.", context: "builder mood" },
-  psychology: { title: "Aftersun", note: "because subtext seems to matter more to you than plot.", context: "quiet recommendation" },
-  philosophy: { title: "Before Sunrise", note: "all conversation, all atmosphere, no wasted motion.", context: "late-night recommendation" },
-  books: { title: "Paterson", note: "for the days when ordinary detail starts feeling sacred.", context: "quiet recommendation" },
-  games: { title: "Her", note: "soft sci-fi for emotionally literate screen people.", context: "late-night recommendation" },
+  movies: { title: "Past Lives", note: "because unfinished conversations seem to stay with you.", context: "tonight's movie", posterUrl: "https://image.tmdb.org/t/p/w1280/k3waqVXSnvCZWfJYNtdamTgTtTA.jpg" },
+  music: { title: "Inside Llewyn Davis", note: "for the beautiful kind of emotional drift.", context: "tonight's movie", posterUrl: "https://image.tmdb.org/t/p/w1280/wZcpaEKfQeC6EihJXXoM4xP0Khu.jpg" },
+  design: { title: "Columbus", note: "stillness, architecture, and people circling what matters.", context: "quiet recommendation", posterUrl: "https://image.tmdb.org/t/p/w1280/pZ0q0Z1m37FzRz9Sps1X6TfXmP6.jpg" },
+  startups: { title: "The Social Network", note: "ambition with sharper edges than people admit.", context: "builder mood", posterUrl: "https://image.tmdb.org/t/p/w1280/n0ybibhJtQ5icDqTp8eRytcZIix.jpg" },
+  psychology: { title: "Aftersun", note: "because subtext seems to matter more to you than plot.", context: "quiet recommendation", posterUrl: "https://image.tmdb.org/t/p/w1280/v28T5F1IygM8vXWZIycvkSml42.jpg" },
+  philosophy: { title: "Before Sunrise", note: "all conversation, all atmosphere, no wasted motion.", context: "late-night recommendation", posterUrl: "https://image.tmdb.org/t/p/w1280/c1zejehiwEikA5y0IqZtLqA2G7B.jpg" },
+  books: { title: "Paterson", note: "for the days when ordinary detail starts feeling sacred.", context: "quiet recommendation", posterUrl: "https://image.tmdb.org/t/p/w1280/jH1C0fLgXg14jJ5c5d0x1WcE2n1.jpg" },
+  games: { title: "Her", note: "soft sci-fi for emotionally literate screen people.", context: "late-night recommendation", posterUrl: "https://image.tmdb.org/t/p/w1280/1qtiXGFlBv1HpaV8t9iYwA4E8O7.jpg" },
 };
 
 const TOPIC_RECOMMENDATIONS: Record<string, { label: string; line: string; detail: string }> = {

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Film } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,25 +13,6 @@ interface MovieCardProps {
 }
 
 export function MovieCard({ title, reason, posterUrl, className }: MovieCardProps) {
-  const [fetchedPoster, setFetchedPoster] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!title) return;
-    const query = encodeURIComponent(title);
-    fetch(`https://itunes.apple.com/search?term=${query}&entity=movie&limit=1`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.results && data.results.length > 0) {
-          // Replace 100x100 with higher res
-          const highResUrl = data.results[0].artworkUrl100.replace("100x100bb.jpg", "1000x1000bb.jpg");
-          setFetchedPoster(highResUrl);
-        }
-      })
-      .catch(console.error);
-  }, [title]);
-
-  const displayPoster = fetchedPoster || posterUrl;
-
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -44,7 +24,7 @@ export function MovieCard({ title, reason, posterUrl, className }: MovieCardProp
         {/* Background Poster */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 group-hover:scale-105"
-          style={{ backgroundImage: `url(${displayPoster})` }}
+          style={{ backgroundImage: `url(${posterUrl})` }}
         />
         
         {/* Vignette Overlay */}
