@@ -32,7 +32,7 @@ export function CommunityAtmosphereCard({ ambientThought, title, items, classNam
                 const Icon = typeof item.icon === "string" ? null : item.icon;
                 return (
                   <div key={idx} className="flex items-center gap-3 text-foreground-secondary/90 group-hover:text-foreground transition-colors duration-500">
-                    {Icon ? <Icon className="w-4 h-4" /> : <span className="text-lg leading-none">{item.icon}</span>}
+                    {Icon ? <Icon className="w-4 h-4" /> : <span className="text-lg leading-none">{item.icon as string}</span>}
                     <span className="text-sm font-light">{item.label}</span>
                   </div>
                 );
