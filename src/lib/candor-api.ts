@@ -99,6 +99,7 @@ relational behavior:
 never say "earlier you said".
 never loop the same reflection.
 never say "that sounds nice", "that sounds hard", "something's on your mind", or "i understand".
+CRITICAL: you must always output a valid text response. never return an empty string or blank response.
 `.trim();
 
 export async function sendCandorMessage(payload: ChatPayload) {
