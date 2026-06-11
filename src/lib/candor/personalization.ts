@@ -26,6 +26,7 @@ export type CandorHomeCardSpec = {
 };
 
 export type CandorAdaptiveHome = {
+  hasSufficientData: boolean;
   cards: CandorHomeCardSpec[];
   heroPrompt: string;
   reflectionLabel: string;
@@ -87,13 +88,6 @@ const HERO_PROMPTS = [
 
 const REFLECTION_LABELS = ["this week", "lately", "recently", "small thing"];
 
-const GENERIC_REFLECTIONS = [
-  "you kept choosing emotionally steady people.",
-  "you've been recommending films more than music.",
-  "you sound lighter after midnight.",
-  "you've become less guarded lately.",
-];
-
 const GENERIC_COMMUNITY = [
   {
     label: "tonight on candor",
@@ -117,13 +111,6 @@ const GENERIC_COMMUNITY = [
   },
 ];
 
-const GENERIC_SURPRISES = [
-  { label: "tiny opinion", line: "movie recommendations are a love language.", detail: "especially when they come with one weird warning." },
-  { label: "small confession", line: "someone admitted they miss being a regular somewhere.", detail: "a cafe, a class, a person. unclear." },
-  { label: "community thought", line: "the group chat is either medicine or a full-time job.", detail: "tonight, people are split." },
-  { label: "memory", line: "you keep circling back to people who feel calm.", detail: "candor noticed the pattern, quietly." },
-  { label: "today's signal", line: "green flag: they remember the throwaway detail.", detail: "dangerously effective behavior." },
-];
 
 const TOPIC_SOUNDTRACKS: Record<string, { title: string; artist: string; note: string; coverUrl?: string }> = {
   movies: { title: "Holocene", artist: "Bon Iver", note: "this feels like your kind of silence." },
@@ -163,7 +150,10 @@ export function buildAdaptiveHome(memory: CandorMemory | null, seedInput?: strin
   const topTopics = topTopicsFromMemory(memory);
   const primaryTopic = topTopics[0];
   const secondaryTopic = topTopics[1];
-  const reflectionLine = sanitizeReflection(memory?.notes?.[0] ?? memory?.lifeThemes?.[0] ?? memory?.softSpots?.[0] ?? GENERIC_REFLECTIONS[seed(now, 1) % GENERIC_REFLECTIONS.length]);
+  
+  const hasSufficientData = (memory?.turnCount ?? 0) >= 10;
+  const safeMemoryFallback = memory?.notes?.[0] ?? memory?.softSpots?.[0] ?? "you hold onto the small details.";
+  const reflectionLine = sanitizeReflection(memory?.lifeThemes?.[0] ?? safeMemoryFallback);
   const soundtrack = TOPIC_SOUNDTRACKS[primaryTopic] ?? fallbackSoundtrack(hour);
   const movie = TOPIC_MOVIES[primaryTopic] ?? fallbackMovie(hour);
   const recommendation = TOPIC_RECOMMENDATIONS[primaryTopic] ?? {
@@ -203,6 +193,7 @@ export function buildAdaptiveHome(memory: CandorMemory | null, seedInput?: strin
   });
 
   return {
+    hasSufficientData,
     cards,
     heroPrompt: HERO_PROMPTS[Math.floor(now.getTime() / (1000 * 60 * 60 * 3)) % HERO_PROMPTS.length],
     reflectionLabel: REFLECTION_LABELS[seed(now, 2) % REFLECTION_LABELS.length],
@@ -299,16 +290,13 @@ function adaptSurprise(primaryTopic: string | undefined, secondaryTopic: string 
   if (primaryTopic === "movies") {
     return { label: "tiny opinion", line: "first-watch honesty matters more than perfect taste.", detail: "especially with films you half-defend." };
   }
-  if (primaryTopic === "music") {
-    return { label: "small confession", line: "someone said they can tell who they miss by what they replay.", detail: "hard to argue with, honestly." };
+  if (primaryTopic === "movies" || secondaryTopic === "movies") {
+    return { label: "tiny opinion", line: "movie recommendations are a love language.", detail: "especially when they come with one weird warning." };
   }
   if (primaryTopic === "startups") {
-    return { label: "community thought", line: "someone admitted they like making decks more than making decisions.", detail: "dangerous sentence. maybe true." };
+    return { label: "small confession", line: "ambition is louder than you let on.", detail: "builders always recognize other builders." };
   }
-  if (secondaryTopic === "design") {
-    return { label: "memory", line: "you keep noticing systems, not just surfaces.", detail: "candor is beginning to weight the wall accordingly." };
-  }
-  return GENERIC_SURPRISES[seed(now, 4) % GENERIC_SURPRISES.length];
+  return { label: "memory", line: "you keep circling back to people who feel calm.", detail: "candor noticed the pattern, quietly." };
 }
 
 function deriveOpenLoop(memory: CandorMemory | null) {

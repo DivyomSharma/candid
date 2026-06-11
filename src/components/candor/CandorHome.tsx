@@ -26,6 +26,7 @@ import { MovieCard } from "@/components/candor/cards/MovieCard";
 import { VisualMemoryCard } from "@/components/candor/cards/VisualMemoryCard";
 import { MoodCollageCard } from "@/components/candor/cards/MoodCollageCard";
 import { RandomObjectCard } from "@/components/candor/cards/RandomObjectCard";
+import { TruthCard } from "@/components/candor/cards/TruthCard";
 
 type PreviewMessage = { role: "user" | "ai"; content: string };
 type AlignPreview = {
@@ -297,41 +298,47 @@ export function CandorHome() {
 
           <MasonryWall>
             {/* The cards organically pack themselves into the Masonry Wall */}
-            {adaptiveHome.cards.map((card, index) => {
-              return (
-                <motion.div
-                  key={`${card.kind}-${index}`}
-                  className={card.spanClass || "col-span-1"}
-                  initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: index * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  {renderHomeCard({
-                    card,
-                    isSignedIn,
-                    preview,
-                    previewTeaser,
-                    signal,
-                    signalAnswered,
-                    primaryAlign,
-                    adaptiveHome,
-                    reflection,
-                    tonightItems,
-                    soundtrackUrl,
-                    router,
-                    fetchSignal,
-                    handleSignalAnswer,
-                    selectPrompt,
-                  })}
-                </motion.div>
-              );
-            })}
-            
-            {/* Random Serendipity - occasionally injected */}
-            {Math.random() > 0.6 && (
-              <CommunityAtmosphereCard 
-                ambientThought="I still reread old chats."
-              />
+            {!adaptiveHome.hasSufficientData ? (
+              <TruthCard />
+            ) : (
+              <>
+                {adaptiveHome.cards.map((card, index) => {
+                  return (
+                    <motion.div
+                      key={`${card.kind}-${index}`}
+                      className={card.spanClass || "col-span-1"}
+                      initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ delay: index * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      {renderHomeCard({
+                        card,
+                        isSignedIn,
+                        preview,
+                        previewTeaser,
+                        signal,
+                        signalAnswered,
+                        primaryAlign,
+                        adaptiveHome,
+                        reflection,
+                        tonightItems,
+                        soundtrackUrl,
+                        router,
+                        fetchSignal,
+                        handleSignalAnswer,
+                        selectPrompt,
+                      })}
+                    </motion.div>
+                  );
+                })}
+                
+                {/* Random Serendipity - occasionally injected */}
+                {Math.random() > 0.6 && (
+                  <CommunityAtmosphereCard 
+                    ambientThought="I still reread old chats."
+                  />
+                )}
+              </>
             )}
           </MasonryWall>
         </section>
