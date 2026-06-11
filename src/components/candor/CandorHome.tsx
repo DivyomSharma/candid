@@ -13,7 +13,6 @@ import type { CandorSignal } from "@/lib/candor/scenarios";
 import type { CandorMemory } from "@/lib/candor/types";
 
 // New Layout & Cards
-import { MasonryWall } from "@/components/layout/MasonryWall";
 import { HeroCard } from "./cards/HeroCard";
 import { ContinueCard } from "./cards/ContinueCard";
 import { SignalCard } from "./cards/SignalCard";
@@ -290,59 +289,61 @@ export function CandorHome() {
       <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 md:px-8 pb-48 pt-16">
         <AmbientGlow />
         
-        <section className="relative z-10 mx-auto w-full max-w-[1600px] flex flex-col">
-          {/* Top Hero replaces grid structure completely */}
-          <div className="mb-8 w-full flex justify-center">
-            <HeroCard question={adaptiveHome.heroPrompt} />
-          </div>
-
-          <MasonryWall>
-            {/* The cards organically pack themselves into the Masonry Wall */}
-            {!adaptiveHome.hasSufficientData ? (
+        <section className="relative z-10 mx-auto w-full max-w-[1400px] flex flex-col items-center">
+          {!adaptiveHome.hasSufficientData ? (
+            <div className="mt-20">
               <TruthCard />
-            ) : (
-              [
-                ...adaptiveHome.cards.map((card, index) => {
-                  return (
-                    <motion.div
-                      key={`${card.kind}-${index}`}
-                      className={card.spanClass || "col-span-1"}
-                      initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      transition={{ delay: index * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    >
-                      {renderHomeCard({
-                        card,
-                        isSignedIn,
-                        preview,
-                        previewTeaser,
-                        signal,
-                        signalAnswered,
-                        primaryAlign,
-                        adaptiveHome,
-                        memoryPreview,
-                        reflection,
-                        tonightItems,
-                        soundtrackUrl,
-                        router,
-                        fetchSignal,
-                        handleSignalAnswer,
-                        selectPrompt,
-                      })}
-                    </motion.div>
-                  );
-                }),
-                
-                /* Random Serendipity - occasionally injected */
-                Math.random() > 0.6 ? (
-                  <CommunityAtmosphereCard 
-                    key="serendipity-card"
-                    ambientThought="I still reread old chats."
-                  />
-                ) : null
-              ]
-            )}
-          </MasonryWall>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 w-full auto-rows-min">
+              {/* ROW 1: Hero & Tonight */}
+              <div className="md:col-span-8 flex h-full">
+                <HeroCard question={adaptiveHome.heroPrompt} />
+              </div>
+              <div className="md:col-span-4 flex h-full pt-16 md:pt-32">
+                <CommunityAtmosphereCard 
+                  title="Tonight on Candor"
+                  items={tonightItems.map(t => ({ icon: t.icon, label: t.label }))}
+                  className="w-full"
+                />
+              </div>
+
+              {/* ROW 2: Continue, Align, Memory */}
+              <div className="md:col-span-4 flex">
+                <div className="w-full">{renderHomeCard({ card: { kind: "continue", size: "medium", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              </div>
+              <div className="md:col-span-4 flex">
+                <div className="w-full">{renderHomeCard({ card: { kind: "align", size: "medium", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              </div>
+              <div className="md:col-span-4 flex">
+                <div className="w-full">{renderHomeCard({ card: { kind: "memory", size: "small", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              </div>
+
+              {/* ROW 3: Signal, Soundtrack */}
+              <div className="md:col-span-6 flex">
+                <div className="w-full">{renderHomeCard({ card: { kind: "signal", size: "large", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              </div>
+              <div className="md:col-span-6 flex">
+                <div className="w-full">{renderHomeCard({ card: { kind: "soundtrack", size: "medium", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              </div>
+
+              {/* ROW 4: Movie, Mood Collage */}
+              <div className="md:col-span-5 flex">
+                <div className="w-full">{renderHomeCard({ card: { kind: "movie", size: "tall", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              </div>
+              <div className="md:col-span-7 flex">
+                <div className="w-full">{renderHomeCard({ card: { kind: "mood_collage", size: "wide", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              </div>
+
+              {/* ROW 5: Reflection, Thought */}
+              <div className="md:col-span-6 flex">
+                <div className="w-full">{renderHomeCard({ card: { kind: "reflection", size: "small", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              </div>
+              <div className="md:col-span-6 flex">
+                <div className="w-full">{renderHomeCard({ card: { kind: "thought", size: "small", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Input refactored: pinned above nav, luxury spacing */}
