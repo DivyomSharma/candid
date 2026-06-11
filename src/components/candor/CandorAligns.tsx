@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, MessageCircle, Sparkles } from "lucide-react";
+import { ChevronRight, Lock, MessageCircle, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { useAuth } from "@/contexts/AuthContext";
 import { resonanceLabel } from "@/lib/candor/matching";
 import { cn } from "@/lib/utils";
-import { StarArt } from "@/components/candor/art";
+import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
 
 type Align = {
   id: string;
@@ -103,9 +103,7 @@ export function CandorAligns() {
       <AmbientGlow />
       
       {/* Ambient Line Art Background */}
-      <div className="fixed bottom-[-10%] right-[-10%] pointer-events-none z-0">
-        <StarArt state={1} width={700} height={700} className="opacity-[0.03]" />
-      </div>
+      <AmbientGlyph icon={Sparkles} />
 
       <section className="relative z-10 mx-auto w-full max-w-[1000px] flex flex-col gap-10">
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>

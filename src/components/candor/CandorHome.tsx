@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Moon, Film, Laptop, Music, Cloud } from "lucide-react";
+import { ArrowRight, Moon, Film, Laptop, Music, Cloud, Home } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
@@ -26,7 +26,7 @@ import { VisualMemoryCard } from "@/components/candor/cards/VisualMemoryCard";
 import { MoodCollageCard } from "@/components/candor/cards/MoodCollageCard";
 import { RandomObjectCard } from "@/components/candor/cards/RandomObjectCard";
 import { TruthCard } from "@/components/candor/cards/TruthCard";
-import { AmbientLogo } from "@/components/candor/art/AmbientLogo";
+import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
 import { MoonArt, ProjectorArt, CoffeeArt, PlantArt, VinylArt } from "@/components/candor/art";
 import { Card } from "@/components/ui/card";
 
@@ -292,16 +292,9 @@ export function CandorHome() {
       <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-40 pt-6 sm:px-6 md:pt-10">
         <AmbientGlow />
         
-        <AmbientLogo />
+        <AmbientGlyph icon={Home} />
 
         <section className="relative z-10 mx-auto w-full max-w-[1600px] flex flex-col gap-10">
-          {!adaptiveHome.hasSufficientData ? (
-            <div className="mt-20 flex justify-center w-full">
-              <div className="max-w-2xl w-full">
-                <TruthCard />
-              </div>
-            </div>
-          ) : (
             <div className="flex flex-col gap-8 w-full">
               {/* HERO SECTION - Top */}
               <div className="flex flex-col md:flex-row gap-6 w-full">
@@ -317,22 +310,25 @@ export function CandorHome() {
                 </div>
               </div>
 
+              {/* CONTINUE CHAT SECTION */}
+              <div className="w-full max-w-3xl mx-auto flex justify-center py-4">
+                {renderHomeCard({ 
+                  card: { kind: "continue", priority: 1, size: 1 }, 
+                  isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
+                })}
+              </div>
+
               {/* MASONRY CARDS */}
               <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
                 {[
-                  { kind: "continue" },
                   { kind: "align" },
-                  { kind: "art", artType: "coffee" },
                   { kind: "memory" },
                   { kind: "signal" },
-                  { kind: "art", artType: "projector" },
                   { kind: "soundtrack" },
                   { kind: "movie" },
                   { kind: "mood_collage" },
-                  { kind: "art", artType: "plant" },
                   { kind: "reflection" },
                   { kind: "thought" },
-                  { kind: "art", artType: "vinyl" }
                 ].map((spec, i) => {
                   const cardEl = renderHomeCard({ 
                     card: { ...spec, priority: 1 } as CandorHomeCardSpec & { artType?: string }, 
@@ -357,7 +353,14 @@ export function CandorHome() {
                 })}
               </div>
             </div>
-          )}
+
+            {!adaptiveHome.hasSufficientData && (
+              <div className="mt-12 flex justify-center w-full">
+                <div className="max-w-2xl w-full">
+                  <TruthCard />
+                </div>
+              </div>
+            )}
         </section>
 
         {/* Input refactored: pinned above nav, luxury spacing */}

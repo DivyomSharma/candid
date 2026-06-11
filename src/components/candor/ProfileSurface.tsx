@@ -21,7 +21,9 @@ import {
   Instagram,
   Github,
   Twitter,
-  Settings
+  Settings,
+  Edit3, 
+  Check
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,7 +34,7 @@ import { BottomNav } from "@/components/candor/BottomNav";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import type { CandorProfilePresentation } from "@/lib/candor/profile";
 import type { CandorMemory, CandorBadge } from "@/lib/candor/types";
-import { PersonArt } from "@/components/candor/art";
+import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
 
 // Custom premium brand SVG icons
 const SpotifyIcon = () => (
@@ -218,9 +220,7 @@ export function ProfileSurface({
       <AmbientGlow />
       
       {/* Ambient Line Art Background */}
-      <div className="fixed bottom-[-10%] right-[-10%] pointer-events-none z-0">
-        <PersonArt state={1} width={700} height={700} className="opacity-[0.03]" />
-      </div>
+      <AmbientGlyph icon={UserRound} />
 
       <section className="relative z-10 mx-auto flex max-w-[900px] flex-col gap-8">
         <motion.div 

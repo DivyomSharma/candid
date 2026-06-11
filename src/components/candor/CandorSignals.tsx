@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ArrowRight, Brain, Check, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowRight, Brain, Check, RefreshCw, Compass } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { BottomNav } from "@/components/candor/BottomNav";
@@ -10,7 +10,8 @@ import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { useAuth } from "@/contexts/AuthContext";
 import { CANDOR_THREAD_ID, candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorSignal } from "@/lib/candor/scenarios";
-import { CompassArt, PaperAirplaneArt } from "@/components/candor/art";
+import { PaperAirplaneArt } from "@/components/candor/art";
+import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
 
 export function CandorSignals() {
   const { isSignedIn, user } = useAuth();
@@ -125,9 +126,7 @@ export function CandorSignals() {
         </div>
         
         {/* Ambient Line Art Background */}
-        <div className="fixed bottom-[-10%] right-[-10%] pointer-events-none z-0">
-          <CompassArt state={1} width={700} height={700} className="opacity-[0.03]" />
-        </div>
+        <AmbientGlyph icon={Compass} />
 
         <section className="relative z-10 mx-auto flex max-w-[1400px] flex-col gap-8">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
@@ -165,7 +164,7 @@ export function CandorSignals() {
                     <CardContent className="flex h-full flex-col gap-4 p-5">
                       <div className="flex items-center justify-between text-[10px] font-light uppercase tracking-[0.2em] text-accent">
                         <div className="flex items-center gap-2">
-                          {signal.category === 'flirty' ? <PaperAirplaneArt state={1} width={16} height={16} className="text-accent" /> : <CompassArt state={1} width={16} height={16} className="text-accent" />}
+                          {signal.category === 'flirty' ? <PaperAirplaneArt state={1} width={16} height={16} className="text-accent" /> : <Compass className="w-4 h-4 text-accent" strokeWidth={1} />}
                           <span>{signal.title}</span>
                         </div>
                         <span className="text-[9px] text-foreground-secondary/40">{signal.category}</span>
