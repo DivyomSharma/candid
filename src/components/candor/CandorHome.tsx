@@ -301,8 +301,8 @@ export function CandorHome() {
             {!adaptiveHome.hasSufficientData ? (
               <TruthCard />
             ) : (
-              <>
-                {adaptiveHome.cards.map((card, index) => {
+              [
+                ...adaptiveHome.cards.map((card, index) => {
                   return (
                     <motion.div
                       key={`${card.kind}-${index}`}
@@ -330,15 +330,16 @@ export function CandorHome() {
                       })}
                     </motion.div>
                   );
-                })}
+                }),
                 
-                {/* Random Serendipity - occasionally injected */}
-                {Math.random() > 0.6 && (
+                /* Random Serendipity - occasionally injected */
+                Math.random() > 0.6 ? (
                   <CommunityAtmosphereCard 
+                    key="serendipity-card"
                     ambientThought="I still reread old chats."
                   />
-                )}
-              </>
+                ) : null
+              ]
             )}
           </MasonryWall>
         </section>
