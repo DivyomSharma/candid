@@ -2,23 +2,8 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  ArrowRight,
-  Brain,
-  Check,
-  Cloud,
-  Film,
-  Laptop,
-  Moon,
-  Music,
-  Quote,
-  RefreshCw,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { ArrowRight, Moon, Film, Laptop, Music, Cloud } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +11,21 @@ import { buildAdaptiveHome, type CandorHomeCardSpec } from "@/lib/candor/persona
 import { CANDOR_THREAD_ID, candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorSignal } from "@/lib/candor/scenarios";
 import type { CandorMemory } from "@/lib/candor/types";
+
+// New Layout & Cards
+import { MasonryWall } from "@/components/layout/MasonryWall";
+import { HeroCard } from "./cards/HeroCard";
+import { ContinueCard } from "./cards/ContinueCard";
+import { SignalCard } from "./cards/SignalCard";
+import { AlignCard } from "./cards/AlignCard";
+import { MemoryCard } from "@/components/candor/cards/MemoryCard";
+import { OpenLoopCard } from "@/components/candor/cards/OpenLoopCard";
+import { CommunityAtmosphereCard } from "@/components/candor/cards/CommunityAtmosphereCard";
+import { SoundtrackCard } from "@/components/candor/cards/SoundtrackCard";
+import { MovieCard } from "@/components/candor/cards/MovieCard";
+import { VisualMemoryCard } from "@/components/candor/cards/VisualMemoryCard";
+import { MoodCollageCard } from "@/components/candor/cards/MoodCollageCard";
+import { RandomObjectCard } from "@/components/candor/cards/RandomObjectCard";
 
 type PreviewMessage = { role: "user" | "ai"; content: string };
 type AlignPreview = {
@@ -38,10 +38,17 @@ type AlignPreview = {
 };
 
 const defaultInitiativeLine = "i have a feeling your algorithm knows too much about you already";
+const placeholders = [
+  "start with the thing you actually care about",
+  "what keeps returning?",
+  "what's been stuck in your head?",
+  "what feels unfinished?"
+];
 
 export function CandorHome() {
   const [message, setMessage] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<PreviewMessage | null>(null);
@@ -56,6 +63,13 @@ export function CandorHome() {
   const { isLoaded, isSignedIn, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!isSignedIn || !user?.id) {
@@ -114,11 +128,7 @@ export function CandorHome() {
       const data = await res.json();
       if (!data.ready || !data.aligns) return;
 
-      const list = data.aligns.slice(0, 2).map((align: {
-        id: string;
-        profile: { username: string; avatarInitials: string; avatarTone: string };
-        score: number;
-      }) => ({
+      const list = data.aligns.slice(0, 2).map((align: { id: string; profile: { username: string; avatarInitials: string; avatarTone: string }; score: number }) => ({
         id: align.id,
         username: align.profile.username,
         initials: align.profile.avatarInitials,
@@ -189,11 +199,7 @@ export function CandorHome() {
         return;
       }
 
-      const data = (await response.json()) as {
-        id: string;
-        persisted?: boolean;
-        message?: { id: string; role: "ai"; content: string } | null;
-      };
+      const data = (await response.json()) as { id: string; persisted?: boolean; message?: { id: string; role: "ai"; content: string } | null };
 
       if (data.persisted === false && user?.id) {
         const initialMessages = [
@@ -250,7 +256,6 @@ export function CandorHome() {
   const soundtrackUrl = memoryPreview?.profileV4?.socialLinks?.spotify
     ? `https://open.spotify.com/user/${memoryPreview.profileV4.socialLinks.spotify}`
     : "https://open.spotify.com/";
-  const primaryMoodCard = adaptiveHome.cards.find((card) => card.kind === "community" || card.kind === "soundtrack");
 
   return (
     <>
@@ -281,123 +286,66 @@ export function CandorHome() {
         ) : null}
       </AnimatePresence>
 
-      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-44 pt-20">
+      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 md:px-8 pb-48 pt-16">
         <AmbientGlow />
-        <div className="pointer-events-none absolute inset-0 opacity-70">
-          <div className="absolute left-[12%] top-24 h-48 w-48 rounded-full bg-[hsl(var(--glow)/0.08)] blur-3xl" />
-          <div className="absolute bottom-28 right-[10%] h-56 w-56 rounded-full bg-[hsl(var(--accent)/0.07)] blur-3xl" />
-        </div>
+        
+        <section className="relative z-10 mx-auto w-full max-w-[1600px] flex flex-col">
+          {/* Top Hero replaces grid structure completely */}
+          <div className="mb-8 w-full flex justify-center">
+            <HeroCard question={adaptiveHome.heroPrompt} />
+          </div>
 
-        <section className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col gap-8">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(300px,0.6fr)]">
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="relative overflow-hidden rounded-[2rem] border border-border/35 bg-[linear-gradient(135deg,hsl(var(--card)/0.36),hsl(var(--background)/0.18))] px-6 py-7 backdrop-blur-md sm:px-8"
-            >
-              <motion.div
-                aria-hidden
-                animate={{ x: [0, 26, 0], opacity: [0.24, 0.4, 0.24] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -left-10 -top-8 h-32 w-32 rounded-full bg-[hsl(var(--accent)/0.12)] blur-3xl"
-              />
-              <p className="mb-3 text-xs font-light uppercase tracking-[0.18em] text-foreground-secondary/70">
-                {isSignedIn ? `hey ${username}` : "the thread continues quietly"}
-              </p>
-              <h1 className="max-w-3xl text-4xl font-light leading-[1.02] tracking-tight sm:text-5xl xl:text-[4.25rem]">
-                {adaptiveHome.heroPrompt}
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm font-light leading-6 text-foreground-secondary">
-                desktop should feel like a quiet place you leave open. the wall adjusts as candor learns what belongs near you.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.06, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <Card className="surface soft-shadow relative h-full overflow-hidden border-border/35 bg-card/30 backdrop-blur-md">
+          <MasonryWall>
+            {/* The cards organically pack themselves into the Masonry Wall */}
+            {adaptiveHome.cards.map((card, index) => {
+              return (
                 <motion.div
-                  aria-hidden
-                  animate={{ opacity: [0.08, 0.18, 0.08], x: [-8, 8, -8] }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute bottom-0 right-0 h-24 w-40 rounded-full bg-[hsl(var(--accent)/0.16)] blur-3xl"
-                />
-                <CardContent className="relative flex h-full flex-col gap-3 p-5 sm:p-6">
-                  <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
-                    {primaryMoodCard?.kind === "soundtrack" ? <Music className="h-3.5 w-3.5 text-accent" /> : <Users className="h-3.5 w-3.5 text-accent" />}
-                    {primaryMoodCard?.kind === "soundtrack" ? "tonight's soundtrack" : adaptiveHome.community.label}
-                  </div>
-                  {primaryMoodCard?.kind === "soundtrack" ? (
-                    <>
-                      <p className="text-2xl font-light leading-8 text-foreground">{adaptiveHome.soundtrack.title}</p>
-                      <p className="text-sm font-light text-foreground-secondary">{adaptiveHome.soundtrack.artist}</p>
-                      <p className="max-w-sm text-sm font-light leading-6 text-foreground-secondary">{adaptiveHome.soundtrack.note}</p>
-                      <a
-                        href={soundtrackUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-auto inline-flex items-center gap-1 text-sm font-light text-accent hover:underline"
-                      >
-                        open spotify <ArrowRight className="h-3.5 w-3.5" />
-                      </a>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-2xl font-light leading-8 text-foreground">{adaptiveHome.community.line}</p>
-                      <p className="max-w-sm text-sm font-light leading-6 text-foreground-secondary">{adaptiveHome.community.detail}</p>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-
-          <div className="candor-desktop-wall">
-            {adaptiveHome.cards.map((card, index) => (
-              <motion.div
-                key={`${card.kind}-${index}`}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="candor-wall-card"
-              >
-                {renderHomeCard({
-                  card,
-                  isSignedIn,
-                  isFetchingAligns,
-                  isFetchingSignal,
-                  preview,
-                  previewTeaser,
-                  signal,
-                  signalAnswered,
-                  primaryAlign,
-                  adaptiveHome,
-                  reflection,
-                  tonightItems,
-                  soundtrackUrl,
-                  router,
-                  fetchSignal,
-                  handleSignalAnswer,
-                  selectPrompt,
-                })}
-              </motion.div>
-            ))}
-          </div>
+                  key={`${card.kind}-${index}`}
+                  className={card.spanClass || "col-span-1"}
+                  initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: index * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {renderHomeCard({
+                    card,
+                    isSignedIn,
+                    preview,
+                    previewTeaser,
+                    signal,
+                    signalAnswered,
+                    primaryAlign,
+                    adaptiveHome,
+                    reflection,
+                    tonightItems,
+                    soundtrackUrl,
+                    router,
+                    fetchSignal,
+                    handleSignalAnswer,
+                    selectPrompt,
+                  })}
+                </motion.div>
+              );
+            })}
+            
+            {/* Random Serendipity - occasionally injected */}
+            {Math.random() > 0.6 && (
+              <CommunityAtmosphereCard 
+                ambientThought="I still reread old chats."
+              />
+            )}
+          </MasonryWall>
         </section>
 
-        <div className="fixed inset-x-6 bottom-24 z-[100] pointer-events-none">
+        {/* Input refactored: pinned above nav, luxury spacing */}
+        <div className="fixed inset-x-0 bottom-28 z-[100] pointer-events-none flex justify-center px-4">
           <motion.form
             onSubmit={submit}
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-auto mx-auto flex w-full max-w-[900px] flex-col gap-3"
+            transition={{ delay: 0.3, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="pointer-events-auto flex w-full max-w-[800px] flex-col gap-3 relative shadow-2xl shadow-black/40 rounded-full"
           >
             <div className="relative flex w-full items-center">
-              <div className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,hsl(var(--foreground)/0.03),transparent)]" />
               <motion.input
                 id="candor-home-input"
                 type="text"
@@ -405,63 +353,40 @@ export function CandorHome() {
                 onChange={(event) => setMessage(event.target.value)}
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setIsInputFocused(false)}
-                placeholder={isInputFocused ? "what's been stuck in your head?" : "start with the thing you actually care about"}
-                animate={{ paddingRight: message.length > 0 || isStarting ? 60 : 160, scaleX: isInputFocused ? 1.01 : 1 }}
-                transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-                className="h-14 w-full origin-center rounded-full border border-border/50 bg-background/45 pl-6 text-base font-light text-foreground outline-none transition-shadow placeholder:text-muted-foreground focus:border-accent/40 focus:ring-1 focus:ring-accent/40"
+                placeholder={isInputFocused ? "" : placeholders[placeholderIndex]}
+                className="h-16 w-full origin-center rounded-full border border-border/60 bg-background/95 backdrop-blur-2xl pl-8 pr-[140px] text-lg font-light text-foreground outline-none transition-all placeholder:text-foreground-secondary/50 focus:border-accent/50 focus:bg-background focus:shadow-[0_0_30px_hsl(var(--accent)/0.15)] shadow-2xl"
               />
 
-              <div className="absolute right-1.5 flex items-center">
+              <div className="absolute right-2 flex items-center">
                 {isLoaded && isSignedIn ? (
                   <motion.button
                     type="submit"
                     disabled={!message.trim() || isStarting}
                     animate={{
-                      width: message.length > 0 || isStarting ? 44 : "auto",
-                      paddingLeft: message.length > 0 || isStarting ? 0 : 20,
-                      paddingRight: message.length > 0 || isStarting ? 0 : 20,
-                      scale: message.length > 0 ? 0.96 : 1,
+                      width: message.length > 0 || isStarting ? 52 : "auto",
+                      paddingLeft: message.length > 0 || isStarting ? 0 : 24,
+                      paddingRight: message.length > 0 || isStarting ? 0 : 24,
                     }}
-                    whileHover={!message.trim() || isStarting ? {} : { scale: 1.03 }}
-                    whileTap={!message.trim() || isStarting ? {} : { scale: 0.97 }}
-                    transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-                    className="flex h-11 items-center justify-center overflow-hidden rounded-full bg-accent text-sm font-medium text-primary-foreground transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    whileHover={!message.trim() || isStarting ? {} : { scale: 1.05 }}
+                    whileTap={!message.trim() || isStarting ? {} : { scale: 0.95 }}
+                    transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
+                    className="flex h-12 items-center justify-center overflow-hidden rounded-full bg-accent text-sm font-medium text-primary-foreground transition-all hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <AnimatePresence mode="wait" initial={false}>
+                    <AnimatePresence mode="wait">
                       {isStarting ? (
-                        <motion.div
-                          key="dots"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          transition={{ duration: 0.15 }}
-                          className="flex items-center gap-1"
-                        >
+                        <motion.div key="dots" className="flex items-center gap-1">
                           <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, delay: 0 }} className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
                           <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, delay: 0.2 }} className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
                           <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, delay: 0.4 }} className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
                         </motion.div>
                       ) : message.length > 0 ? (
-                        <motion.div
-                          key="arrow"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          <ArrowRight className="h-4 w-4" />
+                        <motion.div key="arrow" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                          <ArrowRight className="h-5 w-5" />
                         </motion.div>
                       ) : (
-                        <motion.div
-                          key="text"
-                          initial={{ opacity: 0, x: -5 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 5 }}
-                          transition={{ duration: 0.15 }}
-                          className="flex items-center whitespace-nowrap"
-                        >
+                        <motion.div key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center whitespace-nowrap">
                           {preview ? "keep it going" : "open the thread"}
-                          <ArrowRight className="ml-1.5 h-4 w-4" />
+                          <ArrowRight className="ml-2 h-4 w-4" />
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -471,7 +396,7 @@ export function CandorHome() {
                     type="button"
                     disabled={!isLoaded}
                     onClick={() => router.push(`/candor/login?next=${encodeURIComponent("/candor/home")}`)}
-                    className="flex h-11 items-center gap-1 rounded-full bg-accent px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent/90"
+                    className="flex h-12 items-center gap-2 rounded-full bg-accent px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent/90"
                   >
                     sign in
                     <ArrowRight className="h-4 w-4" />
@@ -479,7 +404,7 @@ export function CandorHome() {
                 )}
               </div>
             </div>
-            {error ? <p className="text-right text-xs font-light leading-5 text-foreground-secondary">{error}</p> : null}
+            {error && <p className="absolute -bottom-6 right-4 text-xs font-light text-foreground-secondary">{error}</p>}
           </motion.form>
         </div>
 
@@ -492,8 +417,6 @@ export function CandorHome() {
 function renderHomeCard(input: {
   card: CandorHomeCardSpec;
   isSignedIn: boolean;
-  isFetchingAligns: boolean;
-  isFetchingSignal: boolean;
   preview: PreviewMessage | null;
   previewTeaser: string;
   signal: CandorSignal | null;
@@ -511,8 +434,6 @@ function renderHomeCard(input: {
   const {
     card,
     isSignedIn,
-    isFetchingAligns,
-    isFetchingSignal,
     preview,
     previewTeaser,
     signal,
@@ -520,7 +441,6 @@ function renderHomeCard(input: {
     primaryAlign,
     adaptiveHome,
     tonightItems,
-    soundtrackUrl,
     router,
     fetchSignal,
     handleSignalAnswer,
@@ -530,319 +450,135 @@ function renderHomeCard(input: {
   if (card.kind === "continue" && preview) {
     const initiativePreview = preview.content === defaultInitiativeLine;
     return (
-      <Card className="surface soft-shadow relative overflow-hidden border-accent/20 bg-[linear-gradient(135deg,hsl(var(--accent)/0.07),hsl(var(--card)/0.42))] backdrop-blur-md">
-        <motion.div
-          aria-hidden
-          animate={{ opacity: [0.18, 0.34, 0.18] }}
-          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute right-6 top-1/2 h-16 w-16 -translate-y-1/2 rounded-full bg-accent/20 blur-2xl"
-        />
-        <CardContent className="relative flex flex-col gap-2.5 p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-4 text-xs font-light text-foreground-secondary">
-            <span className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-accent/80 shadow-[0_0_14px_hsl(var(--accent)/0.65)] animate-[candor-breathe_3.2s_ease-in-out_infinite]" />
-              {initiativePreview ? "unread from candor" : "still open"}
-            </span>
-            {isSignedIn ? (
-              <button
-                type="button"
-                onClick={() => router.push(`/candor/session/${CANDOR_THREAD_ID}`)}
-                className="flex items-center gap-1 text-foreground transition-colors hover:text-accent hover:underline"
-              >
-                continue <ArrowRight className="h-3 w-3" />
-              </button>
-            ) : null}
-          </div>
-          <p className="line-clamp-2 max-w-[32rem] text-[15px] font-light leading-6 text-foreground">{previewTeaser}</p>
-        </CardContent>
-      </Card>
+      <ContinueCard 
+        label={initiativePreview ? "unread from candor" : "still open"}
+        teaser={previewTeaser}
+        onClick={() => isSignedIn && router.push(`/candor/session/${CANDOR_THREAD_ID}`)}
+      />
     );
   }
 
   if (card.kind === "signal") {
+    // If we have a real signal, map it to SignalCard
+    // Otherwise fallback to something generic or the first option
     return (
-      <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-        <motion.div
-          aria-hidden
-          animate={{ rotate: [0, 2, 0], opacity: [0.08, 0.18, 0.08] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[hsl(var(--glow)/0.5)] blur-3xl"
-        />
-        <CardContent className="relative flex flex-col gap-5 p-5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-light uppercase tracking-[0.22em] text-accent">{signal?.title || "signal"}</span>
-            <button
-              onClick={() => {
-                if (signal) void fetchSignal(signal.id);
-              }}
-              className="rounded-full p-2 text-foreground-secondary transition-colors hover:bg-background/40 hover:text-foreground"
-              title="Next signal"
-              disabled={isFetchingSignal}
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isFetchingSignal ? "animate-spin" : ""}`} />
-            </button>
-          </div>
-
-          <button type="button" className="text-left" onClick={() => router.push("/candor/signals")}>
-            <p className="pr-2 text-[1.35rem] font-light leading-8 text-foreground">{signal?.prompt || "loading a signal..."}</p>
-          </button>
-
-          {signal ? (
-            <div className="mt-1">
-              {!signalAnswered ? (
-                <div className="flex flex-wrap gap-3">
-                  {signal.options.map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => void handleSignalAnswer(option)}
-                      className="min-h-11 rounded-full border border-border/50 bg-background/25 px-5 py-2.5 text-sm font-light text-foreground-secondary transition-all hover:border-accent/40 hover:bg-accent/10 hover:text-foreground active:scale-[0.98]"
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              ) : signal.outcomeType === "conversation_worthy" ? (
-                <div className="flex flex-col gap-2">
-                  <p className="text-xs font-light text-accent">i didn't expect that answer.</p>
-                  <button
-                    onClick={() => selectPrompt(`[system: user answered "${signalAnswered}" to "${signal.prompt}"]`)}
-                    className="self-start rounded-full bg-accent px-4 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-accent/90"
-                  >
-                    continue with candor
-                  </button>
-                </div>
-              ) : signal.outcomeType === "community_reveal" && signal.communitySplit ? (
-                <div className="space-y-2">
-                  <div className="flex h-2 w-full overflow-hidden rounded-full bg-border/20">
-                    <div className="bg-accent transition-all duration-1000" style={{ width: `${signal.communitySplit[0]}%` }} />
-                    <div className="bg-foreground-secondary/30 transition-all duration-1000" style={{ width: `${100 - signal.communitySplit[0]}%` }} />
-                  </div>
-                  <div className="flex justify-between text-xs font-light text-foreground-secondary/80">
-                    <span>{signal.communitySplit[0]}% chose "{signal.options[0]}"</span>
-                    <span>{100 - signal.communitySplit[0]}% chose "{signal.options[1]}"</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 text-xs font-light text-accent/90">
-                  <Check className="h-4 w-4" />
-                  <span>{signal.outcomeType === "candor_learns" ? "added to your rhythm" : "saved."}</span>
-                </div>
-              )}
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+      <SignalCard 
+        type={signal?.title || "Hear Me Out"}
+        content={signal?.prompt || "loading a signal..."}
+        options={signal && !signalAnswered ? signal.options : undefined}
+        onSelectOption={handleSignalAnswer}
+      />
     );
   }
 
   if (card.kind === "align") {
+    if (!isSignedIn || !primaryAlign) {
+      return (
+        <MemoryCard observation={!isSignedIn ? "sign in to see familiar energies." : "not enough signals yet. keep responding to find overlays."} />
+      );
+    }
     return (
-      <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-        <CardContent className="flex flex-col gap-4 p-5">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
-              <Sparkles className="h-3 w-3 text-accent" />
-              aligns nearby
-            </span>
-            <button
-              onClick={() => router.push("/candor/aligns")}
-              className="text-xs font-light text-foreground-secondary transition-colors hover:text-accent hover:underline"
-            >
-              see all
-            </button>
-          </div>
-          {!isSignedIn ? (
-            <p className="text-sm font-light text-foreground-secondary/60">your aligns come later. sign in to see familiar energies.</p>
-          ) : isFetchingAligns ? (
-            <div className="space-y-2 py-1">
-              <div className="h-4 w-32 animate-pulse rounded bg-foreground/10" />
-              <div className="h-4 w-40 animate-pulse rounded bg-foreground/10" />
-            </div>
-          ) : primaryAlign ? (
-            <button
-              type="button"
-              onClick={() => router.push(`/candor/aligns/${primaryAlign.id}`)}
-              className="group flex w-full items-center gap-4 rounded-xl p-1.5 text-left transition-colors hover:bg-background/20"
-            >
-              <motion.div
-                animate={{ opacity: [0.72, 1, 0.72], scale: [0.98, 1.02, 0.98] }}
-                transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Avatar className="h-14 w-14 border border-accent/25 shadow-[0_0_28px_-16px_hsl(var(--accent)/0.9)]">
-                  <AvatarFallback className="text-sm font-light" style={{ background: primaryAlign.tone }}>
-                    {primaryAlign.initials}
-                  </AvatarFallback>
-                </Avatar>
-              </motion.div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-base font-light text-foreground transition-colors group-hover:text-accent">{primaryAlign.username}</p>
-                  <span className="shrink-0 rounded-full border border-accent/25 px-2.5 py-1 text-[10px] font-light uppercase tracking-[0.12em] text-accent/85">
-                    {primaryAlign.resonance}
-                  </span>
-                </div>
-                <p className="mt-2 line-clamp-2 text-sm font-light leading-6 text-foreground-secondary">{primaryAlign.insight}</p>
-              </div>
-              <ArrowRight className="h-4 w-4 shrink-0 text-foreground-secondary transition-transform group-hover:translate-x-0.5 group-hover:text-accent" />
-            </button>
-          ) : (
-            <p className="text-sm font-light text-foreground-secondary/60">not enough signals yet. keep responding to signals to find overlays.</p>
-          )}
-        </CardContent>
-      </Card>
+      <AlignCard 
+        username={primaryAlign.username}
+        initials={primaryAlign.initials}
+        tier={primaryAlign.resonance}
+        observation={primaryAlign.insight}
+        avatarTone={primaryAlign.tone}
+        onClick={() => router.push(`/candor/aligns/${primaryAlign.id}`)}
+      />
     );
   }
 
   if (card.kind === "tonight") {
+    const tonightItems = [{ label: "music" }, { label: "late nights" }, { label: "film" }];
     return (
-      <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-        <CardContent className="flex flex-col gap-4 p-4">
-          <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
-            <Moon className="h-3.5 w-3.5 text-accent" />
-            tonight
-          </div>
-          <div className="flex flex-col gap-2.5">
-            {tonightItems.map((item) => (
-              <div key={item.label} className="flex items-center gap-2 text-sm font-light text-foreground-secondary">
-                <item.icon className="h-3.5 w-3.5 text-accent/80" />
-                <span className="truncate text-foreground">{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <CommunityAtmosphereCard 
+        ambientThought={`tonight is about ${tonightItems.map((item: { label: string }) => item.label).join(", ")}.`}
+      />
     );
   }
 
   if (card.kind === "community") {
     return (
-      <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-        <motion.div
-          aria-hidden
-          animate={{ opacity: [0.08, 0.2, 0.08], x: [-8, 8, -8] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-0 right-0 h-24 w-40 rounded-full bg-[hsl(var(--accent)/0.18)] blur-3xl"
-        />
-        <CardContent className="relative flex flex-col gap-3 p-5">
-          <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
-            <Users className="h-3.5 w-3.5 text-accent" />
-            {adaptiveHome.community.label}
-          </div>
-          <p className="text-xl font-light leading-8 text-foreground">{adaptiveHome.community.line}</p>
-          <p className="text-sm font-light leading-6 text-foreground-secondary">{adaptiveHome.community.detail}</p>
-        </CardContent>
-      </Card>
+      <CommunityAtmosphereCard 
+        ambientThought={adaptiveHome.community.line}
+      />
     );
   }
 
   if (card.kind === "reflection") {
     return (
-      <Card className="surface soft-shadow relative overflow-hidden border-l-2 border-l-accent/60 border-border/40 bg-card/30 backdrop-blur-md">
-        <CardContent className="flex flex-col gap-3 p-5">
-          <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
-            <Brain className="h-3.5 w-3.5 text-accent" />
-            {adaptiveHome.reflectionLabel}
-          </div>
-          <p className="pr-6 text-base font-light leading-7 text-foreground">{adaptiveHome.reflectionLine}</p>
-          <button
-            onClick={() => selectPrompt(`let's talk about this pattern: "${adaptiveHome.reflectionLine}"`)}
-            className="mt-1 flex items-center gap-1 self-start text-xs font-light text-accent hover:underline"
-          >
-            open <ArrowRight className="h-3 w-3" />
-          </button>
-        </CardContent>
-      </Card>
+      <OpenLoopCard 
+        topic={adaptiveHome.reflectionLine}
+        onClick={() => selectPrompt(`let's talk about this pattern: "${adaptiveHome.reflectionLine}"`)}
+      />
     );
   }
 
   if (card.kind === "soundtrack") {
     return (
-      <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-        <CardContent className="flex flex-col gap-3 p-5">
-          <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
-            <Music className="h-3.5 w-3.5 text-accent" />
-            tonight's soundtrack
-          </div>
-          <p className="text-2xl font-light leading-8 text-foreground">{adaptiveHome.soundtrack.title}</p>
-          <p className="text-sm font-light text-foreground-secondary">{adaptiveHome.soundtrack.artist}</p>
-          <p className="text-sm font-light leading-6 text-foreground-secondary">{adaptiveHome.soundtrack.note}</p>
-          <a href={soundtrackUrl} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-sm font-light text-accent hover:underline">
-            play <ArrowRight className="h-3.5 w-3.5" />
-          </a>
-        </CardContent>
-      </Card>
+      <SoundtrackCard 
+        title={adaptiveHome.soundtrack.title}
+        artist={adaptiveHome.soundtrack.artist}
+        reason={adaptiveHome.soundtrack.note}
+        coverUrl={adaptiveHome.soundtrack.coverUrl || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80"}
+        onPlay={() => window.open(input.soundtrackUrl, "_blank")}
+      />
     );
   }
 
   if (card.kind === "movie") {
     return (
-      <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-        <CardContent className="flex flex-col gap-3 p-5">
-          <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
-            <Film className="h-3.5 w-3.5 text-accent" />
-            {adaptiveHome.movie.context}
-          </div>
-          <p className="text-xl font-light leading-8 text-foreground">{adaptiveHome.movie.title}</p>
-          <p className="text-sm font-light leading-6 text-foreground-secondary">{adaptiveHome.movie.note}</p>
-        </CardContent>
-      </Card>
+      <MovieCard 
+        title={adaptiveHome.movie.title}
+        reason={adaptiveHome.movie.note}
+        posterUrl={adaptiveHome.movie.posterUrl || "https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?auto=format&fit=crop&q=80"}
+      />
+    );
+  }
+
+  if (card.kind === "visual_memory") {
+    return (
+      <VisualMemoryCard 
+        text={adaptiveHome.visualMemory.line}
+        imageUrl={adaptiveHome.visualMemory.imageUrl}
+      />
+    );
+  }
+
+  if (card.kind === "mood_collage") {
+    return (
+      <MoodCollageCard 
+        images={adaptiveHome.moodCollage.images}
+      />
+    );
+  }
+
+  if (card.kind === "random_object") {
+    return (
+      <RandomObjectCard 
+        type={adaptiveHome.randomObject.type}
+        imageUrl={adaptiveHome.randomObject.imageUrl}
+        text={adaptiveHome.randomObject.text}
+      />
     );
   }
 
   if (card.kind === "open_loop" && adaptiveHome.openLoop) {
     return (
-      <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-        <CardContent className="flex flex-col gap-3 p-5">
-          <div className="text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">{adaptiveHome.openLoop.label}</div>
-          <p className="text-lg font-light leading-8 text-foreground">"{adaptiveHome.openLoop.line}"</p>
-          <button
-            onClick={() => selectPrompt(`you mentioned this before: "${adaptiveHome.openLoop?.line}"`)}
-            className="inline-flex items-center gap-1 self-start text-sm font-light text-accent hover:underline"
-          >
-            continue <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-        </CardContent>
-      </Card>
+      <OpenLoopCard 
+        topic={adaptiveHome.openLoop.line}
+        onClick={() => selectPrompt(`you mentioned this before: "${adaptiveHome.openLoop?.line}"`)}
+      />
     );
   }
 
   if (card.kind === "memory") {
-    return (
-      <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-        <CardContent className="flex flex-col gap-3 p-5">
-          <div className="flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">
-            <Quote className="h-3.5 w-3.5 text-accent" />
-            memory
-          </div>
-          <p className="text-lg font-light leading-8 text-foreground">{adaptiveHome.surprise.line}</p>
-          <p className="text-xs font-light leading-5 text-foreground-secondary/70">{adaptiveHome.surprise.detail}</p>
-        </CardContent>
-      </Card>
-    );
+    return <MemoryCard observation={`${adaptiveHome.surprise.line}. ${adaptiveHome.surprise.detail}`} />;
   }
 
-  if (card.kind === "thought") {
-    return (
-      <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-        <CardContent className="flex flex-col gap-3 p-5">
-          <div className="text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">{adaptiveHome.surprise.label}</div>
-          <p className="text-lg font-light leading-8 text-foreground">{adaptiveHome.surprise.line}</p>
-          <p className="text-xs font-light leading-5 text-foreground-secondary/70">{adaptiveHome.surprise.detail}</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (card.kind === "recommendation") {
-    return (
-      <Card className="surface soft-shadow relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-        <CardContent className="flex flex-col gap-3 p-5">
-          <div className="text-[10px] font-light uppercase tracking-[0.2em] text-foreground-secondary/60">{adaptiveHome.recommendation.label}</div>
-          <p className="text-lg font-light leading-8 text-foreground">{adaptiveHome.recommendation.line}</p>
-          <p className="text-sm font-light leading-6 text-foreground-secondary">{adaptiveHome.recommendation.detail}</p>
-        </CardContent>
-      </Card>
-    );
+  if (card.kind === "thought" || card.kind === "recommendation") {
+    return <MemoryCard observation={`${adaptiveHome.surprise?.line || adaptiveHome.recommendation?.line}`} />;
   }
 
   return <div className="hidden" />;
@@ -865,7 +601,7 @@ function alignInsightForScore(score: number) {
 
 function buildYouTonight(memory: CandorMemory | null) {
   const current = memory?.profileV4?.currently;
-  const rankedInterest = Object.entries(memory?.interactionProfile.interestSignals ?? {}).sort(([, a], [, b]) => b - a)[0]?.[0];
+  const rankedInterest = Object.entries(memory?.interactionProfile.interestSignals ?? {}).sort(([, a], [, b]) => (b as number) - (a as number))[0]?.[0];
 
   const items = [
     current?.watching ? { icon: Film, label: `watching ${current.watching}` } : null,

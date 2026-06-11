@@ -13,12 +13,16 @@ export type CandorHomeCardKind =
   | "thought"
   | "recommendation"
   | "tonight"
-  | "input";
+  | "input"
+  | "visual_memory"
+  | "mood_collage"
+  | "random_object";
 
 export type CandorHomeCardSpec = {
   kind: CandorHomeCardKind;
-  size: "small" | "medium" | "large";
+  size: "small" | "medium" | "large" | "tall" | "wide";
   priority: number;
+  spanClass?: string;
 };
 
 export type CandorAdaptiveHome = {
@@ -40,11 +44,13 @@ export type CandorAdaptiveHome = {
     title: string;
     artist: string;
     note: string;
+    coverUrl?: string;
   };
   movie: {
     title: string;
     note: string;
     context: string;
+    posterUrl?: string;
   };
   recommendation: {
     label: string;
@@ -55,6 +61,18 @@ export type CandorAdaptiveHome = {
     label: string;
     line: string;
   } | null;
+  visualMemory: {
+    line: string;
+    imageUrl: string;
+  };
+  moodCollage: {
+    images: string[];
+  };
+  randomObject: {
+    type: "polaroid" | "cassette" | "ticket";
+    imageUrl: string;
+    text: string;
+  };
 };
 
 const HERO_PROMPTS = [
@@ -107,7 +125,7 @@ const GENERIC_SURPRISES = [
   { label: "today's signal", line: "green flag: they remember the throwaway detail.", detail: "dangerously effective behavior." },
 ];
 
-const TOPIC_SOUNDTRACKS: Record<string, { title: string; artist: string; note: string }> = {
+const TOPIC_SOUNDTRACKS: Record<string, { title: string; artist: string; note: string; coverUrl?: string }> = {
   movies: { title: "Holocene", artist: "Bon Iver", note: "this feels like your kind of silence." },
   music: { title: "Nights", artist: "Frank Ocean", note: "this one holds two moods at once." },
   design: { title: "A Walk", artist: "Tycho", note: "precise, spacious, a little obsessive." },
@@ -118,7 +136,7 @@ const TOPIC_SOUNDTRACKS: Record<string, { title: string; artist: string; note: s
   games: { title: "Wait", artist: "M83", note: "a bit cinematic, a bit unreal." },
 };
 
-const TOPIC_MOVIES: Record<string, { title: string; note: string; context: string }> = {
+const TOPIC_MOVIES: Record<string, { title: string; note: string; context: string; posterUrl?: string }> = {
   movies: { title: "Past Lives", note: "because unfinished conversations seem to stay with you.", context: "tonight's movie" },
   music: { title: "Inside Llewyn Davis", note: "for the beautiful kind of emotional drift.", context: "tonight's movie" },
   design: { title: "Columbus", note: "stillness, architecture, and people circling what matters.", context: "quiet recommendation" },
@@ -156,6 +174,25 @@ export function buildAdaptiveHome(memory: CandorMemory | null, seedInput?: strin
   const community = adaptCommunity(primaryTopic, secondaryTopic, hour, now);
   const surprise = adaptSurprise(primaryTopic, secondaryTopic, now);
   const openLoop = deriveOpenLoop(memory);
+  
+  // V3 Visual Assets (Placeholders)
+  const visualMemory = {
+    line: "you keep finding quiet corners in loud places.",
+    imageUrl: "https://images.unsplash.com/photo-1542466500-dccb2789cbbb?auto=format&fit=crop&q=80", // tokyo alley night
+  };
+  const moodCollage = {
+    images: [
+      "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80", // coffee
+      "https://images.unsplash.com/photo-1516280440502-60292bb0a04d?auto=format&fit=crop&q=80", // rain window
+      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80", // headphones
+    ]
+  };
+  const randomObject = {
+    type: "polaroid" as const,
+    imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80", // circuit/tech/abstract
+    text: "late night building",
+  };
+
   const seedKey = `${seedInput ?? ""}|${primaryTopic}|${secondaryTopic}|${hour}|${memory?.turnCount ?? 0}`;
   const cards = composeHomeCards({
     hasOpenLoop: Boolean(openLoop),
@@ -176,6 +213,9 @@ export function buildAdaptiveHome(memory: CandorMemory | null, seedInput?: strin
     movie,
     recommendation,
     openLoop,
+    visualMemory,
+    moodCollage,
+    randomObject,
   } satisfies CandorAdaptiveHome;
 }
 
@@ -187,32 +227,33 @@ function composeHomeCards(input: {
   seedKey: string;
 }) {
   const cards: CandorHomeCardSpec[] = [
-    { kind: "continue", size: "medium", priority: 100 },
-    { kind: "signal", size: "large", priority: 98 },
-    { kind: "align", size: "medium", priority: 92 },
-    { kind: "tonight", size: "small", priority: 88 },
-    { kind: "community", size: "medium", priority: 87 },
-    { kind: "reflection", size: "small", priority: 84 },
-    { kind: "input", size: "large", priority: 82 },
+    { kind: "continue", size: "medium", priority: 100, spanClass: "min-h-[120px]" },
+    { kind: "signal", size: "large", priority: 98, spanClass: "min-h-[280px]" },
+    { kind: "visual_memory", size: "tall", priority: 95, spanClass: "aspect-[3/4]" },
+    { kind: "align", size: "medium", priority: 92, spanClass: "min-h-[220px]" },
+    { kind: "tonight", size: "small", priority: 88, spanClass: "min-h-[140px]" },
+    { kind: "mood_collage", size: "wide", priority: 87, spanClass: "aspect-square" },
+    { kind: "reflection", size: "small", priority: 84, spanClass: "min-h-[100px]" },
   ];
 
   if (input.hasTopic) {
-    cards.push({ kind: "soundtrack", size: input.hour >= 20 || input.hour < 4 ? "medium" : "small", priority: 86 });
-    cards.push({ kind: "movie", size: "small", priority: 76 });
-    cards.push({ kind: "recommendation", size: "small", priority: 74 });
+    cards.push({ kind: "soundtrack", size: "medium", priority: 86, spanClass: "aspect-square" });
+    cards.push({ kind: "movie", size: "tall", priority: 76, spanClass: "aspect-[2/3]" });
+    cards.push({ kind: "recommendation", size: "small", priority: 74, spanClass: "min-h-[140px]" });
   } else {
-    cards.push({ kind: "memory", size: "small", priority: 75 });
-    cards.push({ kind: "thought", size: "small", priority: 72 });
+    cards.push({ kind: "memory", size: "small", priority: 75, spanClass: "min-h-[120px]" });
+    cards.push({ kind: "thought", size: "small", priority: 72, spanClass: "min-h-[120px]" });
+    cards.push({ kind: "random_object", size: "small", priority: 71, spanClass: "aspect-square" });
   }
 
   if (input.hasOpenLoop) {
-    cards.push({ kind: "open_loop", size: "small", priority: 90 });
+    cards.push({ kind: "open_loop", size: "small", priority: 90, spanClass: "min-h-[140px]" });
   } else {
-    cards.push({ kind: "thought", size: "small", priority: 70 });
+    cards.push({ kind: "thought", size: "small", priority: 70, spanClass: "min-h-[100px]" });
   }
 
   if ((input.memory?.turnCount ?? 0) >= 8) {
-    cards.push({ kind: "memory", size: "small", priority: 80 });
+    cards.push({ kind: "memory", size: "small", priority: 80, spanClass: "min-h-[100px]" });
   }
 
   return cards.sort((a, b) => {
@@ -290,19 +331,19 @@ function topTopicsFromMemory(memory: CandorMemory | null) {
 
 function fallbackSoundtrack(hour: number) {
   if (hour >= 22 || hour < 4) {
-    return { title: "Holocene", artist: "Bon Iver", note: "this fits the quieter part of the night." };
+    return { title: "Holocene", artist: "Bon Iver", note: "this fits the quieter part of the night.", coverUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80" };
   }
   if (hour < 12) {
-    return { title: "Bloom", artist: "The Paper Kites", note: "something gentle enough to start with." };
+    return { title: "Bloom", artist: "The Paper Kites", note: "something gentle enough to start with.", coverUrl: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?auto=format&fit=crop&q=80" };
   }
-  return { title: "Nude", artist: "Radiohead", note: "for the hours that feel suspended." };
+  return { title: "Nude", artist: "Radiohead", note: "for the hours that feel suspended.", coverUrl: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f9af?auto=format&fit=crop&q=80" };
 }
 
 function fallbackMovie(hour: number) {
   if (hour >= 22 || hour < 4) {
-    return { title: "Past Lives", note: "for the part of the night that keeps circling back.", context: "late-night recommendation" };
+    return { title: "Past Lives", note: "for the part of the night that keeps circling back.", context: "late-night recommendation", posterUrl: "https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?auto=format&fit=crop&q=80" };
   }
-  return { title: "Columbus", note: "quiet enough to let the details do the work.", context: "quiet recommendation" };
+  return { title: "Columbus", note: "quiet enough to let the details do the work.", context: "quiet recommendation", posterUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80" };
 }
 
 function sanitizeReflection(line: string) {

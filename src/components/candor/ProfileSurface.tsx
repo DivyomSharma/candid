@@ -30,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
+import { MasonryWall } from "@/components/layout/MasonryWall";
 import type { CandorProfilePresentation } from "@/lib/candor/profile";
 import type { CandorMemory, CandorBadge } from "@/lib/candor/types";
 
@@ -381,9 +382,9 @@ export function ProfileSurface({
         )}
 
         {!isProfileLocked && (<>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <MasonryWall>
           
-          <div className="space-y-6 flex flex-col">
+            {v4.currently && (v4.currently.building || v4.currently.watching || v4.currently.reading || v4.currently.listening || v4.currently.thinking) && (
             <Card className="surface border-border/30 bg-card/20 backdrop-blur-sm flex-1 flex flex-col justify-between">
               <CardHeader className="p-5 pb-2">
                 <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
@@ -450,6 +451,7 @@ export function ProfileSurface({
                 </div>
               </CardContent>
             </Card>
+            )}
 
             {v4.tonight && v4.tonight.length > 0 && (
               <Card className="surface border-border/30 bg-card/20 backdrop-blur-sm">
@@ -461,7 +463,7 @@ export function ProfileSurface({
                 </CardHeader>
                 <CardContent className="p-5 pt-2">
                   <div className="flex flex-wrap gap-2">
-                    {v4.tonight.map((mood) => (
+                    {v4.tonight.map((mood: string) => (
                       <motion.span
                         key={mood}
                         whileHover={{ scale: 1.05 }}
@@ -493,10 +495,6 @@ export function ProfileSurface({
               </Card>
             )}
 
-          </div>
-
-          <div className="space-y-6 flex flex-col">
-            
             {v4.shelf && v4.shelf.length > 0 && (
               <Card className="surface border-border/30 bg-card/20 backdrop-blur-sm flex-1 flex flex-col justify-between">
                 <CardHeader className="p-5 pb-2">
@@ -506,7 +504,7 @@ export function ProfileSurface({
                 </CardHeader>
                 <CardContent className="p-5 pt-2 flex-1 flex flex-col justify-center gap-3">
                   <div className="space-y-3.5">
-                    {v4.shelf.map((item) => (
+                    {v4.shelf.map((item: { key: string; value: string }) => (
                       <div key={item.key} className="p-3 rounded-2xl border border-border/30 bg-background/20 space-y-1 hover:border-accent/30 transition-colors">
                         <span className="text-[9px] uppercase tracking-widest text-foreground-secondary/55 font-light block">{item.key}</span>
                         <span className="text-sm font-light text-foreground flex items-center gap-1.5">
@@ -574,10 +572,6 @@ export function ProfileSurface({
               </Card>
             )}
 
-          </div>
-
-          <div className="space-y-6 flex flex-col">
-            
             {v4.smallThings && v4.smallThings.length > 0 && (
               <Card className="surface border-border/30 bg-card/20 backdrop-blur-sm">
                 <CardHeader className="p-5 pb-2">
@@ -587,7 +581,7 @@ export function ProfileSurface({
                 </CardHeader>
                 <CardContent className="p-5 pt-2">
                   <div className="flex flex-wrap gap-1.5">
-                    {v4.smallThings.map((thing) => (
+                    {v4.smallThings.map((thing: string) => (
                       <span
                         key={thing}
                         className="rounded-full border border-border/40 bg-background/25 px-2.5 py-1 text-xs font-light text-foreground-secondary"
@@ -645,9 +639,7 @@ export function ProfileSurface({
               </CardContent>
             </Card>
 
-          </div>
-
-        </div>
+        </MasonryWall>
 
         {publicMode && (
           <motion.div 
