@@ -320,6 +320,7 @@ export function CandorHome() {
                         signalAnswered,
                         primaryAlign,
                         adaptiveHome,
+                        memoryPreview,
                         reflection,
                         tonightItems,
                         soundtrackUrl,
@@ -431,6 +432,7 @@ function renderHomeCard(input: {
   signalAnswered: string | null;
   primaryAlign: AlignPreview | null;
   adaptiveHome: ReturnType<typeof buildAdaptiveHome>;
+  memoryPreview: CandorMemory | null;
   reflection: string;
   tonightItems: Array<{ icon: typeof Moon; label: string }>;
   soundtrackUrl: string;
@@ -448,6 +450,7 @@ function renderHomeCard(input: {
     signalAnswered,
     primaryAlign,
     adaptiveHome,
+    memoryPreview,
     tonightItems,
     router,
     fetchSignal,
@@ -582,11 +585,25 @@ function renderHomeCard(input: {
   }
 
   if (card.kind === "memory") {
-    return <MemoryCard observation={`${adaptiveHome.surprise.line}. ${adaptiveHome.surprise.detail}`} />;
+    const memoryItem = memoryPreview?.notes?.[Math.floor(Math.random() * (memoryPreview.notes.length || 1))] 
+      || memoryPreview?.softSpots?.[0] 
+      || `${adaptiveHome.surprise.line}. ${adaptiveHome.surprise.detail}`;
+    return <MemoryCard observation={memoryItem} />;
   }
 
-  if (card.kind === "thought" || card.kind === "recommendation") {
-    return <MemoryCard observation={`${adaptiveHome.surprise?.line || adaptiveHome.recommendation?.line}`} />;
+  if (card.kind === "thought") {
+    const thoughts = [
+      "i miss places more than people.", 
+      "some cities keep living inside you.", 
+      "i trust slow replies.",
+      "i still reread old chats."
+    ];
+    const randomThought = thoughts[Math.floor(Math.random() * thoughts.length)];
+    return <MemoryCard observation={`"${randomThought}"`} />;
+  }
+  
+  if (card.kind === "recommendation") {
+    return <MemoryCard observation={`${adaptiveHome.recommendation.line} ${adaptiveHome.recommendation.detail}`} />;
   }
 
   return <div className="hidden" />;
