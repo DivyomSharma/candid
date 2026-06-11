@@ -94,7 +94,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
         </button>
 
         {isLoading || !align ? (
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+          <Card className="glass-card shadow-2xl bg-card/45 backdrop-blur-3xl">
             <CardContent className="grid gap-4 p-5">
               <div className="h-24 rounded-2xl bg-foreground/10" />
               <div className="h-3 w-2/3 rounded-full bg-foreground/10" />
@@ -104,7 +104,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
         ) : (
           <>
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
-              <Card className={cn("surface overflow-hidden backdrop-blur-sm", profileAtmosphere(resonanceLabel(align.score)))}>
+              <Card className={cn("glass-card overflow-hidden backdrop-blur-3xl shadow-2xl", profileAtmosphere(resonanceLabel(align.score)))}>
                 <div className="h-32" style={{ background: align.profile.avatarTone }} />
                 <CardContent className="flex flex-col gap-6 p-5">
                   <div className="-mt-16 flex items-end justify-between gap-4">
@@ -136,7 +136,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
               </Card>
             </motion.div>
 
-            <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+            <Card className="glass-card shadow-2xl bg-card/45 backdrop-blur-3xl">
               <CardHeader className="p-5 pb-2">
                 <CardTitle className="text-base font-light tracking-wide">profile</CardTitle>
               </CardHeader>
@@ -162,17 +162,30 @@ export function CandorAlignProfile({ id }: { id: string }) {
               </CardContent>
             </Card>
 
-            <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
-              <CardContent className="grid gap-6 p-5 md:grid-cols-[1fr_1.15fr]">
+            <Card className="glass-card shadow-2xl bg-card/45 backdrop-blur-3xl">
+              <CardContent className="grid gap-6 p-5 md:grid-cols-[1.5fr_1fr]">
                 <div>
-                  <p className="text-sm font-light text-accent">story type</p>
-                  <p className="mt-3 text-xl font-light leading-8 break-words">{align.profile.storySignal}</p>
+                  <p className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">keeps returning to</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {["late trains", "coffee", "indie films", "rainy cities"].map((item) => (
+                      <span key={item} className="rounded-full border border-border/40 bg-background/25 px-3.5 py-1.5 text-sm font-light text-foreground-secondary">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="rounded-2xl border border-border/50 bg-background/35 p-5">
-                  <p className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary">in a moment</p>
-                  <h3 className="mt-3 text-xl font-light">{align.profile.situation.title}</h3>
-                  <p className="mt-3 text-sm font-light leading-6 text-foreground-secondary break-words">{align.profile.situation.setup}</p>
-                  <p className="mt-4 text-base font-light leading-7 break-words">{align.profile.situation.response}</p>
+                <div className="rounded-2xl border border-border/50 bg-background/35 p-5 flex flex-col justify-center">
+                  <p className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">shared shelf</p>
+                  <div className="mt-4 space-y-3">
+                     <div className="flex items-center gap-3">
+                       <div className="h-4 w-4 rounded-full bg-accent/20 flex items-center justify-center"><span className="h-1.5 w-1.5 bg-accent rounded-full" /></div>
+                       <span className="text-sm font-light text-foreground">Dune: Part Two</span>
+                     </div>
+                     <div className="flex items-center gap-3">
+                       <div className="h-4 w-4 rounded-full bg-accent/20 flex items-center justify-center"><span className="h-1.5 w-1.5 bg-accent rounded-full" /></div>
+                       <span className="text-sm font-light text-foreground">Blonde - Frank Ocean</span>
+                     </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

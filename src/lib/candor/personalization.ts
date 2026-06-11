@@ -135,13 +135,13 @@ const TOPIC_MOVIES: Record<string, { title: string; note: string; context: strin
 };
 
 const TOPIC_RECOMMENDATIONS: Record<string, { label: string; line: string; detail: string }> = {
-  movies: { label: "for your wall", line: "more film cards should show up here.", detail: "candor is starting to notice what lingers with you." },
-  music: { label: "for your wall", line: "soundtrack cards deserve more room tonight.", detail: "music looks like a primary language, not a side detail." },
-  design: { label: "for your wall", line: "design details should interrupt the wall more often.", detail: "the app can lean into precision without becoming clinical." },
-  startups: { label: "for your wall", line: "builder thoughts and late-night focus belong here.", detail: "ambition reads as part of your atmosphere now." },
-  psychology: { label: "for your wall", line: "reflection cards should get deeper over time.", detail: "you keep returning to motives, subtext, and patterns." },
-  philosophy: { label: "for your wall", line: "fewer generic prompts, more questions with weight.", detail: "you seem to prefer ideas that stay open after answering." },
-  books: { label: "for your wall", line: "book thoughts should sit beside reflections more often.", detail: "reading seems closer to identity than simple taste." },
+  movies: { label: "late trains & films", line: "indie films seem to shape your rhythm lately.", detail: "they stay with you longer than the plot." },
+  music: { label: "heavy rotation", line: "soundtracks that feel like walking alone at night.", detail: "music isn't background for you, it's architecture." },
+  design: { label: "quiet spaces", line: "you notice the negative space in conversations.", detail: "you prefer things to feel intentional, not loud." },
+  startups: { label: "late night coffee", line: "the builder energy stays on past midnight.", detail: "you respect ambition when it has a quiet focus." },
+  psychology: { label: "unspoken words", line: "you tend to read the subtext first.", detail: "motives matter to you more than what people say." },
+  philosophy: { label: "open loops", line: "some thoughts you don't really want to close.", detail: "you're okay with ambiguity if it feels true." },
+  books: { label: "margin notes", line: "dog-eared pages and sentences that hit too close.", detail: "you read to find a name for the feeling." },
 };
 
 export function buildAdaptiveHome(memory: CandorMemory | null, seedInput?: string) {

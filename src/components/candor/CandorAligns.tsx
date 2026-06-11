@@ -109,7 +109,7 @@ export function CandorAligns() {
         </motion.div>
 
         {isSearching ? (
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+          <Card className="glass-card shadow-2xl bg-card/45 backdrop-blur-3xl">
             <CardContent className="flex flex-col gap-5 p-5">
               <div className="flex items-center gap-2 text-lg font-light leading-8 text-foreground-secondary">
                 <span>searching for a real align</span>
@@ -127,7 +127,7 @@ export function CandorAligns() {
         ) : null}
 
         {!isSearching && !ready ? (
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+          <Card className="glass-card shadow-2xl bg-card/45 backdrop-blur-3xl">
             <CardContent className="flex flex-col gap-5 p-5">
               <p className="text-lg font-light leading-8 text-foreground-secondary">
                 not yet. a real align should come from understanding, not a quick guess.
@@ -140,7 +140,7 @@ export function CandorAligns() {
         ) : null}
 
         {!isSearching && ready && data?.aligns.length === 0 ? (
-          <Card className="surface border-border/50 bg-card/45 backdrop-blur-sm">
+          <Card className="glass-card shadow-2xl bg-card/45 backdrop-blur-3xl">
             <CardContent className="p-5 text-lg font-light leading-8 text-foreground-secondary">
               candor understands you enough. it is waiting for someone else with enough signal too.
             </CardContent>
@@ -159,7 +159,7 @@ export function CandorAligns() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03, duration: 0.45 }}
                 >
-                  <Card className={cn("surface relative h-full overflow-hidden border backdrop-blur-sm transition-colors", atmosphere.card)}>
+                  <Card className={cn("glass-card relative h-full overflow-hidden backdrop-blur-3xl transition-colors shadow-2xl", atmosphere.card)}>
                     <div className={cn("pointer-events-none absolute inset-0", atmosphere.light)} />
                     <CardContent className="relative flex h-full flex-col gap-5 p-5">
                       <button

@@ -73,7 +73,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body>
+        <body className="radial-lighting">
+          <div className="film-grain" />
           <Providers>{children}</Providers>
         </body>
       </html>

@@ -23,7 +23,7 @@ function MobileThemeIsland() {
   return (
     <div className="relative flex flex-col items-center">
       {isOpen && (
-        <div className="surface soft-shadow absolute bottom-12 flex flex-col items-center gap-2 rounded-full border border-border/50 px-2 py-3 backdrop-blur-md">
+        <div className="glass-card shadow-2xl absolute bottom-12 flex flex-col items-center gap-2 rounded-full px-2 py-3 backdrop-blur-3xl">
           {accents.map((a) => (
             <button
               key={a.name}
@@ -54,7 +54,7 @@ function MobileThemeIsland() {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="soft-shadow flex h-10 w-10 items-center justify-center rounded-full border border-border/50 bg-background/55 text-foreground-secondary backdrop-blur-md transition-colors active:scale-95"
+        className="shadow-2xl flex h-10 w-10 items-center justify-center rounded-full glass-card text-foreground-secondary backdrop-blur-3xl transition-colors active:scale-95"
         aria-expanded={isOpen}
         aria-label="Theme options"
       >
@@ -68,7 +68,7 @@ function DesktopThemeIsland() {
   const { mode, setMode, accent, setAccent } = useTheme();
 
   return (
-    <div className="group relative hidden h-10 w-10 cursor-pointer items-center overflow-hidden rounded-full border border-border/50 bg-background/50 backdrop-blur-md transition-all duration-500 ease-out hover:w-[180px] sm:flex soft-shadow">
+    <div className="group relative hidden h-10 w-10 cursor-pointer items-center overflow-hidden rounded-full glass-card backdrop-blur-3xl transition-all duration-500 ease-out hover:w-[180px] sm:flex shadow-2xl">
       <button
         type="button"
         onClick={() => setMode(mode === "dark" ? "light" : "dark")}
@@ -166,7 +166,7 @@ export function BottomNav() {
     <>
       <div className="fixed inset-x-0 bottom-0 z-[90] h-28 pointer-events-none bg-gradient-to-t from-background via-background/95 to-transparent" aria-hidden="true" />
       <nav className="fixed inset-x-0 bottom-4 z-[100] flex justify-center gap-2 px-3 pointer-events-none sm:bottom-5 sm:gap-3 sm:px-6">
-        <div className="pointer-events-auto surface soft-shadow flex max-w-[calc(100vw-4.5rem)] items-center gap-0.5 rounded-full border border-border/50 px-1.5 py-1.5 backdrop-blur-md sm:max-w-none sm:gap-1 sm:px-2 sm:py-2">
+        <div className="pointer-events-auto glass-card shadow-2xl flex max-w-[calc(100vw-4.5rem)] items-center gap-0.5 rounded-full px-1.5 py-1.5 backdrop-blur-3xl sm:max-w-none sm:gap-1 sm:px-2 sm:py-2">
         <Link
           href={`/candor/session/${CANDOR_THREAD_ID}`}
           className={cn(

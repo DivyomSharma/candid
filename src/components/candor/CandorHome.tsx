@@ -291,16 +291,16 @@ export function CandorHome() {
         
         <section className="relative z-10 mx-auto w-full max-w-[1400px] flex flex-col items-center">
           {!adaptiveHome.hasSufficientData ? (
-            <div className="mt-20">
+            <div className="mt-20 candor-wall-card md:col-span-12">
               <TruthCard />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 w-full auto-rows-min">
+            <div className="candor-desktop-wall w-full auto-rows-min">
               {/* ROW 1: Hero & Tonight */}
-              <div className="md:col-span-8 flex h-full">
+              <div className="candor-wall-card md:col-span-8 flex h-full">
                 <HeroCard question={adaptiveHome.heroPrompt} />
               </div>
-              <div className="md:col-span-4 flex h-full pt-16 md:pt-32">
+              <div className="candor-wall-card md:col-span-4 flex h-full pt-16 md:pt-32">
                 <CommunityAtmosphereCard 
                   title="Tonight on Candor"
                   items={tonightItems.map(t => ({ icon: t.icon, label: t.label }))}
@@ -309,37 +309,37 @@ export function CandorHome() {
               </div>
 
               {/* ROW 2: Continue, Align, Memory */}
-              <div className="md:col-span-4 flex">
+              <div className="candor-wall-card md:col-span-4 flex">
                 <div className="w-full">{renderHomeCard({ card: { kind: "continue", size: "medium", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
               </div>
-              <div className="md:col-span-4 flex">
+              <div className="candor-wall-card md:col-span-4 flex">
                 <div className="w-full">{renderHomeCard({ card: { kind: "align", size: "medium", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
               </div>
-              <div className="md:col-span-4 flex">
+              <div className="candor-wall-card md:col-span-4 flex">
                 <div className="w-full">{renderHomeCard({ card: { kind: "memory", size: "small", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
               </div>
 
               {/* ROW 3: Signal, Soundtrack */}
-              <div className="md:col-span-6 flex">
+              <div className="candor-wall-card md:col-span-6 flex">
                 <div className="w-full">{renderHomeCard({ card: { kind: "signal", size: "large", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
               </div>
-              <div className="md:col-span-6 flex">
+              <div className="candor-wall-card md:col-span-6 flex">
                 <div className="w-full">{renderHomeCard({ card: { kind: "soundtrack", size: "medium", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
               </div>
 
               {/* ROW 4: Movie, Mood Collage */}
-              <div className="md:col-span-5 flex">
+              <div className="candor-wall-card md:col-span-5 flex">
                 <div className="w-full">{renderHomeCard({ card: { kind: "movie", size: "tall", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
               </div>
-              <div className="md:col-span-7 flex">
+              <div className="candor-wall-card md:col-span-7 flex">
                 <div className="w-full">{renderHomeCard({ card: { kind: "mood_collage", size: "wide", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
               </div>
 
               {/* ROW 5: Reflection, Thought */}
-              <div className="md:col-span-6 flex">
+              <div className="candor-wall-card md:col-span-6 flex">
                 <div className="w-full">{renderHomeCard({ card: { kind: "reflection", size: "small", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
               </div>
-              <div className="md:col-span-6 flex">
+              <div className="candor-wall-card md:col-span-6 flex">
                 <div className="w-full">{renderHomeCard({ card: { kind: "thought", size: "small", priority: 1 }, isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt })}</div>
               </div>
             </div>
@@ -364,7 +364,7 @@ export function CandorHome() {
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setIsInputFocused(false)}
                 placeholder={isInputFocused ? "" : placeholders[placeholderIndex]}
-                className="h-16 w-full origin-center rounded-full border border-border/60 bg-background/95 backdrop-blur-2xl pl-8 pr-[140px] text-lg font-light text-foreground outline-none transition-all placeholder:text-foreground-secondary/50 focus:border-accent/50 focus:bg-background focus:shadow-[0_0_30px_hsl(var(--accent)/0.15)] shadow-2xl"
+                className="h-16 w-full origin-center rounded-full glass-card border border-border/60 bg-background/60 backdrop-blur-3xl pl-8 pr-[60px] text-lg font-light text-foreground outline-none transition-all placeholder:text-foreground-secondary/50 focus:border-accent/50 focus:bg-background/80 focus:shadow-[0_0_30px_hsl(var(--accent)/0.15)] shadow-2xl"
               />
 
               <div className="absolute right-2 flex items-center">
@@ -372,15 +372,9 @@ export function CandorHome() {
                   <motion.button
                     type="submit"
                     disabled={!message.trim() || isStarting}
-                    animate={{
-                      width: message.length > 0 || isStarting ? 52 : "auto",
-                      paddingLeft: message.length > 0 || isStarting ? 0 : 24,
-                      paddingRight: message.length > 0 || isStarting ? 0 : 24,
-                    }}
+                    className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-accent text-sm font-medium text-primary-foreground transition-all hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
                     whileHover={!message.trim() || isStarting ? {} : { scale: 1.05 }}
                     whileTap={!message.trim() || isStarting ? {} : { scale: 0.95 }}
-                    transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
-                    className="flex h-12 items-center justify-center overflow-hidden rounded-full bg-accent text-sm font-medium text-primary-foreground transition-all hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <AnimatePresence mode="wait">
                       {isStarting ? (
@@ -390,13 +384,12 @@ export function CandorHome() {
                           <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, delay: 0.4 }} className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
                         </motion.div>
                       ) : message.length > 0 ? (
-                        <motion.div key="arrow" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <motion.div key="arrow" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
                           <ArrowRight className="h-5 w-5" />
                         </motion.div>
                       ) : (
-                        <motion.div key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center whitespace-nowrap">
-                          {preview ? "keep it going" : "open the thread"}
-                          <ArrowRight className="ml-2 h-4 w-4" />
+                        <motion.div key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center">
+                          <ArrowRight className="h-5 w-5" />
                         </motion.div>
                       )}
                     </AnimatePresence>
