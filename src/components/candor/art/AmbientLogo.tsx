@@ -8,33 +8,20 @@ interface AmbientLogoProps {
   className?: string;
 }
 
-const POSITIONS = [
-  "top-[-20%] right-[-10%]", // Top Right
-  "bottom-[-20%] right-[-10%]", // Bottom Right
-  "top-[-20%] left-[-10%]", // Top Left
-  "bottom-[-20%] left-[-10%]", // Bottom Left
-];
-
 export function AmbientLogo({ className }: AmbientLogoProps) {
   const [mounted, setMounted] = useState(false);
   
-  // Randomly choose a position on mount so it's consistent during a session on a single page,
-  // but varies across different page mounts.
-  const randomPosition = useMemo(() => {
-    return POSITIONS[Math.floor(Math.random() * POSITIONS.length)];
-  }, []);
-
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) return null; // Avoid hydration mismatch on random classes
+  if (!mounted) return null;
 
   return (
     <motion.div
       className={cn(
         "fixed pointer-events-none select-none z-0 mix-blend-plus-lighter",
-        randomPosition,
+        "bottom-[-10%] right-[-10%]",
         className
       )}
       initial={{ opacity: 0.03, x: 0, y: 0, rotate: 0 }}
@@ -57,7 +44,7 @@ export function AmbientLogo({ className }: AmbientLogoProps) {
         viewBox="0 0 100 100"
         fill="none"
         stroke="currentColor"
-        className="text-accent stroke-[1.25px] md:stroke-[1px] w-[1400px] h-[1400px] min-w-[900px] max-w-[2200px]"
+        className="text-accent stroke-[1.25px] md:stroke-[1px] w-[700px] h-[700px] min-w-[500px] max-w-[1000px]"
         strokeLinecap="round"
         strokeLinejoin="round"
         xmlns="http://www.w3.org/2000/svg"

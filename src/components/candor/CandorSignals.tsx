@@ -11,7 +11,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CANDOR_THREAD_ID, candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorSignal } from "@/lib/candor/scenarios";
 import { CompassArt, PaperAirplaneArt } from "@/components/candor/art";
-import { AmbientLogo } from "@/components/candor/art/AmbientLogo";
 
 export function CandorSignals() {
   const { isSignedIn, user } = useAuth();
@@ -126,7 +125,9 @@ export function CandorSignals() {
         </div>
         
         {/* Ambient Line Art Background */}
-        <AmbientLogo />
+        <div className="fixed bottom-[-10%] right-[-10%] pointer-events-none z-0">
+          <CompassArt state={1} width={700} height={700} className="opacity-[0.03]" />
+        </div>
 
         <section className="relative z-10 mx-auto flex max-w-[1400px] flex-col gap-8">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
