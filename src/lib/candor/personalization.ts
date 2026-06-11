@@ -16,7 +16,8 @@ export type CandorHomeCardKind =
   | "input"
   | "visual_memory"
   | "mood_collage"
-  | "random_object";
+  | "random_object"
+  | "art";
 
 export type CandorHomeCardSpec = {
   kind: CandorHomeCardKind;
