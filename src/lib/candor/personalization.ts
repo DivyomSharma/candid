@@ -17,7 +17,9 @@ export type CandorHomeCardKind =
   | "visual_memory"
   | "mood_collage"
   | "random_object"
-  | "art";
+  | "art"
+  | "environment"
+  | "reading";
 
 export type CandorHomeCardSpec = {
   kind: CandorHomeCardKind;
@@ -74,6 +76,18 @@ export type CandorAdaptiveHome = {
     type: "polaroid" | "cassette" | "ticket";
     imageUrl: string;
     text: string;
+  };
+  environment: {
+    location: string;
+    time: string;
+    condition: string;
+    imageUrl: string;
+  };
+  reading: {
+    title: string;
+    author: string;
+    quote: string;
+    coverUrl: string;
   };
 };
 
@@ -183,6 +197,18 @@ export function buildAdaptiveHome(memory: CandorMemory | null, seedInput?: strin
     imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80", // circuit/tech/abstract
     text: "late night building",
   };
+  const environment = {
+    location: "Raining in Seattle",
+    time: "11:42 PM",
+    condition: "rain",
+    imageUrl: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&q=80", // moody rain window
+  };
+  const reading = {
+    title: "The Creative Act",
+    author: "Rick Rubin",
+    quote: "The object isn't to make art, it's to be in that wonderful state which makes art inevitable.",
+    coverUrl: "https://covers.openlibrary.org/b/id/13214589-L.jpg", // The Creative Act cover
+  };
 
   const seedKey = `${seedInput ?? ""}|${primaryTopic}|${secondaryTopic}|${hour}|${memory?.turnCount ?? 0}`;
   const cards = composeHomeCards({
@@ -208,6 +234,8 @@ export function buildAdaptiveHome(memory: CandorMemory | null, seedInput?: strin
     visualMemory,
     moodCollage,
     randomObject,
+    environment,
+    reading,
   } satisfies CandorAdaptiveHome;
 }
 
@@ -237,6 +265,10 @@ function composeHomeCards(input: {
     cards.push({ kind: "thought", size: "small", priority: 72, spanClass: "min-h-[120px]" });
     cards.push({ kind: "random_object", size: "small", priority: 71, spanClass: "aspect-square" });
   }
+
+  // Add the new cards into the flow
+  cards.push({ kind: "environment", size: "medium", priority: 85, spanClass: "min-h-[240px]" });
+  cards.push({ kind: "reading", size: "large", priority: 82, spanClass: "min-h-[280px]" });
 
   if (input.hasOpenLoop) {
     cards.push({ kind: "open_loop", size: "small", priority: 90, spanClass: "min-h-[140px]" });

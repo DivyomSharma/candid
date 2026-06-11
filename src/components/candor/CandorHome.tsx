@@ -26,8 +26,10 @@ import { VisualMemoryCard } from "@/components/candor/cards/VisualMemoryCard";
 import { MoodCollageCard } from "@/components/candor/cards/MoodCollageCard";
 import { RandomObjectCard } from "@/components/candor/cards/RandomObjectCard";
 import { TruthCard } from "@/components/candor/cards/TruthCard";
+import { EnvironmentCard } from "@/components/candor/cards/EnvironmentCard";
+import { ReadingCard } from "@/components/candor/cards/ReadingCard";
 import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
-import { MoonArt, ProjectorArt, CoffeeArt, PlantArt, VinylArt } from "@/components/candor/art";
+import { MoonArt, ProjectorArt, CoffeeArt, PlantArt, VinylArt, CloudArt, BookOpenArt } from "@/components/candor/art";
 import { Card } from "@/components/ui/card";
 
 type PreviewMessage = { role: "user" | "ai"; content: string };
@@ -481,6 +483,8 @@ function renderHomeCard(input: {
         {artType === "projector" && <ProjectorArt state={1} width={110} height={110} />}
         {artType === "vinyl" && <VinylArt state={1} width={110} height={110} />}
         {artType === "plant" && <PlantArt state={1} width={100} height={100} />}
+        {artType === "cloud" && <CloudArt state={1} width={100} height={100} />}
+        {artType === "book" && <BookOpenArt state={1} width={100} height={100} />}
       </Card>
     );
   }
@@ -598,6 +602,30 @@ function renderHomeCard(input: {
         type={adaptiveHome.randomObject.type}
         imageUrl={adaptiveHome.randomObject.imageUrl}
         text={adaptiveHome.randomObject.text}
+      />
+    );
+  }
+
+  if (card.kind === "environment") {
+    return (
+      <EnvironmentCard 
+        location={adaptiveHome.environment.location}
+        time={adaptiveHome.environment.time}
+        condition={adaptiveHome.environment.condition}
+        imageUrl={adaptiveHome.environment.imageUrl}
+        onClick={() => selectPrompt(`let's talk about the weather: "${adaptiveHome.environment.location}"`)}
+      />
+    );
+  }
+
+  if (card.kind === "reading") {
+    return (
+      <ReadingCard 
+        title={adaptiveHome.reading.title}
+        author={adaptiveHome.reading.author}
+        quote={adaptiveHome.reading.quote}
+        coverUrl={adaptiveHome.reading.coverUrl}
+        onClick={() => selectPrompt(`let's talk about what i'm reading: "${adaptiveHome.reading.title}"`)}
       />
     );
   }

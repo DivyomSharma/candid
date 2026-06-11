@@ -1,6 +1,8 @@
 "use client";
 
 import { LineArt, LineArtPath, type LineArtProps } from "./LineArt";
+export { CloudArt } from "./CloudArt";
+export { BookArt as BookOpenArt } from "./BookArt";
 
 export function MoonArt(props: Omit<LineArtProps, "children">) {
   return (
