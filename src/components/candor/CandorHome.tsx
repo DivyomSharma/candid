@@ -477,7 +477,7 @@ function renderHomeCard(input: {
   reflection: string;
   tonightItems: Array<{ icon: typeof Moon; label: string }>;
   soundtrackUrl: string;
-  router: ReturnType<typeof useRouter>;
+  router: ReturnType<typeof useTransitionRouter>;
   fetchSignal: (excludeId?: string) => Promise<void>;
   handleSignalAnswer: (option: string) => Promise<void>;
   selectPrompt: (content: string) => void;
@@ -508,7 +508,7 @@ function renderHomeCard(input: {
         {artType === "vinyl" && <VinylArt state={1} width={110} height={110} />}
         {artType === "plant" && <PlantArt state={1} width={100} height={100} />}
         {artType === "cloud" && <CloudArt state={1} width={100} height={100} />}
-        {artType === "book" && <BookOpenArt state={1} width={100} height={100} strokeWidth={2} />}
+        {artType === "book" && <BookOpenArt state={1} width={100} height={100} />}
       </Card>
     );
   }
