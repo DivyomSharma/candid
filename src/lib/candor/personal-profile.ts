@@ -113,7 +113,7 @@ export function normalizeCandorPersonalProfile(value: unknown): CandorPersonalPr
     lat: typeof row.lat === "number" ? row.lat : null,
     lon: typeof row.lon === "number" ? row.lon : null,
     timezone: cleanText(readString(row.timezone), 56),
-    coverUrl: cleanText(readString(row.cover_url, row.coverUrl), 500),
+    coverUrl: readString(row.cover_url, row.coverUrl)?.trim() || null,
     identityChips: Array.isArray(row.identity_chips) ? row.identity_chips : Array.isArray(row.identityChips) ? row.identityChips : [],
     candorBadge: row.candor_badge ?? row.candorBadge ?? null,
     objects: Array.isArray(row.objects) ? row.objects : [],
