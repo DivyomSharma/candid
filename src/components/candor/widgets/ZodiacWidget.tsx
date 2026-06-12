@@ -5,19 +5,19 @@ import { Sparkles, Moon, Sun } from "lucide-react";
 import { useMemo } from "react";
 
 const ZODIAC_SIGNS = [
-  { name: "Capricorn", start: [1, 1], end: [1, 19], icon: "♑", element: "Earth" },
-  { name: "Aquarius", start: [1, 20], end: [2, 18], icon: "♒", element: "Air" },
-  { name: "Pisces", start: [2, 19], end: [3, 20], icon: "♓", element: "Water" },
-  { name: "Aries", start: [3, 21], end: [4, 19], icon: "♈", element: "Fire" },
-  { name: "Taurus", start: [4, 20], end: [5, 20], icon: "♉", element: "Earth" },
-  { name: "Gemini", start: [5, 21], end: [6, 20], icon: "♊", element: "Air" },
-  { name: "Cancer", start: [6, 21], end: [7, 22], icon: "♋", element: "Water" },
-  { name: "Leo", start: [7, 23], end: [8, 22], icon: "♌", element: "Fire" },
-  { name: "Virgo", start: [8, 23], end: [9, 22], icon: "♍", element: "Earth" },
-  { name: "Libra", start: [9, 23], end: [10, 22], icon: "♎", element: "Air" },
-  { name: "Scorpio", start: [10, 23], end: [11, 21], icon: "♏", element: "Water" },
-  { name: "Sagittarius", start: [11, 22], end: [12, 21], icon: "♐", element: "Fire" },
-  { name: "Capricorn", start: [12, 22], end: [12, 31], icon: "♑", element: "Earth" }
+  { name: "Capricorn", start: [1, 1], end: [1, 19], icon: "♑\uFE0E", element: "Earth" },
+  { name: "Aquarius", start: [1, 20], end: [2, 18], icon: "♒\uFE0E", element: "Air" },
+  { name: "Pisces", start: [2, 19], end: [3, 20], icon: "♓\uFE0E", element: "Water" },
+  { name: "Aries", start: [3, 21], end: [4, 19], icon: "♈\uFE0E", element: "Fire" },
+  { name: "Taurus", start: [4, 20], end: [5, 20], icon: "♉\uFE0E", element: "Earth" },
+  { name: "Gemini", start: [5, 21], end: [6, 20], icon: "♊\uFE0E", element: "Air" },
+  { name: "Cancer", start: [6, 21], end: [7, 22], icon: "♋\uFE0E", element: "Water" },
+  { name: "Leo", start: [7, 23], end: [8, 22], icon: "♌\uFE0E", element: "Fire" },
+  { name: "Virgo", start: [8, 23], end: [9, 22], icon: "♍\uFE0E", element: "Earth" },
+  { name: "Libra", start: [9, 23], end: [10, 22], icon: "♎\uFE0E", element: "Air" },
+  { name: "Scorpio", start: [10, 23], end: [11, 21], icon: "♏\uFE0E", element: "Water" },
+  { name: "Sagittarius", start: [11, 22], end: [12, 21], icon: "♐\uFE0E", element: "Fire" },
+  { name: "Capricorn", start: [12, 22], end: [12, 31], icon: "♑\uFE0E", element: "Earth" }
 ];
 
 function getZodiacSign(dob: string) {
@@ -61,7 +61,7 @@ export function ZodiacWidget({ dob }: { dob: string | null }) {
             </span>
           </div>
         </div>
-        <div className="text-4xl opacity-80 mix-blend-luminosity">
+        <div className="text-4xl opacity-80 mix-blend-luminosity text-foreground" style={{ fontFamily: '"Apple Symbols", "Segoe UI Symbol", sans-serif' }}>
           {sign.icon}
         </div>
       </CardContent>
