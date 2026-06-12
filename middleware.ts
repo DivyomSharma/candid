@@ -32,7 +32,19 @@ async function refreshSupabaseSession(request: NextRequest) {
   return response;
 }
 
-export default clerkMiddleware(async (_auth, request) => {
+export default clerkMiddleware(async (auth, request) => {
+  const { userId } = await auth();
+  const url = request.nextUrl;
+  
+  // Protect /candor routes (require onboarding)
+  if (userId && url.pathname.startsWith('/candor') && url.pathname !== '/candor/onboarding' && url.pathname !== '/candor/login') {
+    const hasOnboarded = request.cookies.get('candor_onboarded');
+    if (!hasOnboarded) {
+      // User is logged in but hasn't completed onboarding, redirect them
+      return NextResponse.redirect(new URL('/candor/onboarding', request.url));
+    }
+  }
+  
   return refreshSupabaseSession(request);
 });
 
