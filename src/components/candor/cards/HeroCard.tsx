@@ -15,7 +15,7 @@ export function HeroCard({ question, subtext = "quiet. unfinished. cinematic.", 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className={cn(
-        "relative flex flex-col items-start justify-center pt-24 pb-8 md:pt-32 md:pb-12 w-full",
+        "relative flex flex-col items-start justify-center pt-16 pb-4 md:pt-20 md:pb-6 w-full",
         className
       )}
     >
@@ -34,7 +34,7 @@ export function HeroCard({ question, subtext = "quiet. unfinished. cinematic.", 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 1 }}
-          className="relative z-10 mt-12 text-lg md:text-xl font-light text-foreground-secondary/70 tracking-wide"
+          className="relative z-10 mt-6 text-lg md:text-xl font-light text-foreground-secondary/70 tracking-wide"
         >
           {subtext}
         </motion.p>
