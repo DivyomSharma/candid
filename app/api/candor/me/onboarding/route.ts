@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         
       if (createError || !newUser) {
         console.error("Failed to lazy-create internal user:", createError);
-        return NextResponse.json({ error: "Failed to create internal user", details: createError }, { status: 500 });
+        return NextResponse.json({ error: "Failed to create internal user" }, { status: 500 });
       }
       internalUserId = newUser.id;
     } else {
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Supabase error saving onboarding:", error);
-      return NextResponse.json({ error: "Failed to save profile data", details: error }, { status: 500 });
+      return NextResponse.json({ error: "Failed to save profile data" }, { status: 500 });
     }
 
     // Set the completion cookie so middleware doesn't intercept anymore
@@ -70,7 +70,6 @@ export async function POST(req: Request) {
     return response;
   } catch (err: unknown) {
     console.error("Onboarding API error:", err);
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: "Internal server error", message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
