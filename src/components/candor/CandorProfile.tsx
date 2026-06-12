@@ -64,7 +64,7 @@ export function CandorProfile() {
 
   if (isLoaded && !isSignedIn) {
     return (
-      <main className="gradient-bg grain relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+      <main className="gradient-bg grain relative flex min-h-dvh items-center justify-center overflow-hidden px-6">
         <AmbientGlow />
         <div className="relative z-10 flex max-w-[420px] flex-col items-center gap-6 text-center">
           <h1 className="text-3xl font-light">what candor notices about you</h1>
@@ -85,7 +85,7 @@ export function CandorProfile() {
   }
 
   return (
-    <div className="gradient-bg grain relative min-h-screen overflow-x-hidden pb-40">
+    <div className="gradient-bg grain relative min-h-dvh overflow-x-hidden pb-40">
       <ProfileSurface
         profile={profile}
         heading="you, in context"

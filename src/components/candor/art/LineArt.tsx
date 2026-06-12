@@ -12,6 +12,7 @@ export interface LineArtProps {
   width?: number;
   height?: number;
   viewBox?: string;
+  strokeWidth?: number;
 }
 
 /**
@@ -28,6 +29,7 @@ export function LineArt({
   width = 120,
   height = 120,
   viewBox = "0 0 120 120",
+  strokeWidth = 1.5,
 }: LineArtProps) {
   return (
     <motion.div
@@ -46,7 +48,7 @@ export function LineArt({
         viewBox={viewBox}
         fill="none"
         stroke="currentColor"
-        strokeWidth={1.5}
+        strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
         xmlns="http://www.w3.org/2000/svg"

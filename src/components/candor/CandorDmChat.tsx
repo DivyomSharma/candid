@@ -171,7 +171,7 @@ export function CandorDmChat({ id }: { id: string }) {
 
   if (isLoaded && !isSignedIn) {
     return (
-      <main className="gradient-bg grain relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+      <main className="gradient-bg grain relative flex min-h-dvh items-center justify-center overflow-hidden px-6">
         <AmbientGlow />
         <div className="relative z-10 mx-auto flex max-w-[420px] flex-col items-center gap-6 text-center">
           <h1 className="text-3xl font-light">dm opens after sign in</h1>
@@ -184,7 +184,7 @@ export function CandorDmChat({ id }: { id: string }) {
   }
 
   return (
-    <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-48 pt-16">
+    <main className="gradient-bg grain relative min-h-dvh overflow-x-hidden px-6 pb-48 pt-16">
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[600px] flex-col gap-8">
         <div className="sticky top-0 z-20 -mx-6 flex items-center justify-between bg-background/45 px-6 py-3 backdrop-blur-md">

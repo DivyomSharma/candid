@@ -604,6 +604,12 @@
     border: 1px solid rgba(0, 0, 0, 0.05);
   }
 
+  @layer components {
+    .glass-panel {
+      @apply bg-card/30 backdrop-blur-3xl border border-border/40 shadow-xl;
+    }
+  }
+
   .grain {
     /* grain removed globally for smooth silky theme */
   }

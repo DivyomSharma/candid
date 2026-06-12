@@ -13,7 +13,7 @@ export default function TrustPageShell({
   children: ReactNode;
 }) {
   return (
-    <main className="gradient-bg grain relative isolate min-h-screen overflow-hidden">
+    <main className="gradient-bg grain relative isolate min-h-dvh overflow-hidden">
       <div className="relative z-10">
         <section className="mx-auto max-w-4xl px-6 pb-24 pt-28 sm:px-8 md:px-10">
           <div className="rounded-[2rem] border border-border/60 bg-[hsl(var(--surface)/0.74)] px-6 py-10 shadow-[0_24px_80px_-32px_hsl(var(--foreground)/0.22)] backdrop-blur-xl sm:px-10 sm:py-14">

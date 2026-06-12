@@ -80,7 +80,7 @@ export function CandorAligns() {
 
   if (isLoaded && !isSignedIn) {
     return (
-      <main className="gradient-bg grain relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+      <main className="gradient-bg grain relative flex min-h-dvh items-center justify-center overflow-hidden px-6">
         <AmbientGlow />
         <div className="relative z-10 flex max-w-[420px] flex-col items-center gap-6 text-center">
           <h1 className="text-3xl font-light">your aligns come later</h1>
@@ -99,7 +99,7 @@ export function CandorAligns() {
   const ready = data?.ready;
 
   return (
-    <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-40 pt-20">
+    <main className="gradient-bg grain relative min-h-dvh overflow-x-hidden px-6 pb-40 pt-20">
       <AmbientGlow />
       
       {/* Ambient Line Art Background */}

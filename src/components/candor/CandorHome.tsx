@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Moon, Film, Laptop, Music, Cloud, Home } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useTransitionRouter } from "next-view-transitions";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +12,7 @@ import { buildAdaptiveHome, type CandorHomeCardSpec } from "@/lib/candor/persona
 import { CANDOR_THREAD_ID, candorThreadStorageKey } from "@/lib/candor/thread";
 import type { CandorSignal } from "@/lib/candor/scenarios";
 import type { CandorMemory } from "@/lib/candor/types";
+import { useVisualViewport } from "@/hooks/use-visual-viewport";
 
 // New Layout & Cards
 import { HeroCard } from "./cards/HeroCard";
@@ -20,16 +22,27 @@ import { AlignCard } from "./cards/AlignCard";
 import { MemoryCard } from "@/components/candor/cards/MemoryCard";
 import { OpenLoopCard } from "@/components/candor/cards/OpenLoopCard";
 import { CommunityAtmosphereCard } from "@/components/candor/cards/CommunityAtmosphereCard";
-import { SoundtrackCard } from "@/components/candor/cards/SoundtrackCard";
-import { MovieCard } from "@/components/candor/cards/MovieCard";
-import { VisualMemoryCard } from "@/components/candor/cards/VisualMemoryCard";
-import { MoodCollageCard } from "@/components/candor/cards/MoodCollageCard";
-import { RandomObjectCard } from "@/components/candor/cards/RandomObjectCard";
-import { TruthCard } from "@/components/candor/cards/TruthCard";
-import { EnvironmentCard } from "@/components/candor/cards/EnvironmentCard";
-import { ReadingCard } from "@/components/candor/cards/ReadingCard";
+import { TruthCard } from "./cards/TruthCard";
 import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
-import { MoonArt, ProjectorArt, CoffeeArt, PlantArt, VinylArt, CloudArt, BookOpenArt } from "@/components/candor/art";
+import { PWAInstallPrompt } from "@/components/candor/PWAInstallPrompt";
+import { PushNotificationPrompt } from "@/components/candor/PushNotificationPrompt";
+import dynamic from "next/dynamic";
+
+const SoundtrackCard = dynamic(() => import("@/components/candor/cards/SoundtrackCard").then(mod => mod.SoundtrackCard));
+const MovieCard = dynamic(() => import("@/components/candor/cards/MovieCard").then(mod => mod.MovieCard));
+const VisualMemoryCard = dynamic(() => import("@/components/candor/cards/VisualMemoryCard").then(mod => mod.VisualMemoryCard));
+const MoodCollageCard = dynamic(() => import("@/components/candor/cards/MoodCollageCard").then(mod => mod.MoodCollageCard));
+const RandomObjectCard = dynamic(() => import("@/components/candor/cards/RandomObjectCard").then(mod => mod.RandomObjectCard));
+const EnvironmentCard = dynamic(() => import("@/components/candor/cards/EnvironmentCard").then(mod => mod.EnvironmentCard));
+const ReadingCard = dynamic(() => import("@/components/candor/cards/ReadingCard").then(mod => mod.ReadingCard));
+
+const MoonArt = dynamic(() => import("@/components/candor/art").then(mod => mod.MoonArt));
+const ProjectorArt = dynamic(() => import("@/components/candor/art").then(mod => mod.ProjectorArt));
+const CoffeeArt = dynamic(() => import("@/components/candor/art").then(mod => mod.CoffeeArt));
+const PlantArt = dynamic(() => import("@/components/candor/art").then(mod => mod.PlantArt));
+const VinylArt = dynamic(() => import("@/components/candor/art").then(mod => mod.VinylArt));
+const CloudArt = dynamic(() => import("@/components/candor/art").then(mod => mod.CloudArt));
+const BookOpenArt = dynamic(() => import("@/components/candor/art").then(mod => mod.BookOpenArt));
 import { Card } from "@/components/ui/card";
 
 type PreviewMessage = { role: "user" | "ai"; content: string };
@@ -66,8 +79,9 @@ export function CandorHome() {
   const [memoryPreview, setMemoryPreview] = useState<CandorMemory | null>(null);
 
   const { isLoaded, isSignedIn, user } = useAuth();
-  const router = useRouter();
+  const router = useTransitionRouter();
   const pathname = usePathname();
+  const { isKeyboardOpen, viewportHeight } = useVisualViewport();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -106,7 +120,7 @@ export function CandorHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, user?.id]);
 
-  const fetchSignal = async (excludeId?: string) => {
+  const fetchSignal = useCallback(async (excludeId?: string) => {
     setIsFetchingSignal(true);
     try {
       const url = excludeId ? `/api/candor/signals?limit=1&excludeId=${excludeId}` : "/api/candor/signals?limit=1";
@@ -122,9 +136,9 @@ export function CandorHome() {
     } finally {
       setIsFetchingSignal(false);
     }
-  };
+  }, []);
 
-  const fetchAligns = async () => {
+  const fetchAligns = useCallback(async () => {
     if (!isSignedIn) return;
     setIsFetchingAligns(true);
     try {
@@ -147,9 +161,9 @@ export function CandorHome() {
     } finally {
       setIsFetchingAligns(false);
     }
-  };
+  }, [isSignedIn]);
 
-  const fetchMemoryPreview = async () => {
+  const fetchMemoryPreview = useCallback(async () => {
     if (!isSignedIn) return;
     try {
       const res = await fetch("/api/candor/me/traits");
@@ -159,9 +173,9 @@ export function CandorHome() {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [isSignedIn]);
 
-  const fetchReflection = async () => {
+  const fetchReflection = useCallback(async () => {
     if (!isSignedIn) return;
     try {
       const res = await fetch("/api/candor/me/continuity");
@@ -173,9 +187,9 @@ export function CandorHome() {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [isSignedIn]);
 
-  const start = async (content: string) => {
+  const start = useCallback(async (content: string) => {
     if (!content.trim() || isStarting) return;
 
     if (!isSignedIn) {
@@ -221,9 +235,9 @@ export function CandorHome() {
     } finally {
       if (!success) setIsStarting(false);
     }
-  };
+  }, [isSignedIn, isStarting, pathname, router, user?.id]);
 
-  const handleSignalAnswer = async (option: string) => {
+  const handleSignalAnswer = useCallback(async (option: string) => {
     if (!signal) return;
     setSignalAnswered(option);
 
@@ -237,18 +251,18 @@ export function CandorHome() {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [signal, isSignedIn]);
 
-  const submit = (event: FormEvent) => {
+  const submit = useCallback((event: FormEvent) => {
     event.preventDefault();
     void start(message);
-  };
+  }, [start, message]);
 
-  const selectPrompt = (content: string) => {
+  const selectPrompt = useCallback((content: string) => {
     setMessage(content);
     setError("");
     void start(content);
-  };
+  }, [start]);
 
   const username = user?.firstName?.toLowerCase() || user?.email?.split("@")[0]?.toLowerCase() || "there";
   const previewTeaser = preview ? teaseLine(preview.content) : "";
@@ -261,6 +275,18 @@ export function CandorHome() {
   const soundtrackUrl = memoryPreview?.profileV4?.socialLinks?.spotify
     ? `https://open.spotify.com/user/${memoryPreview.profileV4.socialLinks.spotify}`
     : "https://open.spotify.com/";
+
+  const masonryGroups = useMemo(() => [
+    [{ kind: "art", artType: "coffee" }, { kind: "align" }],
+    [{ kind: "memory" }],
+    [{ kind: "signal" }],
+    [{ kind: "art", artType: "vinyl" }, { kind: "soundtrack" }],
+    [{ kind: "art", artType: "projector" }, { kind: "movie" }],
+    [{ kind: "art", artType: "cloud" }, { kind: "environment" }],
+    [{ kind: "art", artType: "book" }, { kind: "reading" }],
+    [{ kind: "mood_collage" }],
+    [{ kind: "art", artType: "plant" }, { kind: "reflection" }, { kind: "thought" }],
+  ], []);
 
   return (
     <>
@@ -291,7 +317,7 @@ export function CandorHome() {
         ) : null}
       </AnimatePresence>
 
-      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-56 pt-6 sm:px-6 md:pt-10">
+      <main className="gradient-bg grain relative min-h-dvh overflow-x-hidden px-4 pb-[300px] pt-6 sm:px-6 md:pt-10">
         <AmbientGlow />
         
         <AmbientGlyph icon={Home} />
@@ -322,17 +348,7 @@ export function CandorHome() {
 
               {/* MASONRY CARDS */}
               <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
-                {[
-                  [{ kind: "art", artType: "coffee" }, { kind: "align" }],
-                  [{ kind: "memory" }],
-                  [{ kind: "signal" }],
-                  [{ kind: "art", artType: "vinyl" }, { kind: "soundtrack" }],
-                  [{ kind: "art", artType: "projector" }, { kind: "movie" }],
-                  [{ kind: "art", artType: "cloud" }, { kind: "environment" }],
-                  [{ kind: "art", artType: "book" }, { kind: "reading" }],
-                  [{ kind: "mood_collage" }],
-                  [{ kind: "art", artType: "plant" }, { kind: "reflection" }, { kind: "thought" }],
-                ].map((group, i) => {
+                {masonryGroups.map((group, i) => {
                   const renderedCards = group.map((spec) => {
                     const cardEl = renderHomeCard({ 
                       card: { ...spec, priority: 1 } as CandorHomeCardSpec & { artType?: string }, 
@@ -372,7 +388,10 @@ export function CandorHome() {
         </section>
 
         {/* Input refactored: pinned above nav, luxury spacing */}
-        <div className="fixed inset-x-0 bottom-28 z-[100] pointer-events-none flex justify-center px-4">
+        <div 
+          className="fixed inset-x-0 z-[100] pointer-events-none flex justify-center px-4 transition-all duration-300"
+          style={{ bottom: isKeyboardOpen ? Math.max(16, typeof window !== 'undefined' ? window.innerHeight - viewportHeight + 16 : 16) : 112 }}
+        >
           <motion.form
             onSubmit={submit}
             initial={{ opacity: 0, y: 20 }}
@@ -423,6 +442,7 @@ export function CandorHome() {
                   <button
                     type="button"
                     disabled={!isLoaded}
+                    aria-label="Sign in to Candor"
                     onClick={() => router.push(`/candor/login?next=${encodeURIComponent("/candor/home")}`)}
                     className="flex h-12 items-center gap-2 rounded-full bg-accent px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent/90"
                   >
@@ -434,6 +454,8 @@ export function CandorHome() {
             </div>
             {error && <p className="absolute -bottom-6 right-4 text-xs font-light text-foreground-secondary">{error}</p>}
           </motion.form>
+          <PWAInstallPrompt />
+          <PushNotificationPrompt />
         </div>
 
         <BottomNav />
@@ -486,7 +508,7 @@ function renderHomeCard(input: {
         {artType === "vinyl" && <VinylArt state={1} width={110} height={110} />}
         {artType === "plant" && <PlantArt state={1} width={100} height={100} />}
         {artType === "cloud" && <CloudArt state={1} width={100} height={100} />}
-        {artType === "book" && <BookOpenArt state={1} width={100} height={100} />}
+        {artType === "book" && <BookOpenArt state={1} width={100} height={100} strokeWidth={2} />}
       </Card>
     );
   }

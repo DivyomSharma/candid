@@ -1,9 +1,20 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "lenis/dist/lenis.css";
 import "@/index.css";
 import { Providers } from "@/components/candor/Providers";
 import { siteConfig, siteUrl } from "@/lib/site";
+import { OfflineBanner } from "@/components/candor/OfflineBanner";
+import { ViewTransitions } from "next-view-transitions";
+
+export const viewport: Viewport = {
+  themeColor: "#171311",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -34,6 +45,12 @@ export const metadata: Metadata = {
       { url: "/favicon.png", type: "image/png" },
     ],
     apple: [{ url: "/favicon.png", type: "image/png" }],
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: siteConfig.name,
   },
   openGraph: {
     type: "website",
@@ -71,13 +88,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
+    <ViewTransitions>
+      <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className="radial-lighting">
+        <body className="radial-lighting overscroll-y-none">
           <div className="film-grain" />
-          <Providers>{children}</Providers>
+          <Providers>
+            <OfflineBanner />
+            {children}
+          </Providers>
         </body>
       </html>
     </ClerkProvider>
+    </ViewTransitions>
   );
 }

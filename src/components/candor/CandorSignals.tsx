@@ -118,7 +118,7 @@ export function CandorSignals() {
 
   return (
     <>
-      <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-40 pt-20">
+      <main className="gradient-bg grain relative min-h-dvh overflow-x-hidden px-6 pb-40 pt-20">
         <AmbientGlow />
         <div className="pointer-events-none absolute inset-0 opacity-70">
           <div className="absolute left-[15%] top-24 h-48 w-48 rounded-full bg-[hsl(var(--glow)/0.08)] blur-3xl" />

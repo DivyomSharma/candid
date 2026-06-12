@@ -12,7 +12,7 @@ import WaitlistSection from "@/components/WaitlistSection";
 
 export default function Index() {
   return (
-    <div className="landing-page min-h-screen">
+    <div className="landing-page min-h-dvh">
       <Navbar />
       <HeroSection />
 

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import { Home, Compass, Sparkles, UserRound, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme, accents } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHaptics } from "@/hooks/use-haptics";
 import { CANDOR_THREAD_ID, candorThreadPresenceStorageKey, candorThreadReadStorageKey, candorThreadStorageKey } from "@/lib/candor/thread";
 
 const navItems = [
@@ -19,6 +20,7 @@ const navItems = [
 function MobileThemeIsland() {
   const { mode, setMode, accent, setAccent } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const { triggerLight } = useHaptics();
 
   return (
     <div className="relative flex flex-col items-center">
@@ -30,6 +32,7 @@ function MobileThemeIsland() {
               type="button"
               aria-label={`${a.label} theme`}
               onClick={() => {
+                triggerLight();
                 setAccent(a.name);
                 setIsOpen(false);
               }}
@@ -43,7 +46,7 @@ function MobileThemeIsland() {
           <div className="h-px w-5 bg-border/50" />
           <button
             type="button"
-            onClick={() => setMode(mode === "dark" ? "light" : "dark")}
+            onClick={() => { triggerLight(); setMode(mode === "dark" ? "light" : "dark"); }}
             className="flex h-7 w-7 items-center justify-center rounded-full text-foreground-secondary transition-colors active:scale-95"
             aria-label="Toggle light and dark mode"
           >
@@ -53,7 +56,7 @@ function MobileThemeIsland() {
       )}
       <button
         type="button"
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={() => { triggerLight(); setIsOpen((current) => !current); }}
         className="shadow-2xl flex h-10 w-10 items-center justify-center rounded-full glass-card text-foreground-secondary backdrop-blur-3xl transition-colors active:scale-95"
         aria-expanded={isOpen}
         aria-label="Theme options"
@@ -66,12 +69,13 @@ function MobileThemeIsland() {
 
 function DesktopThemeIsland() {
   const { mode, setMode, accent, setAccent } = useTheme();
+  const { triggerLight } = useHaptics();
 
   return (
     <div className="group relative hidden h-10 w-10 cursor-pointer items-center overflow-hidden rounded-full glass-card backdrop-blur-3xl transition-all duration-500 ease-out hover:w-[180px] sm:flex shadow-2xl">
       <button
         type="button"
-        onClick={() => setMode(mode === "dark" ? "light" : "dark")}
+        onClick={() => { triggerLight(); setMode(mode === "dark" ? "light" : "dark"); }}
         className="flex h-full w-10 shrink-0 items-center justify-center text-foreground-secondary transition-colors hover:text-foreground"
         aria-label="Toggle light and dark mode"
       >
@@ -88,6 +92,7 @@ function DesktopThemeIsland() {
             aria-label={`${a.label} theme`}
             onClick={(event) => {
               event.stopPropagation();
+              triggerLight();
               setAccent(a.name);
             }}
             className={cn(
@@ -116,6 +121,7 @@ function ThemeIsland() {
 export function BottomNav() {
   const pathname = usePathname();
   const { isSignedIn, user } = useAuth();
+  const { triggerLight } = useHaptics();
   const [threadHasPresence, setThreadHasPresence] = useState(false);
 
   useEffect(() => {
@@ -169,6 +175,7 @@ export function BottomNav() {
         <div className="pointer-events-auto glass-card shadow-2xl flex max-w-[calc(100vw-4.5rem)] items-center gap-0.5 rounded-full px-1.5 py-1.5 backdrop-blur-3xl sm:max-w-none sm:gap-1 sm:px-2 sm:py-2">
         <Link
           href={`/candor/session/${CANDOR_THREAD_ID}`}
+          onClick={triggerLight}
           className={cn(
             "relative flex h-9 items-center rounded-full px-3 text-sm font-light tracking-tight transition-colors active:scale-95 sm:h-10 sm:px-4",
             pathname.startsWith("/candor/session") ? "text-accent" : "text-foreground hover:text-accent"
@@ -189,6 +196,7 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={triggerLight}
               className={cn(
                 "relative flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-light tracking-wide transition-colors active:scale-95 sm:h-auto sm:min-w-24 sm:gap-2 sm:px-4 sm:py-2",
                 isActive ? "bg-accent text-accent-foreground" : "text-foreground-secondary sm:hover:text-foreground",

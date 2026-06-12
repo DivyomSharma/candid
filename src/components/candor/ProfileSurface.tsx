@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { 
   ExternalLink, 
   Share2, 
@@ -26,6 +26,7 @@ import {
   Check
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -216,7 +217,7 @@ export function ProfileSurface({
   const secondaryMeta = [profile.occupation, profile.education].filter(Boolean);
 
   return (
-    <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-4 pb-40 pt-16 sm:px-6 sm:pt-20">
+    <main className="gradient-bg grain relative min-h-dvh overflow-x-hidden px-4 pb-40 pt-16 sm:px-6 sm:pt-20">
       <AmbientGlow />
       
       {/* Ambient Line Art Background */}
@@ -712,11 +713,13 @@ export function ProfileSurface({
                     index === 0 ? "aspect-[4/5] sm:col-span-1" : "aspect-square"
                   }`}
                 >
-                  <img
+                  <Image
                     src={url}
                     alt={`Atmosphere ${index + 1}`}
-                    className="absolute inset-0 h-full w-full object-cover opacity-80 hover:opacity-95 transition-opacity"
-                    loading="lazy"
+                    fill
+                    sizes="(max-width: 640px) 100vw, 33vw"
+                    className="object-cover opacity-80 hover:opacity-95 transition-opacity"
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent pointer-events-none" />
                 </motion.div>

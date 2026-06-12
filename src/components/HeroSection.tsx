@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+    <section className="relative min-h-dvh flex flex-col items-center justify-center px-6 overflow-hidden">
       {/* Breathing gradient background */}
       <div className="absolute inset-0 -z-10">
         <div

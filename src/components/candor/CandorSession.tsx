@@ -3,13 +3,16 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUp, Sparkles, Check, ArrowLeft } from "lucide-react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
+import { useTransitionRouter } from "next-view-transitions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { BottomNav } from "@/components/candor/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCandorComposerClearance } from "@/hooks/use-candor-composer-clearance";
+import { useHaptics } from "@/hooks/use-haptics";
+import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { candorThreadPresenceStorageKey, candorThreadReadStorageKey, candorThreadStorageKey } from "@/lib/candor/thread";
 import { responseDelayFor } from "@/lib/candor/timing";
 import type { CandorHistoryMessage } from "@/lib/candor-api";
@@ -53,7 +56,7 @@ const parseMessageContent = (content: string): { cleanContent: string, proposal:
 
 export function CandorSession({ id }: { id: string }) {
   const { isLoaded, isSignedIn, user } = useAuth();
-  const router = useRouter();
+  const router = useTransitionRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const isImproveMode = searchParams.get("mode") === "improve";
@@ -67,6 +70,9 @@ export function CandorSession({ id }: { id: string }) {
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [hasTriggeredImproveInit, setHasTriggeredImproveInit] = useState(false);
   const [proposalStates, setProposalStates] = useState<Record<string, "idle" | "applying" | "applied" | "skipped">>({});
+  const [historyDividerId, setHistoryDividerId] = useState<string | null>(null);
+  const { triggerLight, triggerMedium } = useHaptics();
+  const { isKeyboardOpen, viewportHeight } = useVisualViewport();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const shouldRestoreHistoryPositionRef = useRef(false);
@@ -205,6 +211,7 @@ export function CandorSession({ id }: { id: string }) {
     setMessages((current) => [...current, optimistic]);
     setDraft("");
     setIsResponding(true);
+    triggerLight();
 
     await new Promise((resolve) => setTimeout(resolve, responseDelayFor({ message: content })));
 
@@ -236,7 +243,12 @@ export function CandorSession({ id }: { id: string }) {
       const data = (await response.json()) as { messages: Message[]; nextCursor?: string | null; hasMore?: boolean };
       if (data.messages.length) {
         shouldRestoreHistoryPositionRef.current = true;
+        
         setMessages((current) => {
+          if (current.length > 0) {
+            setHistoryDividerId(current[0].id);
+            setTimeout(() => setHistoryDividerId(null), 4000);
+          }
           const existing = new Set(current.map((message) => message.id));
           return [...data.messages.filter((message) => !existing.has(message.id)), ...current];
         });
@@ -253,7 +265,7 @@ export function CandorSession({ id }: { id: string }) {
 
   if (isLoaded && !isSignedIn) {
     return (
-      <main className="gradient-bg grain relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+      <main className="gradient-bg grain relative flex min-h-dvh items-center justify-center overflow-hidden px-6">
         <AmbientGlow />
         <div className="relative z-10 mx-auto flex max-w-[440px] flex-col items-center gap-6 text-center">
           <h1 className="text-3xl font-light">this part is yours to keep</h1>
@@ -282,7 +294,7 @@ export function CandorSession({ id }: { id: string }) {
   ];
 
   return (
-    <main className="gradient-bg grain relative min-h-screen overflow-x-hidden px-6 pb-48 pt-16">
+    <main className="gradient-bg grain relative min-h-dvh overflow-x-hidden px-6 pb-48 pt-16">
       <AmbientGlow />
       <section className="relative z-10 mx-auto flex max-w-[1100px] flex-col gap-12">
         <div className="pt-8 flex items-center justify-between">
@@ -359,9 +371,25 @@ export function CandorSession({ id }: { id: string }) {
               : { cleanContent: message.content, proposal: null };
 
             return (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: message.role === "ai" ? 16 : 8 }}
+              <div key={message.id} className="flex flex-col gap-8 w-full">
+                <AnimatePresence>
+                  {message.id === historyDividerId && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.8 }}
+                      className="w-full flex items-center gap-4 my-2"
+                    >
+                      <div className="h-px bg-border/40 flex-1" />
+                      <span className="text-[10px] uppercase tracking-widest font-medium text-foreground-secondary/40">older messages</span>
+                      <div className="h-px bg-border/40 flex-1" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <motion.div
+                  initial={{ opacity: 0, y: message.role === "ai" ? 16 : 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
                   duration: 0.5,
@@ -416,6 +444,7 @@ export function CandorSession({ id }: { id: string }) {
                           <Button
                             type="button"
                             onClick={async () => {
+                              triggerMedium();
                               setProposalStates(prev => ({ ...prev, [message.id]: "applying" }));
                               try {
                                 const res = await fetch("/api/candor/me/profile/update", {
@@ -444,6 +473,7 @@ export function CandorSession({ id }: { id: string }) {
                   </motion.div>
                 )}
               </motion.div>
+              </div>
             );
           })}
 
@@ -458,8 +488,8 @@ export function CandorSession({ id }: { id: string }) {
         <form
           ref={composerRef}
           onSubmit={submit}
-          className="fixed inset-x-0 bottom-24 z-30 mx-auto flex max-w-[900px] gap-3 px-6"
-          style={{ bottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}
+          className="fixed inset-x-0 bottom-24 z-30 mx-auto flex max-w-[900px] gap-3 px-6 transition-all duration-300"
+          style={{ bottom: isKeyboardOpen ? Math.max(16, typeof window !== 'undefined' ? window.innerHeight - viewportHeight + 16 : 16) : "calc(6rem + env(safe-area-inset-bottom, 0px))" }}
         >
           <Textarea
             value={draft}

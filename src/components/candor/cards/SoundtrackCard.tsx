@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Music, Play } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -84,7 +85,7 @@ export function SoundtrackCard({ title, artist, reason, coverUrl, onPlay, classN
           <div className="flex items-end gap-6 mt-8">
             {/* Crisp Album Art */}
             <div className="shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden shadow-2xl shadow-black/60 relative group-hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-shadow duration-500">
-              <img src={displayCover} alt={title} className="w-full h-full object-cover" />
+              <Image src={displayCover} alt={title} fill sizes="(max-width: 640px) 96px, 128px" className="object-cover" unoptimized />
             </div>
 
             <div className="flex-1 min-w-0 flex justify-between items-end pb-2">
