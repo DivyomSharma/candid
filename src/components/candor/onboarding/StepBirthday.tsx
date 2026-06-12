@@ -20,6 +20,7 @@ function WheelColumn({
   label: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
   const ITEM_HEIGHT = 48; // Must match the height of individual items (h-12 = 3rem = 48px)
 
   useEffect(() => {
@@ -88,9 +89,15 @@ function WheelColumn({
 
   return (
     <div className="flex flex-col items-center">
-      <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2">{label}</span>
+      <span className={`text-[10px] uppercase tracking-widest mb-2 transition-colors duration-200 ${
+        isFocused ? "text-foreground font-semibold" : "text-muted-foreground/60"
+      }`}>
+        {label}
+      </span>
       <div 
-        className="relative h-[144px] overflow-hidden" // 3 visible items (3 * 48)
+        className={`relative h-[144px] overflow-hidden rounded-xl transition-colors duration-200 ${
+          isFocused ? "bg-foreground/[0.03]" : ""
+        }`}
         style={{ WebkitMaskImage: "linear-gradient(to bottom, transparent, black 30%, black 70%, transparent)" }}
       >
         <div 
@@ -101,8 +108,10 @@ function WheelColumn({
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
           onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           tabIndex={0}
-          className="h-full overflow-y-auto snap-y snap-mandatory no-scrollbar cursor-ns-resize outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 rounded-md"
+          className="h-full overflow-y-auto snap-y snap-mandatory no-scrollbar cursor-ns-resize outline-none focus-visible:ring-1 focus-visible:ring-foreground/20 rounded-xl"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', touchAction: 'none' }}
         >
           {/* Top padding to allow first item to be centered */}
