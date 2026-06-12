@@ -36,6 +36,7 @@ export function ShelfItem({ item, index }: { item: ShelfItemData; index: number 
     >
       {item.coverUrl && (
         <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={item.coverUrl || undefined}
             alt={item.title}

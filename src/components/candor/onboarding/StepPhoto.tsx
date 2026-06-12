@@ -86,6 +86,7 @@ export function StepPhoto({
       >
         {preview ? (
           <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview} alt="Profile" className="absolute inset-0 w-full h-full object-cover opacity-60" />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-background/50 backdrop-blur-sm transition-opacity">
               <Camera className="w-8 h-8 text-white" />

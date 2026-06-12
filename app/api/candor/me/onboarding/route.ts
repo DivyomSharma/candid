@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Supabase error saving onboarding:", error);
-      return NextResponse.json({ error: "Failed to save profile data" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to save profile data: " + error.message, details: error }, { status: 500 });
     }
 
     // Set the completion cookie so middleware doesn't intercept anymore

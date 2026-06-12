@@ -53,11 +53,14 @@ export function AlignCard({ align, onToggleDm, onMaybeLater }: AlignCardProps) {
         <div className="absolute inset-0 z-0 bg-background/50 backdrop-blur-xl" />
         <div className="absolute inset-0 z-0 overflow-hidden">
           {hasCover ? (
-            <img
-              src={p.coverUrl || undefined}
-              alt="Ambient cover"
-              className="h-full w-full object-cover opacity-30 transition-opacity duration-700 mix-blend-luminosity group-hover:opacity-40"
-            />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={p.coverUrl || undefined}
+                alt="Ambient cover"
+                className="h-full w-full object-cover opacity-30 transition-opacity duration-700 mix-blend-luminosity group-hover:opacity-40"
+              />
+            </>
           ) : (
             <div 
               className="absolute inset-0 opacity-20 transition-opacity duration-700 group-hover:opacity-30" 

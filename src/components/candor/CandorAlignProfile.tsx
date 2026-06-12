@@ -100,11 +100,14 @@ export function CandorAlignProfile({ id }: { id: string }) {
       {/* Cover Image */}
       <div className="absolute left-0 right-0 top-0 h-[60vh] md:h-[70vh]">
         {hasCover ? (
-          <img
-            src={p.coverUrl || undefined}
-            alt="Room ambient"
-            className="h-full w-full object-cover opacity-40 mix-blend-luminosity"
-          />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={p.coverUrl || undefined}
+              alt="Room ambient"
+              className="h-full w-full object-cover opacity-40 mix-blend-luminosity"
+            />
+          </>
         ) : (
           <div 
             className="h-full w-full opacity-20" 
