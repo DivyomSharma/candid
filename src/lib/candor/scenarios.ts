@@ -496,13 +496,18 @@ rules:
 - vary the types — include at least one scenario type (would_you_rather, have_you_ever, or creative_argument)
 - if user context is provided, tailor 1-2 signals to their interests/personality but keep them universally engaging`;
 
-  const message = `generate exactly ${count} signals as a JSON array.
+  const message = `generate exactly ${count} signals.
 ${memoryContext ? `\nuser context:\n${memoryContext}` : ""}
 
-return format: [{ "id": "...", "type": "...", "category": "...", "title": "...", "prompt": "...", "options": ["...", "..."] }]`;
+return format MUST be a JSON object containing a "signals" array:
+{
+  "signals": [
+    { "id": "...", "type": "...", "category": "...", "title": "...", "prompt": "...", "options": ["...", "..."] }
+  ]
+}`;
 
   try {
-    const raw = await sendCandorJson<AiGeneratedSignal[]>({
+    const raw = await sendCandorJson<{ signals: AiGeneratedSignal[] }>({
       systemPrompt,
       message,
       temperature: 0.9,
@@ -511,7 +516,8 @@ return format: [{ "id": "...", "type": "...", "category": "...", "title": "...",
       routeReason: "ai_signal_generation",
     });
 
-    const signals = (Array.isArray(raw) ? raw : [])
+    const signalsArray = raw?.signals;
+    const signals = (Array.isArray(signalsArray) ? signalsArray : [])
       .filter(isValidAiSignal)
       .slice(0, count)
       .map((s, idx) => normalizeAiSignal(s, idx));
