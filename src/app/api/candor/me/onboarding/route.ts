@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       identity_choices: identityChoices || {},
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
-    });
+    }, { onConflict: 'user_id' });
 
     if (error) {
       console.error("Supabase error saving onboarding:", error);
