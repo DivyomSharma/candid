@@ -88,18 +88,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ViewTransitions>
-      <ClerkProvider>
+    <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className="radial-lighting overscroll-y-none">
-          <div className="film-grain" />
+        <body className="radial-lighting">
+          <ViewTransitions>
+            <div className="film-grain" />
           <Providers>
             <OfflineBanner />
             {children}
           </Providers>
+          </ViewTransitions>
         </body>
       </html>
     </ClerkProvider>
-    </ViewTransitions>
   );
 }

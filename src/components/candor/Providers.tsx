@@ -5,13 +5,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SmoothScrollProvider } from "@/components/candor/SmoothScrollProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <ThemeProvider>
         <TooltipProvider>
-          {children}
+          <SmoothScrollProvider>
+            {children}
+          </SmoothScrollProvider>
           <Toaster />
           <Sonner />
         </TooltipProvider>

@@ -454,10 +454,9 @@ export function CandorHome() {
             </div>
             {error && <p className="absolute -bottom-6 right-4 text-xs font-light text-foreground-secondary">{error}</p>}
           </motion.form>
+          <PWAInstallPrompt />
+          <PushNotificationPrompt />
         </div>
-
-        <PWAInstallPrompt />
-        <PushNotificationPrompt />
 
         <BottomNav />
       </main>
