@@ -39,7 +39,12 @@ export function StepDemographics({
               onChange={(e) => updateData({ city: e.target.value })}
               placeholder="e.g. New York, London, Tokyo"
               className="w-full max-w-[300px] text-center text-3xl font-light bg-transparent border-b border-border/40 focus:border-foreground outline-none pb-2 transition-colors placeholder:text-muted/30"
-              onKeyDown={(e) => { if (e.key === "Enter" && data.city) handleNext(); }}
+              onKeyDown={(e) => { 
+                if (e.key === "Enter" && data.city) {
+                  e.preventDefault();
+                  handleNext(); 
+                }
+              }}
             />
           </motion.div>
         );

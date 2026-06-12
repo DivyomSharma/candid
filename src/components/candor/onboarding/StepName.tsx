@@ -37,6 +37,7 @@ export function StepName({
         className="w-full max-w-[300px] text-center text-4xl font-light bg-transparent border-b border-border/40 focus:border-foreground outline-none pb-2 transition-colors placeholder:text-muted/30"
         onKeyDown={(e) => {
           if (e.key === "Enter" && data.name.trim().length > 0) {
+            e.preventDefault();
             onNext();
           }
         }}

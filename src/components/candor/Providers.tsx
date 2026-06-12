@@ -6,8 +6,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SmoothScrollProvider } from "@/components/candor/SmoothScrollProvider";
+import { useGlobalKeyboardShortcuts } from "@/hooks/useGlobalKeyboardShortcuts";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  useGlobalKeyboardShortcuts();
+
   return (
     <AuthProvider>
       <ThemeProvider>

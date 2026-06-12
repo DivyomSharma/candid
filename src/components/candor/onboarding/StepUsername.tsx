@@ -43,6 +43,7 @@ export function StepUsername({
           className="w-full pl-8 text-3xl font-light bg-transparent border-b border-border/40 focus:border-foreground outline-none pb-2 transition-colors placeholder:text-muted/30"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
+              e.preventDefault();
               onNext();
             }
           }}
