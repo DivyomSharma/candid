@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { createSupabaseServer } from "@/lib/supabase-server";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { name, username, birthday, city, gender, lookingFor, identityChoices } = body;
 
-    const supabase = await createSupabaseServer();
+    const supabase = getSupabaseAdmin();
 
     // Fetch internal UUID mapping
     let internalUserId;

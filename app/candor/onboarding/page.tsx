@@ -1,6 +1,6 @@
 import { OnboardingWizard } from "@/components/candor/onboarding/OnboardingWizard";
 import { auth } from "@clerk/nextjs/server";
-import { createSupabaseServer } from "@/lib/supabase-server";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { SyncAndRedirect } from "./SyncAndRedirect";
 
 export const metadata = {
@@ -11,7 +11,7 @@ export default async function OnboardingPage() {
   const { userId: clerkId } = await auth();
 
   if (clerkId) {
-    const supabase = await createSupabaseServer();
+    const supabase = getSupabaseAdmin();
     const { data: userRow } = await supabase
       .from("candor_users")
       .select("id")
