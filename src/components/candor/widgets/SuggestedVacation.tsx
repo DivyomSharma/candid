@@ -41,7 +41,7 @@ export function SuggestedVacation() {
   }, [vacation.name]);
 
   return (
-    <Card className="glass-card border-border/30 bg-card/20 backdrop-blur-3xl shadow-xl overflow-hidden relative group h-full">
+    <Card className="glass-card border-border/30 bg-card/20 backdrop-blur-3xl shadow-xl overflow-hidden relative group h-[300px] sm:h-[350px] xl:h-[400px] w-full">
       {isLoading ? (
         <div className="absolute inset-0 bg-accent/5 animate-pulse" />
       ) : (
