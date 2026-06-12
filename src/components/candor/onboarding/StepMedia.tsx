@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OnboardingData } from "./OnboardingWizard";
 import { Search, Film, Disc, BookOpen, Check } from "lucide-react";
@@ -28,31 +28,38 @@ export function StepMedia({
   const [results, setResults] = useState<MediaResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const searchMedia = async (val: string, type: "movie" | "album" | "ebook") => {
-    setQuery(val);
-    if (val.length < 2) {
-      setResults([]);
-      return;
-    }
-    setIsSearching(true);
-    try {
-      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(val)}&entity=${type}&limit=5`);
-      const json = await res.json();
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      if (query.length < 2) {
+        setResults([]);
+        return;
+      }
       
-      const mapped = json.results.map((r: Record<string, unknown>) => ({
-        id: (r.trackId ?? r.collectionId)?.toString() || "",
-        title: (r.trackName || r.collectionName) as string || "",
-        subtitle: (r.artistName || r.director) as string || "",
-        coverUrl: r.artworkUrl100 ? (r.artworkUrl100 as string).replace("100x100bb", "600x600bb") : "",
-      })).filter((r: MediaResult) => r.title && r.coverUrl);
-      
-      setResults(mapped);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSearching(false);
-    }
-  };
+      setIsSearching(true);
+      try {
+        const typeValue = subStep === "movie" ? "movie" : subStep === "album" ? "album" : "ebook";
+        const res = await fetch(`/api/candor/search/media?q=${encodeURIComponent(query)}&type=${typeValue}`);
+        const json = await res.json();
+        
+        if (json.results) {
+          const mapped = json.results.map((r: Record<string, unknown>) => ({
+            id: (r.trackId ?? r.collectionId)?.toString() || "",
+            title: (r.trackName || r.collectionName) as string || "",
+            subtitle: (r.artistName || r.director) as string || "",
+            coverUrl: r.artworkUrl100 ? (r.artworkUrl100 as string).replace("100x100bb", "600x600bb") : "",
+          })).filter((r: MediaResult) => r.title && r.coverUrl);
+          
+          setResults(mapped);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400); // 400ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [query, subStep]);
 
   const getShelfItem = (type: string) => {
     return data.shelf_items?.find(i => i.type === type);
@@ -136,10 +143,13 @@ export function StepMedia({
             <input
               type="text"
               value={query}
-              onChange={(e) => searchMedia(e.target.value, typeValue)}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search for a ${typeTitle}...`}
               className="w-full text-lg font-light bg-surface/30 border border-border/50 rounded-2xl focus:border-foreground outline-none py-3 pl-12 pr-4 transition-colors placeholder:text-muted/30"
             />
+            {isSearching && (
+              <div className="absolute right-4 top-4 w-4 h-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+            )}
             {results.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl overflow-hidden shadow-2xl z-50 max-h-[300px] overflow-y-auto">
                 {results.map(r => (
