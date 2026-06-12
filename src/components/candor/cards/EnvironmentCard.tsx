@@ -15,6 +15,122 @@ interface EnvironmentCardProps {
   className?: string;
 }
 
+function WeatherParticles({ condition }: { condition: string }) {
+  const isRain = condition.toLowerCase().includes("rain") || condition.toLowerCase().includes("shower");
+  const isSnow = condition.toLowerCase().includes("snow");
+  const isClear = condition.toLowerCase().includes("clear");
+  
+  const particles = Array.from({ length: 40 });
+  
+  if (isRain) {
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-slate-900/40">
+        {particles.map((_, i) => (
+          <motion.div
+            key={`rain-${i}`}
+            className="absolute bg-white/20 w-[1.5px] h-[20px] rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `-${Math.random() * 20}%`
+            }}
+            animate={{
+              y: [0, 300],
+              opacity: [0, 0.5, 0]
+            }}
+            transition={{
+              duration: 0.5 + Math.random() * 0.3,
+              repeat: Infinity,
+              ease: "linear",
+              delay: Math.random() * 1
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (isSnow) {
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-slate-800/40">
+        {particles.map((_, i) => (
+          <motion.div
+            key={`snow-${i}`}
+            className="absolute bg-white/40 w-[4px] h-[4px] rounded-full blur-[1px]"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `-${Math.random() * 20}%`
+            }}
+            animate={{
+              y: [0, 300],
+              x: [0, Math.random() * 40 - 20],
+              opacity: [0, 0.6, 0]
+            }}
+            transition={{
+              duration: 2 + Math.random() * 2,
+              repeat: Infinity,
+              ease: "linear",
+              delay: Math.random() * 2
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (isClear) {
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-slate-950/60">
+        {particles.map((_, i) => (
+          <motion.div
+            key={`star-${i}`}
+            className="absolute bg-white/60 w-[2px] h-[2px] rounded-full blur-[1px]"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`
+            }}
+            animate={{
+              opacity: [0.1, 0.8, 0.1],
+              scale: [0.8, 1.2, 0.8]
+            }}
+            transition={{
+              duration: 3 + Math.random() * 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: Math.random() * 3
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Fallback (clouds/fog)
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none bg-slate-900/50">
+      {particles.slice(0, 10).map((_, i) => (
+        <motion.div
+          key={`cloud-${i}`}
+          className="absolute bg-white/5 w-[150px] h-[150px] rounded-full blur-[40px]"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`
+          }}
+          animate={{
+            x: [0, 100, 0],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{
+            duration: 15 + Math.random() * 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: Math.random() * 5
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function EnvironmentCard({ 
   location: fallbackLocation = "Raining in Seattle", 
   time: fallbackTime = "11:42 PM", 
@@ -61,15 +177,8 @@ export function EnvironmentCard({
       className={cn("cursor-pointer group h-full", className)}
     >
       <Card className="glass-card overflow-hidden border border-border/40 bg-card/30 backdrop-blur-3xl transition-colors hover:border-accent/30 shadow-xl relative min-h-[240px] h-full">
-        {data.imageUrl && (
-          <div className="absolute inset-0">
-            <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-              style={{ backgroundImage: `url(${data.imageUrl})` }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          </div>
-        )}
+        <WeatherParticles condition={data.condition} />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute bottom-0 left-0 p-6 flex flex-col justify-end w-full relative z-10">
           <div className="flex items-center gap-2 mb-2 text-foreground/80">
             <MapPin size={12} strokeWidth={1.5} />

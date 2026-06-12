@@ -280,7 +280,7 @@ export function CandorHome() {
   const masonryGroups = useMemo(() => [
     [{ kind: "art", artType: "coffee" }, { kind: "align" }],
     [{ kind: "memory" }],
-    [{ kind: "vacation" }, { kind: "signal" }],
+    [{ kind: "signal" }],
     [{ kind: "art", artType: "vinyl" }, { kind: "soundtrack" }],
     [{ kind: "art", artType: "projector" }, { kind: "movie" }],
     [{ kind: "art", artType: "cloud" }, { kind: "environment" }],
@@ -340,11 +340,21 @@ export function CandorHome() {
               </div>
 
               {/* CONTINUE CHAT SECTION */}
-              <div className="w-full max-w-3xl mx-auto flex justify-center pt-0 pb-12">
+              <div className="w-full max-w-3xl mx-auto flex justify-center pt-0 pb-6">
                 {renderHomeCard({ 
                   card: { kind: "continue", priority: 1, size: "wide" }, 
                   isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
                 })}
+              </div>
+
+              {/* SUGGESTED GETAWAY (Large width) */}
+              <div className="w-full h-[400px] mb-6 rounded-3xl overflow-hidden group">
+                <div className="transition-all duration-700 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_-15px_hsl(var(--accent)/0.15)] group-hover:scale-[1.01] h-full w-full">
+                  {renderHomeCard({
+                    card: { kind: "vacation", priority: 1, size: "wide" },
+                    isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
+                  })}
+                </div>
               </div>
 
               {/* MASONRY CARDS */}

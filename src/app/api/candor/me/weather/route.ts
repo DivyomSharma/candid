@@ -29,9 +29,9 @@ export async function GET() {
 
     if (!profile || !profile.lat || !profile.lon) {
       return NextResponse.json({ 
-        location: "Somewhere", 
+        location: profile?.city ? `Clear in ${profile.city}` : "Clear in your world", 
         time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-        condition: "clear",
+        condition: "Clear",
         imageUrl: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&q=80"
       });
     }
