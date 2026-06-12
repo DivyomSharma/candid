@@ -149,6 +149,17 @@ const TOPIC_MOVIES: Record<string, { title: string; note: string; context: strin
   games: { title: "Her", note: "soft sci-fi for emotionally literate screen people.", context: "late-night recommendation", posterUrl: "https://image.tmdb.org/t/p/w1280/1qtiXGFlBv1HpaV8t9iYwA4E8O7.jpg" },
 };
 
+const TOPIC_READING: Record<string, { title: string; author: string; quote: string; coverUrl: string }> = {
+  movies: { title: "Making Movies", author: "Sidney Lumet", quote: "All good work is personal. It must be.", coverUrl: "https://covers.openlibrary.org/b/id/8302307-L.jpg" },
+  music: { title: "Just Kids", author: "Patti Smith", quote: "Where does it all lead? What will become of us? These were our young questions...", coverUrl: "https://covers.openlibrary.org/b/id/8233379-L.jpg" },
+  design: { title: "The Shape of Design", author: "Frank Chimero", quote: "Design is not about making things pretty, but about making them make sense.", coverUrl: "https://covers.openlibrary.org/b/id/10574160-L.jpg" },
+  startups: { title: "The Creative Act", author: "Rick Rubin", quote: "The object isn't to make art, it's to be in that wonderful state which makes art inevitable.", coverUrl: "https://covers.openlibrary.org/b/id/13214589-L.jpg" },
+  psychology: { title: "Man's Search for Meaning", author: "Viktor E. Frankl", quote: "Between stimulus and response there is a space. In that space is our power to choose our response.", coverUrl: "https://covers.openlibrary.org/b/id/10531580-L.jpg" },
+  philosophy: { title: "Meditations", author: "Marcus Aurelius", quote: "You have power over your mind - not outside events. Realize this, and you will find strength.", coverUrl: "https://covers.openlibrary.org/b/id/8044737-L.jpg" },
+  books: { title: "On Earth We're Briefly Gorgeous", author: "Ocean Vuong", quote: "Sometimes I feel like my life is just a series of rooms.", coverUrl: "https://covers.openlibrary.org/b/id/10188612-L.jpg" },
+  games: { title: "Tomorrow, and Tomorrow, and Tomorrow", author: "Gabrielle Zevin", quote: "To play requires trust and love. What is a game but a world where everything makes sense?", coverUrl: "https://covers.openlibrary.org/b/id/12838384-L.jpg" },
+};
+
 const TOPIC_RECOMMENDATIONS: Record<string, { label: string; line: string; detail: string }> = {
   movies: { label: "late trains & films", line: "indie films seem to shape your rhythm lately.", detail: "they stay with you longer than the plot." },
   music: { label: "heavy rotation", line: "soundtracks that feel like walking alone at night.", detail: "music isn't background for you, it's architecture." },
@@ -203,12 +214,7 @@ export function buildAdaptiveHome(memory: CandorMemory | null, seedInput?: strin
     condition: "rain",
     imageUrl: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&q=80", // moody rain window
   };
-  const reading = {
-    title: "The Creative Act",
-    author: "Rick Rubin",
-    quote: "The object isn't to make art, it's to be in that wonderful state which makes art inevitable.",
-    coverUrl: "https://covers.openlibrary.org/b/id/13214589-L.jpg", // The Creative Act cover
-  };
+  const reading = TOPIC_READING[primaryTopic] ?? fallbackReading(hour);
 
   const seedKey = `${seedInput ?? ""}|${primaryTopic}|${secondaryTopic}|${hour}|${memory?.turnCount ?? 0}`;
   const cards = composeHomeCards({
@@ -365,6 +371,13 @@ function fallbackMovie(hour: number) {
     return { title: "Past Lives", note: "for the part of the night that keeps circling back.", context: "late-night recommendation", posterUrl: "https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?auto=format&fit=crop&q=80" };
   }
   return { title: "Columbus", note: "quiet enough to let the details do the work.", context: "quiet recommendation", posterUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80" };
+}
+
+function fallbackReading(hour: number) {
+  if (hour >= 22 || hour < 4) {
+    return { title: "Bluets", author: "Maggie Nelson", quote: "Suppose I were to begin by saying that I had fallen in love with a color.", coverUrl: "https://covers.openlibrary.org/b/id/6429584-L.jpg" };
+  }
+  return { title: "The Creative Act", author: "Rick Rubin", quote: "The object isn't to make art, it's to be in that wonderful state which makes art inevitable.", coverUrl: "https://covers.openlibrary.org/b/id/13214589-L.jpg" };
 }
 
 function sanitizeReflection(line: string) {
