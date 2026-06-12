@@ -347,19 +347,9 @@ export function CandorHome() {
                 })}
               </div>
 
-              {/* SUGGESTED GETAWAY (Large width) */}
-              <div className="w-full h-[400px] mb-6 rounded-3xl overflow-hidden group">
-                <div className="transition-all duration-700 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_-15px_hsl(var(--accent)/0.15)] group-hover:scale-[1.01] h-full w-full">
-                  {renderHomeCard({
-                    card: { kind: "vacation", priority: 1, size: "wide" },
-                    isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
-                  })}
-                </div>
-              </div>
-
-              {/* MASONRY CARDS */}
+              {/* MASONRY CARDS (TOP HALF) */}
               <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
-                {masonryGroups.map((group, i) => {
+                {masonryGroups.slice(0, 4).map((group, i) => {
                   const renderedCards = group.map((spec) => {
                     const cardEl = renderHomeCard({ 
                       card: { ...spec, priority: 1 } as CandorHomeCardSpec & { artType?: string }, 
@@ -377,6 +367,49 @@ export function CandorHome() {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05, duration: 0.5 }}
+                    >
+                      {renderedCards.map((card, idx) => (
+                        <div key={idx} className="transition-all duration-700 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_-15px_hsl(var(--accent)/0.15)] group-hover:scale-[1.01] rounded-3xl">
+                          {card}
+                        </div>
+                      ))}
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* SUGGESTED GETAWAY (Half width, middle of cards) */}
+              <div className="w-full flex justify-center py-4">
+                <div className="w-full md:w-1/2 h-[350px] rounded-3xl overflow-hidden group">
+                  <div className="transition-all duration-700 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_-15px_hsl(var(--accent)/0.15)] group-hover:scale-[1.01] h-full w-full">
+                    {renderHomeCard({
+                      card: { kind: "vacation", priority: 1, size: "wide" },
+                      isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* MASONRY CARDS (BOTTOM HALF) */}
+              <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
+                {masonryGroups.slice(4).map((group, i) => {
+                  const renderedCards = group.map((spec) => {
+                    const cardEl = renderHomeCard({ 
+                      card: { ...spec, priority: 1 } as CandorHomeCardSpec & { artType?: string }, 
+                      isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
+                    });
+                    return cardEl?.props.className !== "hidden" ? cardEl : null;
+                  }).filter(Boolean);
+
+                  if (renderedCards.length === 0) return null;
+
+                  return (
+                    <motion.div 
+                      key={`group-bottom-${i}`} 
+                      className="break-inside-avoid relative group flex flex-col gap-6 mb-6"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: (i + 4) * 0.05, duration: 0.5 }}
                     >
                       {renderedCards.map((card, idx) => (
                         <div key={idx} className="transition-all duration-700 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_-15px_hsl(var(--accent)/0.15)] group-hover:scale-[1.01] rounded-3xl">
