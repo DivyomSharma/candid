@@ -43,6 +43,35 @@ function WheelColumn({
     }
   };
 
+  // Mouse Drag Logic
+  const [isDragging, setIsDragging] = useState(false);
+  const [startY, setStartY] = useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    setIsDragging(true);
+    setStartY(e.pageY - containerRef.current.offsetTop);
+    setScrollTop(containerRef.current.scrollTop);
+    containerRef.current.style.scrollSnapType = 'none'; // Disable snapping while dragging
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || !containerRef.current) return;
+    e.preventDefault();
+    const y = e.pageY - containerRef.current.offsetTop;
+    const walk = (y - startY) * 1.5;
+    containerRef.current.scrollTop = scrollTop - walk;
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    setIsDragging(false);
+    containerRef.current.style.scrollSnapType = 'y mandatory'; // Re-enable snapping
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
   return (
     <div className="flex flex-col items-center">
       <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2">{label}</span>
@@ -53,8 +82,13 @@ function WheelColumn({
         <div 
           ref={containerRef}
           onScroll={handleScroll}
-          className="h-full overflow-y-auto snap-y snap-mandatory no-scrollbar cursor-ns-resize"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          tabIndex={0}
+          className="h-full overflow-y-auto snap-y snap-mandatory no-scrollbar cursor-ns-resize outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 rounded-md"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', touchAction: 'none' }}
         >
           {/* Top padding to allow first item to be centered */}
           <div className="h-[48px]"></div>
