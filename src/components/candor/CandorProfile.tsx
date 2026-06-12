@@ -118,7 +118,7 @@ export function CandorProfile() {
               profileV4={memory?.profileV4 ?? null}
               onSaved={(nextProfile, nextProfileV4) => {
                 setPersonalProfile(nextProfile);
-                setMemory((prev) => prev ? { ...prev, profileV4: nextProfileV4 } : null);
+                setMemory((prev) => prev ? { ...prev, profileV4: nextProfileV4 as unknown as CandorProfileV4 } : null);
                 setEditorOpen(false);
               }}
             />

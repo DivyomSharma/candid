@@ -144,7 +144,7 @@ export function CandorAligns() {
                     onMaybeLater={() => {
                       setHiddenAligns(prev => new Set([...prev, align.id]));
                     }}
-                    onOpenDoor={() => {
+                    onToggleDm={() => {
                       if (align.canText) {
                         router.push(`/candor/aligns/${align.id}/chat`);
                       } else {
