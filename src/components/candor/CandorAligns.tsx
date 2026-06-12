@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Masonry from "react-masonry-css";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BottomNav } from "@/components/candor/BottomNav";
@@ -95,11 +95,11 @@ export function CandorAligns() {
         </motion.div>
 
         {isSearching ? (
-          <Masonry breakpointCols={{ default: 3, 1100: 2, 700: 1 }} className="flex w-auto gap-6" columnClassName="bg-clip-padding">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((item) => (
-              <div key={item} className="mb-6 w-full animate-pulse rounded-[2rem] bg-card/20 border border-white/5 h-[420px]" />
+              <div key={item} className="w-full animate-pulse rounded-[2rem] bg-card/20 border border-white/5 h-[420px]" />
             ))}
-          </Masonry>
+          </div>
         ) : null}
 
         {!isSearching && !ready ? (
@@ -124,11 +124,7 @@ export function CandorAligns() {
         ) : null}
 
         {!isSearching && ready && visibleAligns.length > 0 ? (
-          <Masonry
-            breakpointCols={{ default: 3, 1100: 2, 700: 1 }}
-            className="-ml-6 flex w-auto"
-            columnClassName="pl-6 bg-clip-padding flex flex-col gap-6"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence mode="popLayout">
               {visibleAligns.map((align, index) => (
                 <motion.div
@@ -159,7 +155,7 @@ export function CandorAligns() {
                 </motion.div>
               ))}
             </AnimatePresence>
-          </Masonry>
+          </div>
         ) : null}
       </section>
 

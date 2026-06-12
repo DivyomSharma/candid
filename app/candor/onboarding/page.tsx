@@ -1,4 +1,4 @@
-import { OnboardingWizard } from "@/components/candor/onboarding/OnboardingWizard";
+import { OnboardingWizard, OnboardingData } from "@/components/candor/onboarding/OnboardingWizard";
 import { auth } from "@clerk/nextjs/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { SyncAndRedirect } from "./SyncAndRedirect";
@@ -7,8 +7,13 @@ export const metadata = {
   title: "Welcome to Candor",
 };
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage(props: { searchParams: Promise<{ edit?: string }> }) {
+  const searchParams = await props.searchParams;
+  const isEditing = searchParams.edit === "true";
+
   const { userId: clerkId } = await auth();
+
+  let initialData: OnboardingData | undefined = undefined;
 
   if (clerkId) {
     const supabase = getSupabaseAdmin();
@@ -21,14 +26,27 @@ export default async function OnboardingPage() {
     if (userRow) {
       const { data: profile } = await supabase
         .from("candor_profiles")
-        .select("onboarding_completed")
+        .select("*")
         .eq("user_id", userRow.id)
         .maybeSingle();
 
-      if (profile?.onboarding_completed) {
-        // User is already onboarded in the DB but lacks the local Edge cookie!
-        // Sync the cookie silently and route them to /candor/home
-        return <SyncAndRedirect />;
+      if (profile) {
+        if (profile.onboarding_completed && !isEditing) {
+          // User is already onboarded in the DB but lacks the local Edge cookie!
+          // Sync the cookie silently and route them to /candor/home
+          return <SyncAndRedirect />;
+        }
+
+        initialData = {
+          name: profile.first_name || "",
+          username: profile.username || "",
+          birthday: profile.birthday || "",
+          city: profile.city || "",
+          gender: profile.gender || "",
+          lookingFor: profile.looking_for || [],
+          identityChoices: profile.identity_choices || {},
+          coverUrl: profile.cover_url || "",
+        };
       }
     }
   }
@@ -44,7 +62,7 @@ export default async function OnboardingPage() {
         We do not render BottomNav or other app chrome here.
       */}
       <div className="relative z-10 h-screen w-full flex flex-col">
-        <OnboardingWizard />
+        <OnboardingWizard initialData={initialData} />
       </div>
     </main>
   );

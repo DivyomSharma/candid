@@ -33,7 +33,7 @@ export function AlignCard({ align, onToggleDm, onMaybeLater }: AlignCardProps) {
     router.push(`/candor/aligns/${align.id}`);
   };
 
-  const coverUrl = p.coverUrl || "https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?auto=format&fit=crop&q=80";
+  const hasCover = !!p.coverUrl;
   const locationText = [p.district, p.city].filter(Boolean).join(", ");
   const chips = p.identityChips?.length ? p.identityChips : p.values;
 
@@ -51,22 +51,25 @@ export function AlignCard({ align, onToggleDm, onMaybeLater }: AlignCardProps) {
         className="group relative cursor-pointer overflow-hidden rounded-[2rem] border-0 bg-transparent shadow-2xl transition-transform duration-500 hover:scale-[1.02]"
       >
         <div className="absolute inset-0 z-0 bg-background/50 backdrop-blur-xl" />
-        <div className="absolute inset-0 z-0">
-          <img
-            src={coverUrl}
-            alt="Ambient cover"
-            className="h-full w-full object-cover opacity-30 transition-opacity duration-700 mix-blend-luminosity group-hover:opacity-40"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/10 pointer-events-none" />
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          {hasCover ? (
+            <img
+              src={p.coverUrl || undefined}
+              alt="Ambient cover"
+              className="h-full w-full object-cover opacity-30 transition-opacity duration-700 mix-blend-luminosity group-hover:opacity-40"
+            />
+          ) : (
+            <div 
+              className="absolute inset-0 opacity-20 transition-opacity duration-700 group-hover:opacity-30" 
+              style={{ background: `radial-gradient(circle at top right, ${p.avatarTone || 'var(--accent)'}, transparent 70%)` }} 
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20 pointer-events-none" />
         </div>
 
         <CardContent className="relative z-10 flex min-h-[420px] flex-col justify-between p-6">
           <div className="flex w-full items-start justify-between">
-            <Avatar className="h-16 w-16 border border-white/10 shadow-2xl transition-transform duration-500 group-hover:scale-105">
-              <AvatarFallback className="text-xl font-light text-foreground" style={{ background: p.avatarTone }}>
-                {p.avatarInitials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="h-16 w-16" /> {/* Spacer for alignment */}
 
             <button
               onClick={onMaybeLater}

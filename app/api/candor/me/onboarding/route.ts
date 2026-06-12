@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, username, birthday, city, gender, lookingFor, identityChoices } = body;
+    const { name, username, birthday, city, gender, lookingFor, identityChoices, coverUrl } = body;
 
     const supabase = getSupabaseAdmin();
 
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
       gender_identity: gender || null,
       relationship_preference: lookingFor ? lookingFor.join(", ") : null,
       identity_choices: identityChoices || {},
+      cover_url: coverUrl || null,
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });

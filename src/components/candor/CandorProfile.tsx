@@ -3,11 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { CandorLoading } from "@/components/candor/CandorLoading";
 import { ProfileSurface } from "@/components/candor/ProfileSurface";
-import { PersonalProfileEditor } from "@/components/candor/PersonalProfileEditor";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildCandorProfilePresentation } from "@/lib/candor/profile";
 import { LogOut } from "lucide-react";
@@ -33,7 +32,6 @@ export function CandorProfile() {
   const [personalProfile, setPersonalProfile] = useState<CandorPersonalProfile | null>(null);
   const [access, setAccess] = useState<CandorAccessState | null>(null);
   const [hasLoadedMemory, setHasLoadedMemory] = useState(false);
-  const [editorOpen, setEditorOpen] = useState(false);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -90,7 +88,7 @@ export function CandorProfile() {
         profile={profile}
         heading="you, in context"
         subheading={access?.narrative ?? (memory?.turnCount === 0 ? "waiting for your first interaction" : "not enough interactions yet.")}
-        onEditClick={() => setEditorOpen(true)}
+        onEditClick={() => router.push("/candor/onboarding?edit=true")}
         actionSlot={
           <Button
             type="button"
@@ -107,24 +105,6 @@ export function CandorProfile() {
         }
       />
 
-      <Sheet open={editorOpen} onOpenChange={setEditorOpen}>
-        <SheetContent side="bottom" className="h-[90vh] sm:h-[85vh] rounded-t-[2rem] border-border/40 surface backdrop-blur-xl p-0">
-          <div className="h-full overflow-y-auto px-6 py-8">
-            <SheetHeader className="mb-6">
-              <SheetTitle className="text-2xl font-light">edit your details</SheetTitle>
-            </SheetHeader>
-            <PersonalProfileEditor
-              profile={personalProfile}
-              profileV4={memory?.profileV4 ?? null}
-              onSaved={(nextProfile, nextProfileV4) => {
-                setPersonalProfile(nextProfile);
-                setMemory((prev) => prev ? { ...prev, profileV4: nextProfileV4 as unknown as CandorProfileV4 } : null);
-                setEditorOpen(false);
-              }}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

@@ -30,15 +30,18 @@ export function ShelfItem({ item, index }: { item: ShelfItemData; index: number 
       animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
       transition={{ delay: index * 0.1, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
       className={cn(
-        "group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-2xl border border-white/5 bg-card/20 p-4 transition-all hover:scale-[1.02] hover:border-white/10 hover:shadow-2xl",
-        item.shared && "border-accent/20 bg-accent/5 ring-1 ring-accent/10"
+        "group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-2xl border border-white/5 bg-card/20 bg-gradient-to-br from-white/5 to-transparent p-4 transition-all hover:scale-[1.02] hover:border-white/10 hover:shadow-2xl",
+        item.shared && "border-accent/20 bg-accent/5 ring-1 ring-accent/10 from-accent/10 to-transparent"
       )}
     >
       {item.coverUrl && (
         <>
           <img
-            src={item.coverUrl}
+            src={item.coverUrl || undefined}
             alt={item.title}
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
             className="absolute inset-0 h-full w-full object-cover opacity-60 mix-blend-luminosity transition-all duration-700 group-hover:opacity-100 group-hover:mix-blend-normal"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />

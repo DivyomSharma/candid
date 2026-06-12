@@ -93,17 +93,24 @@ export function CandorAlignProfile({ id }: { id: string }) {
 
   const p = align.profile;
   const locationText = [p.district, p.city].filter(Boolean).join(", ");
-  const fallbackCover = "https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?auto=format&fit=crop&q=80";
+  const hasCover = !!p.coverUrl;
 
   return (
     <main className="bg-background grain relative min-h-dvh overflow-x-hidden pb-40">
       {/* Cover Image */}
       <div className="absolute left-0 right-0 top-0 h-[60vh] md:h-[70vh]">
-        <img
-          src={p.coverUrl || fallbackCover}
-          alt="Room ambient"
-          className="h-full w-full object-cover opacity-40 mix-blend-luminosity"
-        />
+        {hasCover ? (
+          <img
+            src={p.coverUrl || undefined}
+            alt="Room ambient"
+            className="h-full w-full object-cover opacity-40 mix-blend-luminosity"
+          />
+        ) : (
+          <div 
+            className="h-full w-full opacity-20" 
+            style={{ background: `radial-gradient(circle at top, ${p.avatarTone || 'var(--accent)'}, transparent 80%)` }} 
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/60 to-background" />
       </div>
 
@@ -123,14 +130,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
           transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1], delay: 0.1 }}
           className="mt-32 flex flex-col items-center text-center"
         >
-          <Avatar className="h-28 w-28 border border-white/10 shadow-2xl">
-            <AvatarFallback
-              className="text-2xl font-light text-foreground"
-              style={{ background: p.avatarTone }}
-            >
-              {p.avatarInitials}
-            </AvatarFallback>
-          </Avatar>
+          <div className="h-10" /> {/* Spacer instead of Avatar */}
 
           <h1 className="mt-6 text-4xl font-light tracking-tight text-foreground/90">
             {p.username}

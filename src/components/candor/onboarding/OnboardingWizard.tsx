@@ -9,6 +9,7 @@ import { StepUsername } from "./StepUsername";
 import { StepBirthday } from "./StepBirthday";
 import { StepDemographics } from "./StepDemographics";
 import { StepIdentity } from "./StepIdentity";
+import { StepPhoto } from "./StepPhoto";
 import { StepFinal } from "./StepFinal";
 
 export type OnboardingData = {
@@ -19,22 +20,24 @@ export type OnboardingData = {
   gender: string;
   lookingFor: string[];
   identityChoices: Record<string, string>;
+  coverUrl?: string;
 };
 
-const TOTAL_STEPS = 8; // Including sub-steps roughly tracked
+const TOTAL_STEPS = 9; // Including sub-steps roughly tracked
 
-export function OnboardingWizard() {
+export function OnboardingWizard({ initialData }: { initialData?: Partial<OnboardingData> }) {
   const router = useTransitionRouter();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<OnboardingData>({
-    name: "",
-    username: "",
-    birthday: "",
-    city: "",
-    gender: "",
-    lookingFor: [],
-    identityChoices: {},
+    name: initialData?.name || "",
+    username: initialData?.username || "",
+    birthday: initialData?.birthday || "",
+    city: initialData?.city || "",
+    gender: initialData?.gender || "",
+    lookingFor: initialData?.lookingFor || [],
+    identityChoices: initialData?.identityChoices || {},
+    coverUrl: initialData?.coverUrl || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -109,6 +112,8 @@ export function OnboardingWizard() {
       case 6:
         return <StepIdentity data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 7:
+        return <StepPhoto data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+      case 8:
         return <StepFinal isSubmitting={isSubmitting} onComplete={completeOnboarding} />;
       default:
         return null;
@@ -117,9 +122,9 @@ export function OnboardingWizard() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden px-6">
-      {step > 1 && step < 7 && (
+      {step > 1 && step < 8 && (
         <div className="absolute top-12 left-0 right-0 flex justify-center gap-1.5 z-20">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 6 }).map((_, i) => (
             <motion.div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-500 ${
