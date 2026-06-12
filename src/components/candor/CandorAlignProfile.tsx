@@ -174,7 +174,8 @@ export function CandorAlignProfile({ id }: { id: string }) {
             </div>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
               {p.shelfItems.map((item, i) => (
-                <ShelfItem key={i} item={item} index={i} />
+                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+                <ShelfItem key={i} item={item as any} index={i} />
               ))}
             </div>
           </motion.div>
