@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Send, Check, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { CandorPersonalProfile } from "@/lib/candor/personal-profile";
+import { type CandorPersonalProfile, emptyCandorPersonalProfile } from "@/lib/candor/personal-profile";
 
 type ChatMessage = {
   id: string;
@@ -26,7 +26,7 @@ export function PersonalProfileEditor({ profile, profileV4, onSaved }: { profile
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [draft, setDraft] = useState<CandorPersonalProfile>(profile || {});
+  const [draft, setDraft] = useState<CandorPersonalProfile>(profile || emptyCandorPersonalProfile);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

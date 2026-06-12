@@ -13,7 +13,7 @@ import { buildCandorProfilePresentation } from "@/lib/candor/profile";
 import { LogOut } from "lucide-react";
 import type { CandorAccessState } from "@/lib/candor/access";
 import type { CandorPersonalProfile } from "@/lib/candor/personal-profile";
-import type { CandorMemory } from "@/lib/candor/types";
+import type { CandorMemory, CandorProfileV4 } from "@/lib/candor/types";
 
 type TraitsResponse = {
   memory: CandorMemory;
