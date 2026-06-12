@@ -154,6 +154,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
             ))}
           </div>
 
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           <CandorBadge className="mt-10 w-full max-w-xs" badge={p.candorBadge as any} />
         </motion.div>
 
