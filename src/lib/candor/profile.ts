@@ -8,6 +8,7 @@ export type CandorProfilePresentation = {
   initials: string;
   publicPath: string;
   bannerTone: string;
+  coverUrl: string | null;
   bio: string;
   profileV4: CandorProfileV4;
   age: string | null;
@@ -155,6 +156,7 @@ export function buildCandorProfilePresentation(input: {
     initials: initialsFrom(username),
     publicPath: `/u/${safeHandle}`,
     bannerTone: bannerFrom(values[0]),
+    coverUrl: personalProfile?.coverUrl || null,
     bio,
     profileV4: memory?.profileV4 ?? createEmptyProfileV4(),
     age: age ? String(age) : null,

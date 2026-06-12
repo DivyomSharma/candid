@@ -238,7 +238,14 @@ export function ProfileSurface({
           transition={{ duration: 0.4 }}
         >
           <Card className="surface relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
-            <div className="absolute inset-0 pointer-events-none opacity-40" style={{ background: profile.bannerTone }} />
+            {profile.coverUrl ? (
+              <div className="absolute inset-0 pointer-events-none opacity-40">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={profile.coverUrl} alt="Cover" className="h-full w-full object-cover mix-blend-luminosity" />
+              </div>
+            ) : (
+              <div className="absolute inset-0 pointer-events-none opacity-40" style={{ background: profile.bannerTone }} />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none" />
             
             <CardContent className="relative z-10 flex min-h-[280px] flex-col gap-8 px-6 py-8 sm:px-8 md:min-h-[280px] md:flex-row md:items-start md:gap-10 md:pb-24 lg:px-10">
@@ -264,9 +271,14 @@ export function ProfileSurface({
                     style={{ scale: 1.15 }}
                   />
                   <Avatar className="relative z-10 h-24 w-24 border-2 border-border/80 bg-background/90 shadow-2xl sm:h-28 sm:w-28">
-                    <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] sm:text-4xl">
-                      {profile.initials}
-                    </AvatarFallback>
+                    {profile.coverUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={profile.coverUrl} className="h-full w-full object-cover" alt={profile.username} />
+                    ) : (
+                      <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] sm:text-4xl">
+                        {profile.initials}
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                 </div>
 

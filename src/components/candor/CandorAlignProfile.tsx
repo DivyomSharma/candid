@@ -133,7 +133,24 @@ export function CandorAlignProfile({ id }: { id: string }) {
           transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1], delay: 0.1 }}
           className="mt-32 flex flex-col items-center text-center"
         >
-          <div className="h-10" /> {/* Spacer instead of Avatar */}
+          <div className="relative group shrink-0">
+            <motion.div
+              animate={{ scale: [1, 1.08, 1], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 rounded-full bg-accent blur-md"
+              style={{ scale: 1.15 }}
+            />
+            <Avatar className="relative z-10 h-24 w-24 border-2 border-border/80 bg-background/90 shadow-2xl sm:h-28 sm:w-28">
+              {p.coverUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={p.coverUrl} className="h-full w-full object-cover" alt={p.username} />
+              ) : (
+                <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] sm:text-4xl">
+                  {p.avatarInitials}
+                </AvatarFallback>
+              )}
+            </Avatar>
+          </div>
 
           <h1 className="mt-6 text-4xl font-light tracking-tight text-foreground/90">
             {p.username}
