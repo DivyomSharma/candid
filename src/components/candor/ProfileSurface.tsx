@@ -36,6 +36,9 @@ import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import type { CandorProfilePresentation } from "@/lib/candor/profile";
 import type { CandorMemory, CandorBadge } from "@/lib/candor/types";
 import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
+import { WeatherWidget } from "@/components/candor/widgets/WeatherWidget";
+import { ZodiacWidget } from "@/components/candor/widgets/ZodiacWidget";
+import { SpinningVinyl } from "@/components/candor/widgets/SpinningVinyl";
 
 // Custom premium brand SVG icons
 const SpotifyIcon = () => (
@@ -215,6 +218,11 @@ export function ProfileSurface({
   const isProfileLocked = turnCount < 2;
   const primaryMeta = [profile.age, profile.city].filter(Boolean);
   const secondaryMeta = [profile.occupation, profile.education].filter(Boolean);
+  
+  // Find a favorite album for the SpinningVinyl widget
+  const favoriteAlbum = useMemo(() => {
+    return v4.shelf?.find((s: Record<string, unknown>) => s.key === "album");
+  }, [v4.shelf]);
 
   return (
     <main className="gradient-bg grain relative min-h-dvh overflow-x-hidden px-4 pb-40 pt-16 sm:px-6 sm:pt-20">
@@ -455,6 +463,26 @@ export function ProfileSurface({
                 </div>
               </CardContent>
             </Card>
+            )}
+
+            {(profile.lat || profile.lon || profile.dob || favoriteAlbum) && (
+              <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-min">
+                {profile.lat && profile.lon && (
+                  <div className="h-full">
+                    <WeatherWidget lat={profile.lat} lon={profile.lon} city={profile.city} />
+                  </div>
+                )}
+                {profile.dob && (
+                  <div className="h-full">
+                    <ZodiacWidget dob={profile.dob} />
+                  </div>
+                )}
+                {favoriteAlbum && (
+                  <div className="h-full">
+                    <SpinningVinyl title={favoriteAlbum.value} coverUrl={(favoriteAlbum as Record<string, unknown>).coverUrl as string} />
+                  </div>
+                )}
+              </div>
             )}
 
             {v4.tonight && v4.tonight.length > 0 && (

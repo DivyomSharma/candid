@@ -8,6 +8,9 @@ export type PublicCandorIdentity = {
   age: number | null;
   district: string | null;
   city: string | null;
+  lat: number | null;
+  lon: number | null;
+  dob: string | null;
   coverUrl: string | null;
   identityChips: string[];
   candorBadge: unknown | null;
@@ -37,7 +40,7 @@ export async function getPublicIdentityForCandorUserId(userId: string): Promise<
   });
   if (profileIdentity) return profileIdentity;
 
-  if (!authId) return { username: null, handle: null, age: null, district: null, city: null, coverUrl: null, identityChips: [], candorBadge: null, objects: [], photos: [], shelfItems: [] };
+  if (!authId) return { username: null, handle: null, age: null, district: null, city: null, lat: null, lon: null, dob: null, coverUrl: null, identityChips: [], candorBadge: null, objects: [], photos: [], shelfItems: [] };
   return getPublicIdentityFromAuthId(authId);
 }
 
@@ -48,7 +51,7 @@ export async function getPublicIdentitiesForCandorUserIds(userIds: string[]) {
   const supabaseAdmin = getSupabaseAdmin();
   const [{ data: users }, { data: profiles }] = await Promise.all([
     supabaseAdmin.from("candor_users").select("id, clerk_id").in("id", uniqueIds),
-    supabaseAdmin.from("candor_profiles").select("user_id, username, display_name, dob, district, city, cover_url, identity_chips, candor_badge, objects, photos, shelf_items").in("user_id", uniqueIds),
+    supabaseAdmin.from("candor_profiles").select("user_id, username, display_name, dob, district, city, lat, lon, cover_url, identity_chips, candor_badge, objects, photos, shelf_items").in("user_id", uniqueIds),
   ]);
 
   const profileMap = new Map(
@@ -70,13 +73,13 @@ export async function getPublicIdentitiesForCandorUserIds(userIds: string[]) {
 async function getPublicIdentityFromAuthId(authId: string): Promise<PublicCandorIdentity> {
   if (isUuid(authId)) return getSupabaseIdentity(authId);
   if (authId.startsWith("user_")) return getClerkIdentity(authId);
-  return { username: null, handle: null, age: null, district: null, city: null, coverUrl: null, identityChips: [], candorBadge: null, objects: [], photos: [], shelfItems: [] };
+  return { username: null, handle: null, age: null, district: null, city: null, lat: null, lon: null, dob: null, coverUrl: null, identityChips: [], candorBadge: null, objects: [], photos: [], shelfItems: [] };
 }
 
 async function getSupabaseIdentity(authId: string): Promise<PublicCandorIdentity> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin.auth.admin.getUserById(authId);
-  if (error || !data.user) return { username: null, handle: null, age: null, district: null, city: null, coverUrl: null, identityChips: [], candorBadge: null, objects: [], photos: [], shelfItems: [] };
+  if (error || !data.user) return { username: null, handle: null, age: null, district: null, city: null, lat: null, lon: null, dob: null, coverUrl: null, identityChips: [], candorBadge: null, objects: [], photos: [], shelfItems: [] };
 
   const metadata = data.user.user_metadata as AuthMetadata;
   const explicitUsername = firstString(metadata.username, metadata.user_name, metadata.preferred_username);
@@ -94,6 +97,9 @@ async function getSupabaseIdentity(authId: string): Promise<PublicCandorIdentity
     age: null,
     district: null,
     city: null,
+    lat: null,
+    lon: null,
+    dob: null,
     coverUrl: null,
     identityChips: [],
     candorBadge: null,
@@ -121,6 +127,9 @@ async function getClerkIdentity(authId: string): Promise<PublicCandorIdentity> {
       age: null,
       district: null,
       city: null,
+      lat: null,
+      lon: null,
+      dob: null,
       coverUrl: null,
       identityChips: [],
       candorBadge: null,
@@ -129,7 +138,7 @@ async function getClerkIdentity(authId: string): Promise<PublicCandorIdentity> {
       shelfItems: [],
     };
   } catch {
-    return { username: null, handle: null, age: null, district: null, city: null, coverUrl: null, identityChips: [], candorBadge: null, objects: [], photos: [], shelfItems: [] };
+    return { username: null, handle: null, age: null, district: null, city: null, lat: null, lon: null, dob: null, coverUrl: null, identityChips: [], candorBadge: null, objects: [], photos: [], shelfItems: [] };
   }
 }
 
@@ -163,6 +172,9 @@ export function publicIdentityFromProfile(profile: Record<string, unknown>) {
     age: calculateAge(typeof profile?.dob === "string" ? profile.dob : null),
     district: typeof profile?.district === "string" ? profile.district : null,
     city: typeof profile?.city === "string" ? profile.city : null,
+    lat: typeof profile?.lat === "number" ? profile.lat : null,
+    lon: typeof profile?.lon === "number" ? profile.lon : null,
+    dob: typeof profile?.dob === "string" ? profile.dob : null,
     coverUrl: typeof profile?.cover_url === "string" ? profile.cover_url : null,
     identityChips: Array.isArray(profile?.identity_chips) ? profile.identity_chips : [],
     candorBadge: profile?.candor_badge as unknown,

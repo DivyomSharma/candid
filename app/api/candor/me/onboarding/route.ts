@@ -10,7 +10,10 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, username, birthday, city, gender, lookingFor, identityChoices, coverUrl } = body;
+    const { 
+      name, username, birthday, city, gender, lookingFor, identityChoices, coverUrl,
+      district, state, country, lat, lon, timezone, shelf_items 
+    } = body;
 
     const supabase = getSupabaseAdmin();
 
@@ -46,10 +49,17 @@ export async function POST(req: Request) {
       username: username || null,
       dob: birthday || null,
       city: city || null,
+      district: district || null,
+      state: state || null,
+      country: country || null,
+      lat: lat || null,
+      lon: lon || null,
+      timezone: timezone || null,
       gender_identity: gender || null,
       relationship_preference: lookingFor ? lookingFor.join(", ") : null,
       identity_choices: identityChoices || {},
       cover_url: coverUrl || null,
+      shelf_items: shelf_items || [],
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });

@@ -6,6 +6,9 @@ export type PublicCandorProfile = {
   age: number | null;
   district: string | null;
   city: string | null;
+  lat: number | null;
+  lon: number | null;
+  dob: string | null;
   coverUrl: string | null;
   identityChips: string[];
   candorBadge: unknown | null;
@@ -44,6 +47,9 @@ export function buildPublicProfile(
     age?: number | null;
     district?: string | null;
     city?: string | null;
+    lat?: number | null;
+    lon?: number | null;
+    dob?: string | null;
     coverUrl?: string | null;
     identityChips?: string[];
     candorBadge?: unknown | null;
@@ -66,6 +72,9 @@ export function buildPublicProfile(
     age: identity?.age ?? null,
     district: identity?.district ?? null,
     city: identity?.city ?? null,
+    lat: identity?.lat ?? null,
+    lon: identity?.lon ?? null,
+    dob: identity?.dob ?? null,
     coverUrl: identity?.coverUrl ?? null,
     identityChips: identity?.identityChips ?? [],
     candorBadge: identity?.candorBadge ?? null,

@@ -11,7 +11,13 @@ export type CandorProfilePresentation = {
   bio: string;
   profileV4: CandorProfileV4;
   age: string | null;
+  dob: string | null;
   city: string | null;
+  district: string | null;
+  state: string | null;
+  country: string | null;
+  lat: number | null;
+  lon: number | null;
   occupation: string | null;
   education: string | null;
   relationshipIntention: string | null;
@@ -96,7 +102,13 @@ export function buildCandorProfilePresentation(input: {
   });
 
   const age = ageFromDob(personalProfile?.dob);
+  const dob = personalProfile?.dob || null;
   const city = personalProfile?.city || null;
+  const district = personalProfile?.district || null;
+  const state = personalProfile?.state || null;
+  const country = personalProfile?.country || null;
+  const lat = personalProfile?.lat || null;
+  const lon = personalProfile?.lon || null;
   const occupation = personalProfile?.occupation || null;
   const education = personalProfile?.education || null;
   const relationshipIntention = personalProfile?.relationshipPreference || null;
@@ -146,7 +158,13 @@ export function buildCandorProfilePresentation(input: {
     bio,
     profileV4: memory?.profileV4 ?? createEmptyProfileV4(),
     age: age ? String(age) : null,
+    dob,
     city,
+    district,
+    state,
+    country,
+    lat,
+    lon,
     occupation,
     education,
     relationshipIntention,

@@ -10,6 +10,7 @@ import { StepBirthday } from "./StepBirthday";
 import { StepDemographics } from "./StepDemographics";
 import { StepIdentity } from "./StepIdentity";
 import { StepPhoto } from "./StepPhoto";
+import { StepMedia } from "./StepMedia";
 import { StepFinal } from "./StepFinal";
 
 export type OnboardingData = {
@@ -21,9 +22,16 @@ export type OnboardingData = {
   lookingFor: string[];
   identityChoices: Record<string, string>;
   coverUrl?: string;
+  district?: string;
+  state?: string;
+  country?: string;
+  lat?: number;
+  lon?: number;
+  timezone?: string;
+  shelf_items?: Record<string, unknown>[];
 };
 
-const TOTAL_STEPS = 9; // Including sub-steps roughly tracked
+const TOTAL_STEPS = 10; // Including sub-steps roughly tracked
 
 export function OnboardingWizard({ initialData }: { initialData?: Partial<OnboardingData> }) {
   const router = useTransitionRouter();
@@ -38,6 +46,13 @@ export function OnboardingWizard({ initialData }: { initialData?: Partial<Onboar
     lookingFor: initialData?.lookingFor || [],
     identityChoices: initialData?.identityChoices || {},
     coverUrl: initialData?.coverUrl || "",
+    district: initialData?.district || "",
+    state: initialData?.state || "",
+    country: initialData?.country || "",
+    lat: initialData?.lat,
+    lon: initialData?.lon,
+    timezone: initialData?.timezone || "",
+    shelf_items: initialData?.shelf_items || [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -114,6 +129,8 @@ export function OnboardingWizard({ initialData }: { initialData?: Partial<Onboar
       case 7:
         return <StepPhoto data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 8:
+        return <StepMedia data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+      case 9:
         return <StepFinal isSubmitting={isSubmitting} onComplete={completeOnboarding} />;
       default:
         return null;
@@ -122,7 +139,7 @@ export function OnboardingWizard({ initialData }: { initialData?: Partial<Onboar
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden px-6">
-      {step > 1 && step < 8 && (
+      {step > 1 && step < 9 && (
         <div className="absolute top-12 left-0 right-0 flex justify-center gap-1.5 z-20">
           {Array.from({ length: 6 }).map((_, i) => (
             <motion.div
