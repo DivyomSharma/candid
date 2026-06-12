@@ -8,10 +8,10 @@ export type PublicCandorProfile = {
   city: string | null;
   coverUrl: string | null;
   identityChips: string[];
-  candorBadge: any | null;
-  objects: any[];
-  photos: any[];
-  shelfItems: any[];
+  candorBadge: unknown | null;
+  objects: unknown[];
+  photos: unknown[];
+  shelfItems: unknown[];
   avatarInitials: string;
   avatarTone: string;
   line: string;
@@ -46,10 +46,10 @@ export function buildPublicProfile(
     city?: string | null;
     coverUrl?: string | null;
     identityChips?: string[];
-    candorBadge?: any | null;
-    objects?: any[];
-    photos?: any[];
-    shelfItems?: any[];
+    candorBadge?: unknown | null;
+    objects?: unknown[];
+    photos?: unknown[];
+    shelfItems?: unknown[];
   },
 ): PublicCandorProfile {
   const values = memory.values.slice(0, 3);

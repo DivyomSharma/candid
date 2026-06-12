@@ -154,7 +154,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
             ))}
           </div>
 
-          <CandorBadge className="mt-10 w-full max-w-xs" badge={p.candorBadge} />
+          <CandorBadge className="mt-10 w-full max-w-xs" badge={p.candorBadge as any} />
         </motion.div>
 
         {/* Shelf Section */}

@@ -22,7 +22,7 @@ const QUESTIONS = [
   { text: "Upload a cover photo for your room (or paste an image URL)", field: "cover_url" as const, key: "cover_url" },
 ];
 
-export function PersonalProfileEditor({ profile, profileV4, onSaved }: any) {
+export function PersonalProfileEditor({ profile, profileV4, onSaved }: { profile: CandorPersonalProfile | null; profileV4: Record<string, unknown> | null; onSaved: (p: CandorPersonalProfile, p4: Record<string, unknown> | null) => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -49,6 +49,7 @@ export function PersonalProfileEditor({ profile, profileV4, onSaved }: any) {
     if (currentQ.field === "city" && draft.city) setInputValue(draft.city);
     else if (currentQ.field === "occupation" && draft.occupation) setInputValue(draft.occupation);
     // for shelf items we'd need to extract from profileV4, but let's leave blank if not simple
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

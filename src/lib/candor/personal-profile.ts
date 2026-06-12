@@ -20,10 +20,10 @@ export type CandorPersonalProfile = {
   timezone: string | null;
   coverUrl: string | null;
   identityChips: string[];
-  candorBadge: any | null;
-  objects: any[];
-  photos: any[];
-  shelfItems: any[];
+  candorBadge: unknown | null;
+  objects: unknown[];
+  photos: unknown[];
+  shelfItems: unknown[];
 };
 
 export const emptyCandorPersonalProfile: CandorPersonalProfile = {

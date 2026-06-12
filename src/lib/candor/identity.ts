@@ -10,10 +10,10 @@ export type PublicCandorIdentity = {
   city: string | null;
   coverUrl: string | null;
   identityChips: string[];
-  candorBadge: any | null;
-  objects: any[];
-  photos: any[];
-  shelfItems: any[];
+  candorBadge: unknown | null;
+  objects: unknown[];
+  photos: unknown[];
+  shelfItems: unknown[];
 };
 
 type AuthMetadata = {
@@ -151,7 +151,7 @@ function calculateAge(dobStr: string | null) {
   return Math.abs(ageDate.getUTCFullYear() - 1970);
 }
 
-export function publicIdentityFromProfile(profile: any) {
+export function publicIdentityFromProfile(profile: Record<string, unknown>) {
   const username = firstString(profile?.username);
   const displayName = firstString(profile?.display_name, username);
   const handle = handleFromUsername(username ?? displayName);
@@ -160,12 +160,12 @@ export function publicIdentityFromProfile(profile: any) {
   return {
     username: cleanDisplayName(displayName),
     handle,
-    age: calculateAge(profile?.dob),
-    district: profile?.district ?? null,
-    city: profile?.city ?? null,
-    coverUrl: profile?.cover_url ?? null,
+    age: calculateAge(typeof profile?.dob === "string" ? profile.dob : null),
+    district: typeof profile?.district === "string" ? profile.district : null,
+    city: typeof profile?.city === "string" ? profile.city : null,
+    coverUrl: typeof profile?.cover_url === "string" ? profile.cover_url : null,
     identityChips: Array.isArray(profile?.identity_chips) ? profile.identity_chips : [],
-    candorBadge: profile?.candor_badge ?? null,
+    candorBadge: profile?.candor_badge as unknown,
     objects: Array.isArray(profile?.objects) ? profile.objects : [],
     photos: Array.isArray(profile?.photos) ? profile.photos : [],
     shelfItems: Array.isArray(profile?.shelf_items) ? profile.shelf_items : [],
