@@ -4,8 +4,8 @@ import { createSupabaseServer } from "@/lib/supabase-server";
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -14,9 +14,21 @@ export async function POST(req: Request) {
 
     const supabase = await createSupabaseServer();
 
+    // Fetch internal UUID mapping
+    const { data: userRow, error: userError } = await supabase
+      .from("candor_users")
+      .select("id")
+      .eq("clerk_id", clerkId)
+      .single();
+
+    if (userError || !userRow) {
+      console.error("Failed to find internal user:", userError);
+      return NextResponse.json({ error: "Internal user missing" }, { status: 404 });
+    }
+
     // Upsert the profile data
     const { error } = await supabase.from("candor_profiles").upsert({
-      user_id: userId,
+      user_id: userRow.id,
       display_name: name,
       username: username || null,
       dob: birthday || null,
