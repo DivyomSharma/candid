@@ -10,6 +10,20 @@ export type CandorPersonalProfile = {
   shortBio: string | null;
   occupation: string | null;
   education: string | null;
+  
+  // V2 Fields
+  district: string | null;
+  state: string | null;
+  country: string | null;
+  lat: number | null;
+  lon: number | null;
+  timezone: string | null;
+  coverUrl: string | null;
+  identityChips: string[];
+  candorBadge: any | null;
+  objects: any[];
+  photos: any[];
+  shelfItems: any[];
 };
 
 export const emptyCandorPersonalProfile: CandorPersonalProfile = {
@@ -22,13 +36,25 @@ export const emptyCandorPersonalProfile: CandorPersonalProfile = {
   shortBio: null,
   occupation: null,
   education: null,
+  district: null,
+  state: null,
+  country: null,
+  lat: null,
+  lon: null,
+  timezone: null,
+  coverUrl: null,
+  identityChips: [],
+  candorBadge: null,
+  objects: [],
+  photos: [],
+  shelfItems: [],
 };
 
 export async function getCandorPersonalProfile(userId: string): Promise<CandorPersonalProfile> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data } = await supabaseAdmin
     .from("candor_profiles")
-    .select("username, display_name, dob, gender_identity, city, relationship_preference, short_bio, occupation, education")
+    .select("username, display_name, dob, gender_identity, city, district, state, country, lat, lon, timezone, cover_url, identity_chips, candor_badge, objects, photos, shelf_items, relationship_preference, short_bio, occupation, education")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -49,6 +75,18 @@ export async function upsertCandorPersonalProfile(userId: string, profile: Cando
       short_bio: cleanText(profile.shortBio, 120),
       occupation: cleanText(profile.occupation, 56),
       education: cleanText(profile.education, 56),
+      district: cleanText(profile.district, 56),
+      state: cleanText(profile.state, 56),
+      country: cleanText(profile.country, 56),
+      lat: profile.lat,
+      lon: profile.lon,
+      timezone: cleanText(profile.timezone, 56),
+      cover_url: profile.coverUrl,
+      identity_chips: profile.identityChips,
+      candor_badge: profile.candorBadge,
+      objects: profile.objects,
+      photos: profile.photos,
+      shelf_items: profile.shelfItems,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
@@ -69,6 +107,18 @@ export function normalizeCandorPersonalProfile(value: unknown): CandorPersonalPr
     shortBio: cleanText(readString(row.short_bio, row.shortBio), 120),
     occupation: cleanText(readString(row.occupation), 56),
     education: cleanText(readString(row.education), 56),
+    district: cleanText(readString(row.district), 56),
+    state: cleanText(readString(row.state), 56),
+    country: cleanText(readString(row.country), 56),
+    lat: typeof row.lat === "number" ? row.lat : null,
+    lon: typeof row.lon === "number" ? row.lon : null,
+    timezone: cleanText(readString(row.timezone), 56),
+    coverUrl: cleanText(readString(row.cover_url, row.coverUrl), 500),
+    identityChips: Array.isArray(row.identity_chips) ? row.identity_chips : Array.isArray(row.identityChips) ? row.identityChips : [],
+    candorBadge: row.candor_badge ?? row.candorBadge ?? null,
+    objects: Array.isArray(row.objects) ? row.objects : [],
+    photos: Array.isArray(row.photos) ? row.photos : [],
+    shelfItems: Array.isArray(row.shelf_items) ? row.shelf_items : Array.isArray(row.shelfItems) ? row.shelfItems : [],
   };
 }
 

@@ -3,6 +3,15 @@ import type { CandorMemory, CandorProfileV4 } from "@/lib/candor/types";
 export type PublicCandorProfile = {
   username: string;
   handle: string;
+  age: number | null;
+  district: string | null;
+  city: string | null;
+  coverUrl: string | null;
+  identityChips: string[];
+  candorBadge: any | null;
+  objects: any[];
+  photos: any[];
+  shelfItems: any[];
   avatarInitials: string;
   avatarTone: string;
   line: string;
@@ -29,7 +38,19 @@ export type AlignmentResonance =
 export function buildPublicProfile(
   memory: CandorMemory,
   userId = "candor",
-  identity?: { username?: string | null; handle?: string | null },
+  identity?: { 
+    username?: string | null; 
+    handle?: string | null;
+    age?: number | null;
+    district?: string | null;
+    city?: string | null;
+    coverUrl?: string | null;
+    identityChips?: string[];
+    candorBadge?: any | null;
+    objects?: any[];
+    photos?: any[];
+    shelfItems?: any[];
+  },
 ): PublicCandorProfile {
   const values = memory.values.slice(0, 3);
   const needs = memory.communicationNeeds.slice(0, 2);
@@ -42,6 +63,15 @@ export function buildPublicProfile(
   return {
     username,
     handle: identity?.handle?.trim() || `@${username.toLowerCase().replace(/\s+/g, ".")}`,
+    age: identity?.age ?? null,
+    district: identity?.district ?? null,
+    city: identity?.city ?? null,
+    coverUrl: identity?.coverUrl ?? null,
+    identityChips: identity?.identityChips ?? [],
+    candorBadge: identity?.candorBadge ?? null,
+    objects: identity?.objects ?? [],
+    photos: identity?.photos ?? [],
+    shelfItems: identity?.shelfItems ?? [],
     avatarInitials: initialsFrom(username),
     avatarTone: avatarToneFrom(userId),
     line: oneLineFrom(memory),
@@ -97,6 +127,23 @@ export function alignmentLanguageWithSignals(memory: CandorMemory, other: Candor
   const signal = signals[0];
   if (!signal) return base;
   return `${base} there is also a quiet shared signal around ${signal}.`;
+}
+
+export function alignmentObservation(memory: CandorMemory, other: CandorMemory, signals: string[]) {
+  const value = shared(aList(memory.values), aList(other.values));
+  const theme = shared(aList(memory.lifeThemes), aList(other.lifeThemes));
+  const signal = signals[0];
+  
+  if (signal) return `you both seem drawn to ${signal}.`;
+  if (theme) return `you both carry a shared history around ${theme}.`;
+  if (value) return `you both seem to trust ${value} more than performance.`;
+  
+  return "you both seem to trust silence more than speed.";
+}
+
+export function alignmentWhy(memory: CandorMemory, other: CandorMemory) {
+  const need = memory.communicationNeeds[0] ?? other.appreciatesInPeople[0] ?? "gentle honesty";
+  return `neither of you seems comfortable with rushed conversations.\nthere could be real ease around ${need}.`;
 }
 
 export function resonanceLabel(score: number): AlignmentResonance {

@@ -312,12 +312,12 @@ export function ProfileSurface({
                   <>
                     <Button
                       type="button"
-                      onClick={() => router.push("/candor/session/ongoing?mode=improve")}
+                      onClick={onEditClick || (() => router.push("/candor/session/ongoing?mode=improve"))}
                       className="flex h-11 items-center gap-2 rounded-full bg-accent px-5 text-accent-foreground shadow-lg transition-all hover:scale-105 hover:bg-accent/90 sm:px-7"
-                      title="Improve with Candor"
+                      title="Edit Profile"
                     >
-                      <Sparkles className="h-4 w-4" />
-                      <span className="hidden sm:inline">Improve with Candor</span>
+                      <Edit3 className="h-4 w-4" />
+                      <span className="hidden sm:inline">Edit Profile</span>
                     </Button>
 
                     <Button

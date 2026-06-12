@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candor/memory";
 import { accessProfileFor, getCandorAccess } from "@/lib/candor/access";
 import { getAlignmentPreview } from "@/lib/candor/alignment";
-import { alignmentLanguageWithSignals, alignmentScoreWithSignals, buildPublicProfile } from "@/lib/candor/matching";
+import { alignmentObservation, alignmentWhy, alignmentScoreWithSignals, buildPublicProfile } from "@/lib/candor/matching";
 import { getPublicIdentitiesForCandorUserIds } from "@/lib/candor/identity";
 import { getAlignmentSignals } from "@/lib/candor/alignment-memory";
 
@@ -88,7 +88,7 @@ export async function GET() {
   const preview = getAlignmentPreview(memory);
 
   if (!memory.alignmentReady) {
-    return NextResponse.json({ ready: false, language: preview.language, aligns: [] });
+    return NextResponse.json({ ready: false, observation: "finding someone who listens like you do.", aligns: [] });
   }
 
   const { data: allTraits } = await supabaseAdmin
@@ -127,7 +127,8 @@ export async function GET() {
       return {
         id: alignment.id,
         score: item.score,
-        language: alignmentLanguageWithSignals(memory, item.memory, item.signals),
+        observation: alignmentObservation(memory, item.memory, item.signals),
+        why: alignmentWhy(memory, item.memory),
         profile: buildPublicProfile(item.memory, item.userId, identities.get(item.userId)),
         myDmOn,
         theirDmOn,
@@ -138,7 +139,7 @@ export async function GET() {
 
   return NextResponse.json({
     ready: true,
-    language: aligns[0]?.language ?? preview.language,
+    observation: aligns[0]?.observation ?? "finding someone who listens like you do.",
     aligns,
   });
 }
