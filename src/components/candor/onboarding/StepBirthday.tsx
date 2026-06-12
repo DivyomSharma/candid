@@ -72,6 +72,20 @@ function WheelColumn({
     e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const nextParent = e.currentTarget.parentElement?.parentElement?.nextElementSibling;
+      const nextCol = nextParent?.querySelector('[tabindex="0"]') as HTMLElement;
+      if (nextCol) nextCol.focus();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prevParent = e.currentTarget.parentElement?.parentElement?.previousElementSibling;
+      const prevCol = prevParent?.querySelector('[tabindex="0"]') as HTMLElement;
+      if (prevCol) prevCol.focus();
+    }
+  };
+
   return (
     <div className="flex flex-col items-center">
       <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2">{label}</span>
@@ -86,6 +100,7 @@ function WheelColumn({
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
+          onKeyDown={handleKeyDown}
           tabIndex={0}
           className="h-full overflow-y-auto snap-y snap-mandatory no-scrollbar cursor-ns-resize outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 rounded-md"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', touchAction: 'none' }}
