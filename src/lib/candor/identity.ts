@@ -30,15 +30,17 @@ type AuthMetadata = {
 
 export async function getPublicIdentityForCandorUserId(userId: string): Promise<PublicCandorIdentity> {
   const supabaseAdmin = getSupabaseAdmin();
-  const { data } = await supabaseAdmin.from("candor_users").select("clerk_id").eq("id", userId).maybeSingle();
-  const authId = data?.clerk_id;
+  const [{ data: user }, { data: profile }] = await Promise.all([
+    supabaseAdmin.from("candor_users").select("clerk_id").eq("id", userId).maybeSingle(),
+    supabaseAdmin.from("candor_profiles").select("user_id, username, display_name, dob, district, city, lat, lon, cover_url, identity_chips, candor_badge, objects, photos, shelf_items").eq("user_id", userId).maybeSingle(),
+  ]);
 
-  const profile = await getCandorPersonalProfile(userId).catch(() => null);
-  const profileIdentity = publicIdentityFromProfile({
-    username: profile?.username,
-    display_name: profile?.displayName,
-  });
-  if (profileIdentity) return profileIdentity;
+  const authId = user?.clerk_id;
+
+  if (profile) {
+    const profileIdentity = publicIdentityFromProfile(profile);
+    if (profileIdentity) return profileIdentity;
+  }
 
   if (!authId) return { username: null, handle: null, age: null, district: null, city: null, lat: null, lon: null, dob: null, coverUrl: null, identityChips: [], candorBadge: null, objects: [], photos: [], shelfItems: [] };
   return getPublicIdentityFromAuthId(authId);
