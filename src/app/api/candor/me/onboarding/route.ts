@@ -15,20 +15,33 @@ export async function POST(req: Request) {
     const supabase = await createSupabaseServer();
 
     // Fetch internal UUID mapping
+    let internalUserId;
     const { data: userRow, error: userError } = await supabase
       .from("candor_users")
       .select("id")
       .eq("clerk_id", clerkId)
-      .single();
+      .maybeSingle();
 
-    if (userError || !userRow) {
-      console.error("Failed to find internal user:", userError);
-      return NextResponse.json({ error: "Internal user missing" }, { status: 404 });
+    if (!userRow) {
+      // Lazy create the user if webhook missed them
+      const { data: newUser, error: createError } = await supabase
+        .from("candor_users")
+        .insert({ clerk_id: clerkId })
+        .select("id")
+        .single();
+        
+      if (createError || !newUser) {
+        console.error("Failed to lazy-create internal user:", createError);
+        return NextResponse.json({ error: "Failed to create internal user" }, { status: 500 });
+      }
+      internalUserId = newUser.id;
+    } else {
+      internalUserId = userRow.id;
     }
 
     // Upsert the profile data
     const { error } = await supabase.from("candor_profiles").upsert({
-      user_id: userRow.id,
+      user_id: internalUserId,
       display_name: name,
       username: username || null,
       dob: birthday || null,

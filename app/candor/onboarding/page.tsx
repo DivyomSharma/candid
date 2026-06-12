@@ -16,14 +16,14 @@ export default async function OnboardingPage() {
       .from("candor_users")
       .select("id")
       .eq("clerk_id", clerkId)
-      .single();
+      .maybeSingle();
 
     if (userRow) {
       const { data: profile } = await supabase
         .from("candor_profiles")
         .select("onboarding_completed")
         .eq("user_id", userRow.id)
-        .single();
+        .maybeSingle();
 
       if (profile?.onboarding_completed) {
         // User is already onboarded in the DB but lacks the local Edge cookie!
