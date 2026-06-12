@@ -36,7 +36,7 @@ export function AmbientGlyph({ icon: Icon, className, isCompass }: AmbientGlyphP
       )}
       <motion.div
         className={cn(
-          "fixed pointer-events-none select-none z-0 mix-blend-plus-lighter text-accent",
+          "fixed pointer-events-none select-none z-0 mix-blend-multiply dark:mix-blend-plus-lighter text-accent opacity-60 dark:opacity-100",
           "bottom-[-10%] right-[-10%]",
           isCompass && "compass-needle-spin",
           className

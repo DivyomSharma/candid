@@ -264,8 +264,8 @@ function composeHomeCards(input: {
   ];
 
   if (input.hasTopic) {
-    cards.push({ kind: "soundtrack", size: "medium", priority: 86, spanClass: "aspect-square" });
-    cards.push({ kind: "movie", size: "tall", priority: 76, spanClass: "aspect-[2/3]" });
+    cards.push({ kind: "soundtrack", size: "tall", priority: 86, spanClass: "aspect-[1/2]" });
+    cards.push({ kind: "movie", size: "tall", priority: 76, spanClass: "aspect-[1/2]" });
     cards.push({ kind: "recommendation", size: "small", priority: 74, spanClass: "min-h-[140px]" });
   } else {
     cards.push({ kind: "memory", size: "small", priority: 75, spanClass: "min-h-[120px]" });
@@ -274,9 +274,9 @@ function composeHomeCards(input: {
   }
 
   // Add the new cards into the flow
-  cards.push({ kind: "vacation", size: "medium", priority: 89, spanClass: "min-h-[240px]" });
+  cards.push({ kind: "vacation", size: "large", priority: 89, spanClass: "aspect-square" });
   cards.push({ kind: "environment", size: "medium", priority: 85, spanClass: "min-h-[240px]" });
-  cards.push({ kind: "reading", size: "large", priority: 82, spanClass: "min-h-[280px]" });
+  cards.push({ kind: "reading", size: "medium", priority: 82, spanClass: "aspect-square" });
 
   if (input.hasOpenLoop) {
     cards.push({ kind: "open_loop", size: "small", priority: 90, spanClass: "min-h-[140px]" });
