@@ -26,6 +26,7 @@ import { TruthCard } from "./cards/TruthCard";
 import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
 import { PWAInstallPrompt } from "@/components/candor/PWAInstallPrompt";
 import { PushNotificationPrompt } from "@/components/candor/PushNotificationPrompt";
+import { SuggestedVacation } from "@/components/candor/widgets/SuggestedVacation";
 import dynamic from "next/dynamic";
 
 const SoundtrackCard = dynamic(() => import("@/components/candor/cards/SoundtrackCard").then(mod => mod.SoundtrackCard));
@@ -279,7 +280,7 @@ export function CandorHome() {
   const masonryGroups = useMemo(() => [
     [{ kind: "art", artType: "coffee" }, { kind: "align" }],
     [{ kind: "memory" }],
-    [{ kind: "signal" }],
+    [{ kind: "vacation" }, { kind: "signal" }],
     [{ kind: "art", artType: "vinyl" }, { kind: "soundtrack" }],
     [{ kind: "art", artType: "projector" }, { kind: "movie" }],
     [{ kind: "art", artType: "cloud" }, { kind: "environment" }],
@@ -683,6 +684,10 @@ function renderHomeCard(input: {
   
   if (card.kind === "recommendation") {
     return <MemoryCard observation={`${adaptiveHome.recommendation.line} ${adaptiveHome.recommendation.detail}`} />;
+  }
+
+  if (card.kind === "vacation") {
+    return <SuggestedVacation />;
   }
 
   return <div className="hidden" />;

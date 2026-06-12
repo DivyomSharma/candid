@@ -19,7 +19,8 @@ export type CandorHomeCardKind =
   | "random_object"
   | "art"
   | "environment"
-  | "reading";
+  | "reading"
+  | "vacation";
 
 export type CandorHomeCardSpec = {
   kind: CandorHomeCardKind;
@@ -273,6 +274,7 @@ function composeHomeCards(input: {
   }
 
   // Add the new cards into the flow
+  cards.push({ kind: "vacation", size: "medium", priority: 89, spanClass: "min-h-[240px]" });
   cards.push({ kind: "environment", size: "medium", priority: 85, spanClass: "min-h-[240px]" });
   cards.push({ kind: "reading", size: "large", priority: 82, spanClass: "min-h-[280px]" });
 

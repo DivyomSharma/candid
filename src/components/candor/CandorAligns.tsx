@@ -12,7 +12,6 @@ import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { useAuth } from "@/contexts/AuthContext";
 import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
 import { AlignCard, type Align } from "./AlignCard";
-import { SuggestedVacation } from "@/components/candor/widgets/SuggestedVacation";
 
 type AlignsResponse = {
   ready: boolean;
@@ -95,11 +94,7 @@ export function CandorAligns() {
           </p>
         </motion.div>
 
-        {!isSearching && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-2">
-            <SuggestedVacation />
-          </div>
-        )}
+
 
         {isSearching ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
