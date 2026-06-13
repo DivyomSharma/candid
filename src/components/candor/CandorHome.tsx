@@ -731,14 +731,16 @@ function FidgetArtCard({ artType }: { artType: string }) {
     setTimeout(() => setAnimating(false), 1500); // 1.5s fidget length
   };
 
-  let customAnimationClass = "";
+  let customAnimationClass = "transition-all duration-[1500ms] ease-[cubic-bezier(0.22,1,0.36,1)]";
   if (animating) {
-    if (artType === "vinyl") customAnimationClass = "animate-[spin_1.5s_ease-in-out_1]";
-    if (artType === "coffee") customAnimationClass = "animate-[candor-breathe_1s_ease-in-out_infinite]";
-    if (artType === "projector") customAnimationClass = "animate-[pulse_0.75s_ease-in-out_2]";
-    if (artType === "plant") customAnimationClass = "animate-[bounce_0.5s_ease-in-out_3]";
-    if (artType === "cloud") customAnimationClass = "animate-[bounce_0.5s_ease-in-out_3]";
-    if (artType === "book") customAnimationClass = "animate-[pulse_0.5s_ease-in-out_2]";
+    if (artType === "vinyl") customAnimationClass += " rotate-45 scale-[1.03]";
+    else if (artType === "coffee") customAnimationClass += " -translate-y-1 scale-[1.03]";
+    else if (artType === "projector") customAnimationClass += " scale-[1.03]";
+    else if (artType === "plant") customAnimationClass += " rotate-3 scale-[1.03]";
+    else if (artType === "cloud") customAnimationClass += " translate-x-1 -translate-y-1 scale-[1.03]";
+    else if (artType === "book") customAnimationClass += " -rotate-2 scale-[1.03]";
+  } else {
+    customAnimationClass += " rotate-0 scale-100 translate-x-0 translate-y-0";
   }
 
   return (
