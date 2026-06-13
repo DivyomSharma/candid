@@ -501,17 +501,8 @@ function renderHomeCard(input: {
   } = input;
 
   if (card.kind === "art") {
-    const artType = (card as CandorHomeCardSpec & { artType?: string }).artType;
-    return (
-      <Card className="glass-card overflow-hidden border border-border/40 bg-card/30 max-md:backdrop-blur-md md:backdrop-blur-3xl transition-colors hover:border-accent/30 shadow-xl flex items-center justify-center p-8 min-h-[220px]">
-        {artType === "coffee" && <CoffeeArt state={1} width={90} height={90} />}
-        {artType === "projector" && <ProjectorArt state={1} width={110} height={110} />}
-        {artType === "vinyl" && <VinylArt state={1} width={110} height={110} />}
-        {artType === "plant" && <PlantArt state={1} width={100} height={100} />}
-        {artType === "cloud" && <CloudArt state={1} width={100} height={100} />}
-        {artType === "book" && <BookOpenArt state={1} width={100} height={100} />}
-      </Card>
-    );
+    const artType = (card as CandorHomeCardSpec & { artType?: string }).artType || "coffee";
+    return <FidgetArtCard artType={artType} />;
   }
 
   if (card.kind === "continue" && preview) {
@@ -727,4 +718,42 @@ function buildYouTonight(memory: CandorMemory | null) {
     { icon: rankedInterest === "movies" ? Film : Laptop, label: rankedInterest ? `circling ${rankedInterest}` : "building" },
     { icon: Cloud, label: "thinking" },
   ].slice(0, 3);
+}
+
+function FidgetArtCard({ artType }: { artType: string }) {
+  const [key, setKey] = useState(0);
+  const [animating, setAnimating] = useState(false);
+
+  const handleClick = () => {
+    if (animating) return;
+    setAnimating(true);
+    setKey(k => k + 1); // Trigger SVG redraw
+    setTimeout(() => setAnimating(false), 1500); // 1.5s fidget length
+  };
+
+  let customAnimationClass = "";
+  if (animating) {
+    if (artType === "vinyl") customAnimationClass = "animate-[spin_1.5s_ease-in-out_1]";
+    if (artType === "coffee") customAnimationClass = "animate-[candor-breathe_1s_ease-in-out_infinite]";
+    if (artType === "projector") customAnimationClass = "animate-[pulse_0.75s_ease-in-out_2]";
+    if (artType === "plant") customAnimationClass = "animate-[bounce_0.5s_ease-in-out_3]";
+    if (artType === "cloud") customAnimationClass = "animate-[bounce_0.5s_ease-in-out_3]";
+    if (artType === "book") customAnimationClass = "animate-[pulse_0.5s_ease-in-out_2]";
+  }
+
+  return (
+    <Card 
+      onClick={handleClick}
+      className={`cursor-pointer glass-card overflow-hidden border border-border/40 bg-card/30 max-md:backdrop-blur-md md:backdrop-blur-3xl transition-all hover:border-accent/50 hover:shadow-[0_0_20px_hsl(var(--accent)/0.15)] shadow-xl flex items-center justify-center p-8 min-h-[220px] active:scale-[0.97]`}
+    >
+      <div key={key} className={customAnimationClass}>
+        {artType === "coffee" && <CoffeeArt state={animating ? 2 : 1} width={90} height={90} />}
+        {artType === "projector" && <ProjectorArt state={animating ? 2 : 1} width={110} height={110} />}
+        {artType === "vinyl" && <VinylArt state={animating ? 2 : 1} width={110} height={110} />}
+        {artType === "plant" && <PlantArt state={animating ? 2 : 1} width={100} height={100} />}
+        {artType === "cloud" && <CloudArt state={animating ? 2 : 1} width={100} height={100} />}
+        {artType === "book" && <BookOpenArt state={animating ? 2 : 1} width={100} height={100} />}
+      </div>
+    </Card>
+  );
 }
