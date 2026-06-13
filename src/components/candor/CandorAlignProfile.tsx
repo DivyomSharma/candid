@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, DoorOpen, Sparkles, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -101,11 +102,13 @@ export function CandorAlignProfile({ id }: { id: string }) {
       <div className="absolute left-0 right-0 top-0 h-[60vh] md:h-[70vh]">
         {hasCover ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={p.coverUrl || undefined}
+            <Image
+              src={p.coverUrl as string}
               alt="Room ambient"
-              className="h-full w-full object-cover opacity-40 mix-blend-luminosity"
+              fill
+              sizes="100vw"
+              priority
+              className="absolute inset-0 object-cover opacity-40 mix-blend-luminosity"
             />
           </>
         ) : (
@@ -142,8 +145,7 @@ export function CandorAlignProfile({ id }: { id: string }) {
             />
             <Avatar className="relative z-10 h-24 w-24 border-2 border-border/80 bg-background/90 shadow-2xl sm:h-28 sm:w-28">
               {p.coverUrl ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={p.coverUrl} className="h-full w-full object-cover" alt={p.username} />
+                <Image src={p.coverUrl} className="object-cover" alt={p.username} fill sizes="(max-width: 768px) 112px, 112px" />
               ) : (
                 <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] sm:text-4xl">
                   {p.avatarInitials}

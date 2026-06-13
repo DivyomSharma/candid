@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plane, MapPin } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const VACATIONS = [
@@ -41,15 +42,16 @@ export function SuggestedVacation() {
   }, [vacation.name]);
 
   return (
-    <Card className="glass-card border-border/30 bg-card/20 backdrop-blur-3xl shadow-xl overflow-hidden relative group h-[300px] sm:h-[350px] xl:h-[400px] w-full">
+    <Card className="glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl overflow-hidden relative group h-[300px] sm:h-[350px] xl:h-[400px] w-full">
       {isLoading ? (
         <div className="absolute inset-0 bg-accent/5 animate-pulse" />
       ) : (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
+        <Image
           src={imageUrl || vacation.fallback}
           alt={vacation.name}
-          className="absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-luminosity transition-all duration-700 group-hover:opacity-60 group-hover:mix-blend-normal group-hover:scale-105"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="absolute inset-0 object-cover opacity-40 mix-blend-luminosity transition-all duration-700 group-hover:opacity-60 group-hover:mix-blend-normal group-hover:scale-105"
         />
       )}
       

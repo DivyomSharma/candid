@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { MapPin } from "lucide-react";
@@ -19,8 +19,26 @@ function WeatherParticles({ condition }: { condition: string }) {
   const isRain = condition.toLowerCase().includes("rain") || condition.toLowerCase().includes("shower");
   const isSnow = condition.toLowerCase().includes("snow");
   const isClear = condition.toLowerCase().includes("clear");
+  const prefersReducedMotion = useReducedMotion();
   
-  const particles = Array.from({ length: 40 });
+  const [particleCount, setParticleCount] = useState(40);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setParticleCount(0);
+      return;
+    }
+    const updateCount = () => {
+      setParticleCount(window.innerWidth < 768 ? 8 : 40);
+    };
+    updateCount();
+    window.addEventListener("resize", updateCount);
+    return () => window.removeEventListener("resize", updateCount);
+  }, [prefersReducedMotion]);
+  
+  if (particleCount === 0) return null;
+
+  const particles = Array.from({ length: particleCount });
   
   if (isRain) {
     return (
@@ -174,9 +192,9 @@ export function EnvironmentCard({
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
       onClick={onClick}
-      className={cn("cursor-pointer group h-full", className)}
+      className={cn("cursor-pointer group h-full relative overflow-hidden rounded-3xl [contain:layout_paint_style]", className)}
     >
-      <Card className="glass-card overflow-hidden border border-border/40 bg-card/30 backdrop-blur-3xl transition-colors hover:border-accent/30 shadow-xl relative min-h-[240px] h-full">
+      <Card className="glass-card overflow-hidden border border-border/40 bg-card/30 max-md:backdrop-blur-md md:backdrop-blur-3xl transition-colors hover:border-accent/30 shadow-xl relative min-h-[240px] h-full">
         <WeatherParticles condition={data.condition} />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute bottom-0 left-0 p-6 flex flex-col justify-end w-full relative z-10">

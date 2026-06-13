@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Disc } from "lucide-react";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function SpinningVinyl({
@@ -14,7 +15,7 @@ export function SpinningVinyl({
   coverUrl?: string;
 }) {
   return (
-    <Card className="glass-card border-border/30 bg-card/20 backdrop-blur-3xl shadow-xl overflow-hidden relative group">
+    <Card className="glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl overflow-hidden relative group">
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent pointer-events-none" />
       <CardContent className="p-5 flex items-center gap-5">
         <div className="relative h-20 w-20 shrink-0">
@@ -34,11 +35,12 @@ export function SpinningVinyl({
           >
             <div className="h-8 w-8 rounded-full overflow-hidden border border-black/40 relative">
               {coverUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={coverUrl}
                   alt={title}
-                  className="h-full w-full object-cover"
+                  fill
+                  sizes="32px"
+                  className="object-cover"
                 />
               ) : (
                 <div className="h-full w-full bg-accent" />

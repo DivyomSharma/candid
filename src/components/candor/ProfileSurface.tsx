@@ -240,8 +240,7 @@ export function ProfileSurface({
           <Card className="surface relative overflow-hidden border-border/40 bg-card/30 backdrop-blur-md">
             {profile.coverUrl ? (
               <div className="absolute inset-0 pointer-events-none opacity-40">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={profile.coverUrl} alt="Cover" className="h-full w-full object-cover mix-blend-luminosity" />
+                <Image src={profile.coverUrl} alt="Cover" fill sizes="100vw" priority className="object-cover mix-blend-luminosity" />
               </div>
             ) : (
               <div className="absolute inset-0 pointer-events-none opacity-40" style={{ background: profile.bannerTone }} />
@@ -272,8 +271,7 @@ export function ProfileSurface({
                   />
                   <Avatar className="relative z-10 h-24 w-24 border-2 border-border/80 bg-background/90 shadow-2xl sm:h-28 sm:w-28">
                     {profile.coverUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={profile.coverUrl} className="h-full w-full object-cover" alt={profile.username} />
+                      <Image src={profile.coverUrl} className="object-cover" alt={profile.username} fill sizes="(max-width: 768px) 112px, 112px" />
                     ) : (
                       <AvatarFallback className="bg-background/80 text-3xl font-light text-foreground shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] sm:text-4xl">
                         {profile.initials}
@@ -409,7 +407,7 @@ export function ProfileSurface({
         <div className="candor-desktop-wall auto-rows-min">
           
             {v4.currently && (v4.currently.building || v4.currently.watching || v4.currently.reading || v4.currently.listening || v4.currently.thinking) && (
-            <Card className="candor-wall-card md:col-span-8 glass-card border-border/30 bg-card/20 backdrop-blur-3xl flex-1 flex flex-col justify-between shadow-xl">
+            <Card className="candor-wall-card md:col-span-8 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl flex-1 flex flex-col justify-between shadow-xl">
               <CardHeader className="p-5 pb-2">
                 <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
                   currently
@@ -498,7 +496,7 @@ export function ProfileSurface({
             )}
 
             {v4.tonight && v4.tonight.length > 0 && (
-              <Card className="candor-wall-card md:col-span-4 glass-card border-border/30 bg-card/20 backdrop-blur-3xl shadow-xl">
+              <Card className="candor-wall-card md:col-span-4 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
                 <CardHeader className="p-5 pb-2">
                   <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70 flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
@@ -522,7 +520,7 @@ export function ProfileSurface({
             )}
 
             {profile.recentSignals && profile.recentSignals.length > 0 && (
-              <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 backdrop-blur-3xl shadow-xl">
+              <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
                 <CardHeader className="p-5 pb-2">
                   <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
                     recent signals
@@ -540,7 +538,7 @@ export function ProfileSurface({
             )}
 
             {v4.shelf && v4.shelf.length > 0 && (
-              <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 backdrop-blur-3xl flex-1 flex flex-col justify-between shadow-xl">
+              <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl flex-1 flex flex-col justify-between shadow-xl">
                 <CardHeader className="p-5 pb-2">
                   <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
                     on my shelf
@@ -567,7 +565,7 @@ export function ProfileSurface({
             )}
 
             {v4.openLoops && (v4.openLoops.thinkingAbout || v4.openLoops.recommending || v4.openLoops.defending) && (
-              <Card className="candor-wall-card md:col-span-7 glass-card border-border/30 bg-card/20 backdrop-blur-3xl shadow-xl">
+              <Card className="candor-wall-card md:col-span-7 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
                 <CardHeader className="p-5 pb-2">
                   <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
                     open loops
@@ -597,7 +595,7 @@ export function ProfileSurface({
             )}
 
             {profile.lookingFor && profile.lookingFor.length > 0 && (
-              <Card className="candor-wall-card md:col-span-5 glass-card border-border/30 bg-card/20 backdrop-blur-3xl shadow-xl">
+              <Card className="candor-wall-card md:col-span-5 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
                 <CardHeader className="p-5 pb-2">
                   <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
                     looking for
@@ -617,7 +615,7 @@ export function ProfileSurface({
             )}
 
             {v4.smallThings && v4.smallThings.length > 0 && (
-              <Card className="candor-wall-card md:col-span-12 glass-card border-border/30 bg-card/20 backdrop-blur-3xl shadow-xl">
+              <Card className="candor-wall-card md:col-span-12 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
                 <CardHeader className="p-5 pb-2">
                   <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
                     small things
@@ -639,7 +637,7 @@ export function ProfileSurface({
             )}
 
             {socialLinksConfig.length > 0 && (
-              <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 backdrop-blur-3xl shadow-xl">
+              <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
                 <CardHeader className="p-5 pb-2">
                   <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
                     connections
@@ -669,7 +667,7 @@ export function ProfileSurface({
               </Card>
             )}
 
-            <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 backdrop-blur-3xl border-l-2 border-l-accent flex-1 flex flex-col justify-between shadow-xl">
+            <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl border-l-2 border-l-accent flex-1 flex flex-col justify-between shadow-xl">
               <CardHeader className="p-5 pb-2">
                 <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70 flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-accent" />

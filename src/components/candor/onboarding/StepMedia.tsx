@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { OnboardingData } from "./OnboardingWizard";
 import { Search, Film, Disc, BookOpen, Check } from "lucide-react";
+import Image from "next/image";
 
 interface MediaResult {
   id: string;
@@ -109,8 +110,7 @@ export function StepMedia({
         {selected ? (
           <div className="flex flex-col items-center gap-4 w-full">
             <div className="relative w-40 aspect-[3/4] rounded-xl overflow-hidden shadow-2xl border border-white/10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={selected.coverUrl as string} alt={selected.title as string} className="w-full h-full object-cover" />
+              <Image src={selected.coverUrl as string} alt={selected.title as string} fill sizes="160px" className="object-cover" />
               <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                 <button 
                   onClick={() => {
@@ -158,8 +158,9 @@ export function StepMedia({
                     onClick={() => selectMedia(r, shelfType)}
                     className="w-full text-left p-3 hover:bg-foreground/5 transition-colors flex items-center gap-4 border-b border-border/10 last:border-0"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={r.coverUrl} alt={r.title} className="w-12 h-16 object-cover rounded-md shadow-sm" />
+                    <div className="w-12 h-16 relative shrink-0 rounded-md shadow-sm overflow-hidden">
+                      <Image src={r.coverUrl} alt={r.title} fill sizes="48px" className="object-cover" />
+                    </div>
                     <div className="flex flex-col overflow-hidden">
                       <span className="truncate font-medium text-foreground">{r.title}</span>
                       <span className="text-xs text-muted-foreground truncate">{r.subtitle}</span>

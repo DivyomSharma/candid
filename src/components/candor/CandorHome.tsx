@@ -347,8 +347,8 @@ export function CandorHome() {
                 })}
               </div>
 
-              {/* MASONRY CARDS (CONTINUOUS WALL) */}
-              <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
+              {/* MASONRY CARDS (CONTINUOUS WALL ON DESKTOP, FLEX COL ON MOBILE) */}
+              <div className="flex flex-col md:block md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
                 {masonryGroups.map((group, i) => {
                   const renderedCards = group.map((spec) => {
                     const cardEl = renderHomeCard({ 
@@ -409,7 +409,7 @@ export function CandorHome() {
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setIsInputFocused(false)}
                 placeholder={isInputFocused ? "" : placeholders[placeholderIndex]}
-                className="h-16 w-full origin-center rounded-full glass-card border border-border/60 bg-background/60 backdrop-blur-3xl pl-8 pr-[60px] text-lg font-light text-foreground outline-none transition-all placeholder:text-foreground-secondary/50 focus:border-accent/50 focus:bg-background/80 focus:shadow-[0_0_30px_hsl(var(--accent)/0.15)] shadow-2xl"
+                className="h-16 w-full origin-center rounded-full glass-card border border-border/60 bg-background/60 max-md:backdrop-blur-md md:backdrop-blur-3xl pl-8 pr-[60px] text-lg font-light text-foreground outline-none transition-all placeholder:text-foreground-secondary/50 focus:border-accent/50 focus:bg-background/80 focus:shadow-[0_0_30px_hsl(var(--accent)/0.15)] shadow-2xl"
               />
 
               <div className="absolute right-2 flex items-center">
@@ -503,7 +503,7 @@ function renderHomeCard(input: {
   if (card.kind === "art") {
     const artType = (card as CandorHomeCardSpec & { artType?: string }).artType;
     return (
-      <Card className="glass-card overflow-hidden border border-border/40 bg-card/30 backdrop-blur-3xl transition-colors hover:border-accent/30 shadow-xl flex items-center justify-center p-8 min-h-[220px]">
+      <Card className="glass-card overflow-hidden border border-border/40 bg-card/30 max-md:backdrop-blur-md md:backdrop-blur-3xl transition-colors hover:border-accent/30 shadow-xl flex items-center justify-center p-8 min-h-[220px]">
         {artType === "coffee" && <CoffeeArt state={1} width={90} height={90} />}
         {artType === "projector" && <ProjectorArt state={1} width={110} height={110} />}
         {artType === "vinyl" && <VinylArt state={1} width={110} height={110} />}

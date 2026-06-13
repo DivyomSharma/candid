@@ -25,7 +25,7 @@ function MobileThemeIsland() {
   return (
     <div className="relative flex flex-col items-center">
       {isOpen && (
-        <div className="glass-card shadow-2xl absolute bottom-12 flex flex-col items-center gap-2 rounded-full px-2 py-3 backdrop-blur-3xl">
+        <div className="glass-card shadow-2xl absolute bottom-12 flex flex-col items-center gap-2 rounded-full px-2 py-3 backdrop-blur-md">
           {accents.map((a) => (
             <button
               key={a.name}
@@ -57,7 +57,7 @@ function MobileThemeIsland() {
       <button
         type="button"
         onClick={() => { triggerLight(); setIsOpen((current) => !current); }}
-        className="shadow-2xl flex h-10 w-10 items-center justify-center rounded-full glass-card text-foreground-secondary backdrop-blur-3xl transition-colors active:scale-95"
+        className="shadow-2xl flex h-10 w-10 items-center justify-center rounded-full glass-card text-foreground-secondary backdrop-blur-md transition-colors active:scale-95"
         aria-expanded={isOpen}
         aria-label="Theme options"
       >
@@ -171,8 +171,8 @@ export function BottomNav() {
   return (
     <>
       <div className="fixed inset-x-0 bottom-0 z-[90] h-28 pointer-events-none bg-gradient-to-t from-background via-background/95 to-transparent" aria-hidden="true" />
-      <nav className="fixed inset-x-0 bottom-4 z-[100] flex justify-center gap-2 px-3 pointer-events-none sm:bottom-5 sm:gap-3 sm:px-6">
-        <div className="pointer-events-auto glass-card shadow-2xl flex max-w-[calc(100vw-4.5rem)] items-center gap-0.5 rounded-full px-1.5 py-1.5 backdrop-blur-3xl sm:max-w-none sm:gap-1 sm:px-2 sm:py-2">
+      <nav className="fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-[100] flex justify-center gap-2 px-3 pointer-events-none sm:bottom-[calc(1.25rem+env(safe-area-inset-bottom))] sm:gap-3 sm:px-6">
+        <div className="pointer-events-auto glass-card shadow-2xl flex max-w-[calc(100vw-4.5rem)] items-center gap-0.5 rounded-full px-1.5 py-1.5 max-md:backdrop-blur-md md:backdrop-blur-3xl sm:max-w-none sm:gap-1 sm:px-2 sm:py-2">
         <Link
           href={`/candor/session/${CANDOR_THREAD_ID}`}
           onClick={triggerLight}
