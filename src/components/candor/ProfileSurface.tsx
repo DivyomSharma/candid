@@ -39,6 +39,7 @@ import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
 import { WeatherWidget } from "@/components/candor/widgets/WeatherWidget";
 import { ZodiacWidget } from "@/components/candor/widgets/ZodiacWidget";
 import { SpinningVinyl } from "@/components/candor/widgets/SpinningVinyl";
+import { ShelfItemCard } from "@/components/candor/widgets/ShelfItemCard";
 
 // Custom premium brand SVG icons
 const SpotifyIcon = () => (
@@ -547,17 +548,7 @@ export function ProfileSurface({
                 <CardContent className="p-5 pt-2 flex-1 flex flex-col justify-center gap-3">
                   <div className="space-y-3.5">
                     {v4.shelf.map((item: { key: string; value: string }) => (
-                      <div key={item.key} className="p-3 rounded-2xl border border-border/30 bg-background/20 space-y-1 hover:border-accent/30 transition-colors">
-                        <span className="text-[9px] uppercase tracking-widest text-foreground-secondary/55 font-light block">{item.key}</span>
-                        <span className="text-sm font-light text-foreground flex items-center gap-1.5">
-                          {item.key?.includes("movie") ? <Film className="h-3.5 w-3.5 text-accent/80" /> : 
-                           item.key?.includes("album") ? <Music className="h-3.5 w-3.5 text-accent/80" /> :
-                           item.key?.includes("book") ? <BookOpen className="h-3.5 w-3.5 text-accent/80" /> :
-                           item.key?.includes("caf") ? <Coffee className="h-3.5 w-3.5 text-accent/80" /> :
-                           <Compass className="h-3.5 w-3.5 text-accent/80" />}
-                          {item.value}
-                        </span>
-                      </div>
+                      <ShelfItemCard key={item.key} item={item} />
                     ))}
                   </div>
                 </CardContent>

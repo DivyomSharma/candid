@@ -62,7 +62,7 @@ export function CandorSession({ id }: { id: string }) {
   const isImproveMode = searchParams.get("mode") === "improve";
 
   const [messages, setMessages] = useState<Message[]>([]);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(searchParams.get("q") ?? "");
   const [isResponding, setIsResponding] = useState(false);
   const [historyCursor, setHistoryCursor] = useState<string | null>(null);
   const [hasMoreHistory, setHasMoreHistory] = useState(false);
