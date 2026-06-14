@@ -1,8 +1,6 @@
 "use client";
 
 import { LineArt, LineArtPath, type LineArtProps } from "./LineArt";
-export { CloudArt } from "./CloudArt";
-export { BookArt as BookOpenArt } from "./BookArt";
 
 export function MoonArt(props: Omit<LineArtProps, "children">) {
   return (
@@ -45,7 +43,19 @@ export function ProjectorArt(props: Omit<LineArtProps, "children">) {
   );
 }
 
-export function BookArt(props: Omit<LineArtProps, "children">) {
+export function CloudArt(props: Omit<LineArtProps, "children">) {
+  return (
+    <LineArt {...props}>
+      <LineArtPath d="M35 70C25 70 20 60 25 50C20 40 30 35 35 40C40 25 60 25 65 40C70 30 85 30 90 40C100 45 100 60 90 70H35Z" state={props.state} delay={0} />
+      <LineArtPath d="M40 75V85" state={props.state} delay={0.4} />
+      <LineArtPath d="M55 75V90" state={props.state} delay={0.6} />
+      <LineArtPath d="M70 75V85" state={props.state} delay={0.8} />
+      <LineArtPath d="M85 75V90" state={props.state} delay={1.0} />
+    </LineArt>
+  );
+}
+
+export function BookOpenArt(props: Omit<LineArtProps, "children">) {
   return (
     <LineArt {...props}>
       <LineArtPath d="M60 85V25" state={props.state} delay={0} />
