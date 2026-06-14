@@ -38,8 +38,8 @@ import type { CandorMemory, CandorBadge } from "@/lib/candor/types";
 import { AmbientGlyph } from "@/components/candor/art/AmbientGlyph";
 import { WeatherWidget } from "@/components/candor/widgets/WeatherWidget";
 import { ZodiacWidget } from "@/components/candor/widgets/ZodiacWidget";
-import { SpinningVinyl } from "@/components/candor/widgets/SpinningVinyl";
 import { ShelfItemCard } from "@/components/candor/widgets/ShelfItemCard";
+import { ProfileWall, type ProfileModuleData } from "@/components/candor/ProfileWall";
 
 // Custom premium brand SVG icons
 const SpotifyIcon = () => (
@@ -225,6 +225,83 @@ export function ProfileSurface({
     return v4.shelf?.find((s: Record<string, unknown>) => s.key === "album");
   }, [v4.shelf]);
 
+  const profileModules = useMemo(() => {
+    let baseLayout = profile.profileV4.layout;
+    if (!baseLayout || baseLayout.length === 0) {
+      baseLayout = [
+        { id: "candor-noticed", order: 0, visible: true, pinned: false },
+        { id: "gallery", order: 1, visible: true, pinned: false },
+        { id: "public-read", order: 2, visible: true, pinned: false },
+        { id: "conversation-energy", order: 3, visible: true, pinned: false },
+        { id: "current-curiosity", order: 4, visible: true, pinned: false },
+        { id: "small-joys", order: 5, visible: true, pinned: false },
+        { id: "seasonal-mood", order: 6, visible: true, pinned: false },
+        { id: "shelf", order: 7, visible: true, pinned: false },
+        { id: "questions-worth-asking", order: 8, visible: true, pinned: false },
+        { id: "signature-objects", order: 9, visible: true, pinned: false },
+      ];
+    }
+    
+    // Sort by order
+    const sorted = [...baseLayout].sort((a, b) => a.order - b.order);
+    
+    const mapped: ProfileModuleData[] = [];
+    for (const mod of sorted) {
+      if (!mod.visible) continue;
+      
+      const type = mod.id;
+      let props: Record<string, unknown> = {};
+      
+      switch (mod.id) {
+        case "candor-noticed":
+          if (!profile.whatCandorNotices?.[0]) continue;
+          props = { observation: profile.whatCandorNotices[0] };
+          break;
+        case "public-read":
+          if (!profile.publicReadSentence) continue;
+          props = { sentence: profile.publicReadSentence };
+          break;
+        case "conversation-energy": {
+          const chips = [profile.socialPreferences?.[0], profile.interests?.[0], profile.lifestylePreferences?.[0]].filter(Boolean);
+          if (chips.length === 0) continue;
+          props = { chips };
+          break;
+        }
+        case "current-curiosity":
+          if (!profile.interests || profile.interests.length < 2) continue;
+          props = { topics: profile.interests.slice(0, 3) };
+          break;
+        case "small-joys":
+          if (!v4.smallThings || v4.smallThings.length === 0) continue;
+          props = { joys: v4.smallThings };
+          break;
+        case "questions-worth-asking":
+          if (!profile.questionsWorthAsking || profile.questionsWorthAsking.length === 0) continue;
+          props = { questions: profile.questionsWorthAsking };
+          break;
+        case "signature-objects":
+          if (!profile.signatureObjects) continue;
+          props = { objects: profile.signatureObjects };
+          break;
+        case "shelf":
+          if (!v4.shelf || v4.shelf.length === 0) continue;
+          props = { title: "on my shelf", items: v4.shelf };
+          break;
+        case "seasonal-mood":
+          props = { season: "summer", mood: "slow mornings, iced coffee, long books" };
+          break;
+        case "gallery":
+          if (!v4.photos || v4.photos.length === 0) continue;
+          props = { images: v4.photos };
+          break;
+      }
+      
+      mapped.push({ id: mod.id, type, visible: mod.visible, pinned: mod.pinned, props });
+    }
+    
+    return mapped;
+  }, [profile, v4]);
+
   return (
     <main className="gradient-bg grain relative min-h-dvh overflow-x-hidden px-4 pb-40 pt-16 sm:px-6 sm:pt-20">
       <AmbientGlow />
@@ -404,275 +481,11 @@ export function ProfileSurface({
           </motion.div>
         )}
 
-        {!isProfileLocked && (<>
-        <div className="candor-desktop-wall auto-rows-min">
-          
-            {v4.currently && (v4.currently.building || v4.currently.watching || v4.currently.reading || v4.currently.listening || v4.currently.thinking) && (
-            <Card className="candor-wall-card md:col-span-8 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl flex-1 flex flex-col justify-between shadow-xl">
-              <CardHeader className="p-5 pb-2">
-                <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
-                  currently
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-5 pt-2 flex-1 flex flex-col justify-center gap-4">
-                <div className="space-y-3.5">
-                  {v4.currently?.building && (
-                    <div className="flex items-center gap-3 group">
-                      <div className="p-2 rounded-xl bg-background/40 border border-border/30 text-foreground-secondary group-hover:text-accent transition-colors">
-                        <Laptop className="h-4.5 w-4.5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] uppercase tracking-wider text-foreground-secondary/50 font-light">building</span>
-                        <span className="text-sm font-light text-foreground">{v4.currently.building}</span>
-                      </div>
-                    </div>
-                  )}
-                  {v4.currently?.watching && (
-                    <div className="flex items-center gap-3 group">
-                      <div className="p-2 rounded-xl bg-background/40 border border-border/30 text-foreground-secondary group-hover:text-accent transition-colors">
-                        <Film className="h-4.5 w-4.5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] uppercase tracking-wider text-foreground-secondary/50 font-light">watching</span>
-                        <span className="text-sm font-light text-foreground">{v4.currently.watching}</span>
-                      </div>
-                    </div>
-                  )}
-                  {v4.currently?.reading && (
-                    <div className="flex items-center gap-3 group">
-                      <div className="p-2 rounded-xl bg-background/40 border border-border/30 text-foreground-secondary group-hover:text-accent transition-colors">
-                        <BookOpen className="h-4.5 w-4.5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] uppercase tracking-wider text-foreground-secondary/50 font-light">reading</span>
-                        <span className="text-sm font-light text-foreground">{v4.currently.reading}</span>
-                      </div>
-                    </div>
-                  )}
-                  {v4.currently?.listening && (
-                    <div className="flex items-center gap-3 group">
-                      <div className="p-2 rounded-xl bg-background/40 border border-border/30 text-foreground-secondary group-hover:text-accent transition-colors">
-                        <Music className="h-4.5 w-4.5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] uppercase tracking-wider text-foreground-secondary/50 font-light">listening</span>
-                        <span className="text-sm font-light text-foreground">{v4.currently.listening}</span>
-                      </div>
-                    </div>
-                  )}
-                  {v4.currently?.thinking && (
-                    <div className="flex items-center gap-3 group">
-                      <div className="p-2 rounded-xl bg-background/40 border border-border/30 text-foreground-secondary group-hover:text-accent transition-colors">
-                        <Brain className="h-4.5 w-4.5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] uppercase tracking-wider text-foreground-secondary/50 font-light">thinking about</span>
-                        <span className="text-sm font-light text-foreground">{v4.currently.thinking}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-            )}
-
-            {(profile.lat || profile.lon || profile.dob || favoriteAlbum) && (
-              <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-min">
-                {profile.lat && profile.lon && (
-                  <div className="h-full">
-                    <WeatherWidget lat={profile.lat} lon={profile.lon} city={profile.city} />
-                  </div>
-                )}
-                {profile.dob && (
-                  <div className="h-full">
-                    <ZodiacWidget dob={profile.dob} />
-                  </div>
-                )}
-                {favoriteAlbum && (
-                  <div className="h-full">
-                    <SpinningVinyl title={favoriteAlbum.value} coverUrl={(favoriteAlbum as Record<string, unknown>).coverUrl as string} />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {v4.tonight && v4.tonight.length > 0 && (
-              <Card className="candor-wall-card md:col-span-4 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
-                <CardHeader className="p-5 pb-2">
-                  <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70 flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                    tonight
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 pt-2">
-                  <div className="flex flex-wrap gap-2">
-                    {v4.tonight.map((mood: string) => (
-                      <motion.span
-                        key={mood}
-                        whileHover={{ scale: 1.05 }}
-                        className="rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-light text-foreground shadow-sm"
-                      >
-                        {mood}
-                      </motion.span>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {profile.recentSignals && profile.recentSignals.length > 0 && (
-              <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
-                <CardHeader className="p-5 pb-2">
-                  <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
-                    recent signals
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 pt-2 space-y-3">
-                  {profile.recentSignals.map((signal) => (
-                    <div key={signal.label} className="space-y-1">
-                      <span className="text-[10px] font-light uppercase tracking-wider text-accent/80">{signal.label}</span>
-                      <p className="text-sm font-light text-foreground leading-relaxed">{signal.value}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
-            {v4.shelf && v4.shelf.length > 0 && (
-              <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl flex-1 flex flex-col justify-between shadow-xl">
-                <CardHeader className="p-5 pb-2">
-                  <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
-                    on my shelf
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 pt-2 flex-1 flex flex-col justify-center gap-3">
-                  <div className="space-y-3.5">
-                    {v4.shelf.map((item: { key: string; value: string }) => (
-                      <ShelfItemCard key={item.key} item={item} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {v4.openLoops && (v4.openLoops.thinkingAbout || v4.openLoops.recommending || v4.openLoops.defending) && (
-              <Card className="candor-wall-card md:col-span-7 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
-                <CardHeader className="p-5 pb-2">
-                  <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
-                    open loops
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 pt-2 space-y-3">
-                  {v4.openLoops.thinkingAbout && (
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-light uppercase tracking-wider text-foreground-secondary/40">still thinking about...</span>
-                      <p className="text-sm font-light text-foreground leading-relaxed italic">"{v4.openLoops.thinkingAbout}"</p>
-                    </div>
-                  )}
-                  {v4.openLoops.recommending && (
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-light uppercase tracking-wider text-foreground-secondary/40">i'll never stop recommending...</span>
-                      <p className="text-sm font-light text-foreground leading-relaxed italic">"{v4.openLoops.recommending}"</p>
-                    </div>
-                  )}
-                  {v4.openLoops.defending && (
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-light uppercase tracking-wider text-foreground-secondary/40">currently defending...</span>
-                      <p className="text-sm font-light text-foreground leading-relaxed italic">"{v4.openLoops.defending}"</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {profile.lookingFor && profile.lookingFor.length > 0 && (
-              <Card className="candor-wall-card md:col-span-5 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
-                <CardHeader className="p-5 pb-2">
-                  <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
-                    looking for
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 pt-2 flex flex-wrap gap-2">
-                  {profile.lookingFor.map((item) => (
-                    <span
-                      key={item}
-                      className="rounded-full border border-border/30 bg-background/20 px-3.5 py-1.5 text-xs font-light text-foreground-secondary"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
-            {v4.smallThings && v4.smallThings.length > 0 && (
-              <Card className="candor-wall-card md:col-span-12 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
-                <CardHeader className="p-5 pb-2">
-                  <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
-                    small things
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 pt-2">
-                  <div className="flex flex-wrap gap-1.5">
-                    {v4.smallThings.map((thing: string) => (
-                      <span
-                        key={thing}
-                        className="rounded-full border border-border/40 bg-background/25 px-2.5 py-1 text-xs font-light text-foreground-secondary"
-                      >
-                        {thing}
-                      </span>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {socialLinksConfig.length > 0 && (
-              <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl shadow-xl">
-                <CardHeader className="p-5 pb-2">
-                  <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70">
-                    connections
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 pt-2">
-                  <div className="flex flex-wrap gap-2.5">
-                    {socialLinksConfig.map((cfg) => {
-                      const value = v4.socialLinks[cfg.key];
-                      return (
-                        <motion.a
-                          key={cfg.key}
-                          href={cfg.url(value)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          whileHover={{ scale: 1.05 }}
-                          className="flex items-center gap-2 rounded-full border border-border/45 bg-background/30 px-3.5 py-1.5 text-xs font-light text-foreground-secondary backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-foreground"
-                        >
-                          {cfg.icon}
-                          <span>{cfg.label}</span>
-                          <ExternalLink className="h-3 w-3 opacity-50" />
-                        </motion.a>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card className="candor-wall-card md:col-span-6 glass-card border-border/30 bg-card/20 max-md:backdrop-blur-md md:backdrop-blur-3xl border-l-2 border-l-accent flex-1 flex flex-col justify-between shadow-xl">
-              <CardHeader className="p-5 pb-2">
-                <CardTitle className="text-xs font-light uppercase tracking-[0.2em] text-foreground-secondary/70 flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-accent" />
-                  candor noticed
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-5 pt-2 flex-1 flex flex-col justify-center">
-                <p className="text-sm font-light leading-relaxed text-foreground">
-                  "{observation}"
-                </p>
-              </CardContent>
-            </Card>
-
-        </div>
+        {!isProfileLocked && (
+          <div className="mt-8">
+            <ProfileWall initialModules={profileModules} isOwner={!publicMode} />
+          </div>
+        )}
 
         {publicMode && (
           <motion.div 
@@ -795,8 +608,6 @@ export function ProfileSurface({
             </Button>
           </div>
         )}
-        </>)}
-
       </section>
       {showBottomNav && <BottomNav />}
     </main>

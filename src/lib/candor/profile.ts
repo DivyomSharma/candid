@@ -52,6 +52,9 @@ export type CandorProfilePresentation = {
     title: string;
     lines: string[];
   }>;
+  publicReadSentence: string;
+  questionsWorthAsking: string[];
+  signatureObjects: string[];
 };
 
 export function buildCandorProfilePresentation(input: {
@@ -150,6 +153,16 @@ export function buildCandorProfilePresentation(input: {
 
   const openDoorStatus = "Open to conversation";
 
+  const publicReadSentence = `Feels more at home in ${interests[0] ? themeLabel(interests[0]) : "quiet spaces"} than surface small talk.`;
+  
+  const questionsWorthAsking = [
+    interests[0] ? `What is it about ${themeLabel(interests[0])} that completely holds your attention?` : "What place feels like home?",
+    values[0] ? `When did you first realize you cared so much about ${values[0]}?` : "What city changed you?",
+    needs[0] ? `Who understands how you communicate best?` : "What film ending stayed with you?"
+  ];
+
+  const signatureObjects = ["☕", "🎧", "📖"];
+
   return {
     username,
     handle,
@@ -211,6 +224,9 @@ export function buildCandorProfilePresentation(input: {
       } : null,
     ].filter(Boolean) as Array<{ label: string; value: string; meter: number }>,
     shareCards: buildShareCards({ username, values, interests, socialPreferences, needs, resonanceIndicators }),
+    publicReadSentence,
+    questionsWorthAsking,
+    signatureObjects,
   };
 }
 

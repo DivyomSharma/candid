@@ -225,6 +225,13 @@ export type CandorBadge = {
   source: "confirmed" | "inferred";
 };
 
+export type CandorProfileLayoutModule = {
+  id: string;
+  visible: boolean;
+  pinned: boolean;
+  order: number;
+};
+
 export type CandorProfileV4 = {
   currently: CurrentlyV4;
   tonight: string[];
@@ -234,4 +241,5 @@ export type CandorProfileV4 = {
   socialLinks: Record<string, string>;
   photos: string[];
   badges: CandorBadge[];
+  layout?: CandorProfileLayoutModule[];
 };
