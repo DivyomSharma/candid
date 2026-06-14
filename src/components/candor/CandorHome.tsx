@@ -277,16 +277,24 @@ export function CandorHome() {
     ? `https://open.spotify.com/user/${memoryPreview.profileV4.socialLinks.spotify}`
     : "https://open.spotify.com/";
 
-  const masonryGroups = useMemo(() => [
-    [{ kind: "art", artType: "coffee" }, { kind: "align" }],
-    [{ kind: "memory" }],
-    [{ kind: "signal" }],
-    [{ kind: "art", artType: "vinyl" }, { kind: "soundtrack" }],
-    [{ kind: "vacation" }, { kind: "art", artType: "projector" }, { kind: "movie" }],
-    [{ kind: "art", artType: "cloud" }, { kind: "environment" }],
-    [{ kind: "art", artType: "book" }, { kind: "reading" }],
-    [{ kind: "mood_collage" }],
-    [{ kind: "art", artType: "plant" }, { kind: "reflection" }, { kind: "thought" }],
+  const masonryCards = useMemo(() => [
+    { kind: "art", artType: "coffee" },
+    { kind: "align" },
+    { kind: "memory" },
+    { kind: "signal" },
+    { kind: "art", artType: "vinyl" },
+    { kind: "soundtrack" },
+    { kind: "vacation" },
+    { kind: "art", artType: "projector" },
+    { kind: "movie" },
+    { kind: "art", artType: "cloud" },
+    { kind: "environment" },
+    { kind: "art", artType: "book" },
+    { kind: "reading" },
+    { kind: "mood_collage" },
+    { kind: "art", artType: "plant" },
+    { kind: "reflection" },
+    { kind: "thought" },
   ], []);
 
   return (
@@ -348,31 +356,23 @@ export function CandorHome() {
               </div>
 
               {/* MASONRY CARDS (CONTINUOUS WALL ON DESKTOP, FLEX COL ON MOBILE) */}
-              <div className="flex flex-col md:block md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
-                {masonryGroups.map((group, i) => {
-                  const renderedCards = group.map((spec) => {
-                    const cardEl = renderHomeCard({ 
-                      card: { ...spec, priority: 1 } as CandorHomeCardSpec & { artType?: string }, 
-                      isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
-                    });
-                    return cardEl?.props.className !== "hidden" ? cardEl : null;
-                  }).filter(Boolean);
-
-                  if (renderedCards.length === 0) return null;
+              <div className="flex flex-col md:block md:columns-2 lg:columns-3 xl:columns-4 gap-6">
+                {masonryCards.map((spec, i) => {
+                  const cardEl = renderHomeCard({ 
+                    card: { ...spec, priority: 1 } as CandorHomeCardSpec & { artType?: string }, 
+                    isSignedIn, preview, previewTeaser, signal, signalAnswered, primaryAlign, adaptiveHome, memoryPreview, reflection, tonightItems, soundtrackUrl, router, fetchSignal, handleSignalAnswer, selectPrompt 
+                  });
+                  if (cardEl?.props.className === "hidden" || !cardEl) return null;
 
                   return (
                     <motion.div 
-                      key={`group-${i}`} 
-                      className="break-inside-avoid relative group flex flex-col gap-6 mb-6"
+                      key={`card-${i}`} 
+                      className="break-inside-avoid relative mb-6 transition-all duration-700 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_hsl(var(--accent)/0.15)] rounded-3xl"
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05, duration: 0.5 }}
                     >
-                      {renderedCards.map((card, idx) => (
-                        <div key={idx} className="transition-all duration-700 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_-15px_hsl(var(--accent)/0.15)] group-hover:scale-[1.01] rounded-3xl">
-                          {card}
-                        </div>
-                      ))}
+                      {cardEl}
                     </motion.div>
                   );
                 })}
