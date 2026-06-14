@@ -20,25 +20,25 @@ export function ProfileWall({ initialModules, isOwner }: { initialModules: Profi
   const renderModule = (mod: ProfileModuleData) => {
     switch (mod.type) {
       case "candor-noticed":
-        return <CandorNoticed observation={mod.props.observation} />;
+        return <CandorNoticed observation={mod.props.observation as string} />;
       case "public-read":
-        return <PublicRead sentence={mod.props.sentence} />;
+        return <PublicRead sentence={mod.props.sentence as string} />;
       case "conversation-energy":
-        return <ConversationEnergy chips={mod.props.chips} />;
+        return <ConversationEnergy chips={mod.props.chips as string[]} />;
       case "questions-worth-asking":
-        return <QuestionsWorthAsking questions={mod.props.questions} />;
+        return <QuestionsWorthAsking questions={mod.props.questions as string[]} />;
       case "small-joys":
-        return <SmallJoys joys={mod.props.joys} />;
+        return <SmallJoys joys={mod.props.joys as string[]} />;
       case "signature-objects":
-        return <SignatureObjects objects={mod.props.objects} />;
+        return <SignatureObjects objects={mod.props.objects as string[]} />;
       case "current-curiosity":
-        return <CuriosityModule topics={mod.props.topics} />;
+        return <CuriosityModule topics={mod.props.topics as string[]} />;
       case "shelf":
-        return <ShelfModule title={mod.props.title} items={mod.props.items} />;
+        return <ShelfModule title={mod.props.title as string} items={mod.props.items as Array<{key: string, value: string}>} />;
       case "seasonal-mood":
-        return <SeasonalMood season={mod.props.season} mood={mod.props.mood} />;
+        return <SeasonalMood season={mod.props.season as string} mood={mod.props.mood as string} />;
       case "gallery":
-        return <Gallery images={mod.props.images} />;
+        return <Gallery images={mod.props.images as string[]} />;
       default:
         return null;
     }
