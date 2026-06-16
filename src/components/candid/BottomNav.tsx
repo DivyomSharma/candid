@@ -5,7 +5,7 @@ import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import { Home, Compass, Sparkles, UserRound, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTheme, accents } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHaptics } from "@/hooks/use-haptics";
 import { CANDID_THREAD_ID, candidThreadPresenceStorageKey, candidThreadReadStorageKey, candidThreadStorageKey } from "@/lib/candid/thread";
@@ -17,104 +17,19 @@ const navItems = [
   { href: "/candid/you", label: "you", icon: UserRound },
 ];
 
-function MobileThemeIsland() {
-  const { mode, setMode, accent, setAccent } = useTheme();
-  const [isOpen, setIsOpen] = useState(false);
-  const { triggerLight } = useHaptics();
-
-  return (
-    <div className="relative flex flex-col items-center">
-      {isOpen && (
-        <div className="glass-card shadow-2xl absolute bottom-12 flex flex-col items-center gap-2 rounded-full px-2 py-3 backdrop-blur-md">
-          {accents.map((a) => (
-            <button
-              key={a.name}
-              type="button"
-              aria-label={`${a.label} theme`}
-              onClick={() => {
-                triggerLight();
-                setAccent(a.name);
-                setIsOpen(false);
-              }}
-              className={cn(
-                "h-[18px] w-[18px] rounded-full transition-transform active:scale-95",
-                accent === a.name && "ring-1 ring-foreground/50 ring-offset-1 ring-offset-background",
-              )}
-              style={{ backgroundColor: mode === "dark" ? a.darkColor : a.lightColor }}
-            />
-          ))}
-          <div className="h-px w-5 bg-border/50" />
-          <button
-            type="button"
-            onClick={() => { triggerLight(); setMode(mode === "dark" ? "light" : "dark"); }}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-foreground-secondary transition-colors active:scale-95"
-            aria-label="Toggle light and dark mode"
-          >
-            {mode === "dark" ? <Sun size={15} /> : <Moon size={15} />}
-          </button>
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={() => { triggerLight(); setIsOpen((current) => !current); }}
-        className="shadow-2xl flex h-10 w-10 items-center justify-center rounded-full glass-card text-foreground-secondary backdrop-blur-md transition-colors active:scale-95"
-        aria-expanded={isOpen}
-        aria-label="Theme options"
-      >
-        {mode === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-      </button>
-    </div>
-  );
-}
-
-function DesktopThemeIsland() {
-  const { mode, setMode, accent, setAccent } = useTheme();
-  const { triggerLight } = useHaptics();
-
-  return (
-    <div className="group relative hidden h-10 w-10 cursor-pointer items-center overflow-hidden rounded-full glass-card backdrop-blur-3xl transition-all duration-500 ease-out hover:w-[180px] sm:flex shadow-2xl">
-      <button
-        type="button"
-        onClick={() => { triggerLight(); setMode(mode === "dark" ? "light" : "dark"); }}
-        className="flex h-full w-10 shrink-0 items-center justify-center text-foreground-secondary transition-colors hover:text-foreground"
-        aria-label="Toggle light and dark mode"
-      >
-        {mode === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-      </button>
-
-      <div className="h-4 w-px shrink-0 bg-border/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-      <div className="flex items-center gap-2 pl-3 pr-2 opacity-0 transition-opacity duration-300 delay-100 group-hover:opacity-100">
-        {accents.map((a) => (
-          <button
-            key={a.name}
-            type="button"
-            aria-label={`${a.label} theme`}
-            onClick={(event) => {
-              event.stopPropagation();
-              triggerLight();
-              setAccent(a.name);
-            }}
-            className={cn(
-              "h-[18px] w-[18px] rounded-full transition-transform hover:scale-110",
-              accent === a.name && "ring-1 ring-foreground/50 ring-offset-1 ring-offset-background",
-            )}
-            style={{ backgroundColor: mode === "dark" ? a.darkColor : a.lightColor }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ThemeIsland() {
+  const { mode, setMode } = useTheme();
+  const { triggerLight } = useHaptics();
+
   return (
-    <>
-      <div className="sm:hidden">
-        <MobileThemeIsland />
-      </div>
-      <DesktopThemeIsland />
-    </>
+    <button
+      type="button"
+      onClick={() => { triggerLight(); setMode(mode === "dark" ? "light" : "dark"); }}
+      className="shadow-2xl flex h-10 w-10 items-center justify-center rounded-full glass-card text-foreground-secondary backdrop-blur-md transition-colors active:scale-95 hover:text-foreground"
+      aria-label="Toggle light and dark mode"
+    >
+      {mode === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+    </button>
   );
 }
 
