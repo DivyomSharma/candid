@@ -1,4 +1,4 @@
-import { CANDOR_IDENTITY, CANDOR_PRODUCT_KNOWLEDGE, CANDOR_INTERNAL_REASONING } from "@/lib/candid/system-context";
+import { CANDID_IDENTITY, CANDID_PRODUCT_KNOWLEDGE, CANDID_INTERNAL_REASONING } from "@/lib/candid/system-context";
 import type {
   CandidDecision,
   CandidLearningBias,
@@ -45,11 +45,11 @@ export function buildCandidPrompt(input: {
   } = input;
 
   let prompt = `
-${CANDOR_IDENTITY}
+${CANDID_IDENTITY}
 
-${CANDOR_PRODUCT_KNOWLEDGE}
+${CANDID_PRODUCT_KNOWLEDGE}
 
-${CANDOR_INTERNAL_REASONING}
+${CANDID_INTERNAL_REASONING}
 
 style:
 - lowercase only

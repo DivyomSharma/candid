@@ -9,7 +9,7 @@ import { BottomNav } from "@/components/candid/BottomNav";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildAdaptiveHome, type CandidHomeCardSpec } from "@/lib/candid/personalization";
-import { CANDOR_THREAD_ID, candidThreadStorageKey } from "@/lib/candid/thread";
+import { CANDID_THREAD_ID, candidThreadStorageKey } from "@/lib/candid/thread";
 import type { CandidSignal } from "@/lib/candid/scenarios";
 import type { CandidMemory } from "@/lib/candid/types";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
@@ -230,7 +230,7 @@ export function CandidHome() {
       }
 
       success = true;
-      router.push(`/candid/session/${data.id || CANDOR_THREAD_ID}`);
+      router.push(`/candid/session/${data.id || CANDID_THREAD_ID}`);
     } catch {
       setError("the connection did not answer. try again.");
     } finally {
@@ -511,7 +511,7 @@ function renderHomeCard(input: {
       <ContinueCard 
         label={initiativePreview ? "unread from candid" : "still open"}
         teaser={previewTeaser}
-        onClick={() => isSignedIn && router.push(`/candid/session/${CANDOR_THREAD_ID}`)}
+        onClick={() => isSignedIn && router.push(`/candid/session/${CANDID_THREAD_ID}`)}
       />
     );
   }

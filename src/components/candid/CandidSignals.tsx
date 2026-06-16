@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BottomNav } from "@/components/candid/BottomNav";
 import { AmbientGlow } from "@/components/magicui/ambient-glow";
 import { useAuth } from "@/contexts/AuthContext";
-import { CANDOR_THREAD_ID, candidThreadStorageKey } from "@/lib/candid/thread";
+import { CANDID_THREAD_ID, candidThreadStorageKey } from "@/lib/candid/thread";
 import type { CandidSignal } from "@/lib/candid/scenarios";
 import { PaperAirplaneArt } from "@/components/candid/art";
 import { AmbientGlyph } from "@/components/candid/art/AmbientGlyph";
@@ -103,7 +103,7 @@ export function CandidSignals() {
         ];
         window.localStorage.setItem(candidThreadStorageKey(user.id), JSON.stringify(initialMessages));
       }
-      router.push(`/candid/session/${data.id || CANDOR_THREAD_ID}`);
+      router.push(`/candid/session/${data.id || CANDID_THREAD_ID}`);
     } catch (e) {
       console.error(e);
     } finally {

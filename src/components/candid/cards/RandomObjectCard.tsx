@@ -70,7 +70,7 @@ export function RandomObjectCard({ type, imageUrl, text, className, onClick }: R
           </div>
           <div className="w-16 flex items-center justify-center bg-card/20">
             <span className="text-xs tracking-widest text-foreground-secondary/40 -rotate-90 whitespace-nowrap">
-              CANDOR
+              CANDID
             </span>
           </div>
         </div>

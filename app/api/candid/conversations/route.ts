@@ -5,7 +5,7 @@ import { createEmptyMemory, normalizeMemory } from "@/lib/candid/memory";
 import { accessProfileFor, getCandidAccess } from "@/lib/candid/access";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { CANDOR_THREAD_ID } from "@/lib/candid/thread";
+import { CANDID_THREAD_ID } from "@/lib/candid/thread";
 import {
   getOrCreateCandidUser,
   getSocialState,
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    const id = CANDOR_THREAD_ID;
+    const id = CANDID_THREAD_ID;
     let aiContent: string | null = null;
 
     if (opening) {
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logCandidInternal({ event: "conversation_creation_failed", level: "error", error });
     return NextResponse.json({
-      id: CANDOR_THREAD_ID,
+      id: CANDID_THREAD_ID,
       persisted: false,
       warning: "database_unavailable",
     });

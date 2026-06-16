@@ -24,7 +24,7 @@ export async function embedCandidText(text: string): Promise<CandidEmbeddingResu
 }
 
 async function embedWithOpenAI(text: string): Promise<CandidEmbeddingResult | null> {
-  const model = process.env.CANDOR_EMBEDDING_MODEL ?? DEFAULT_OPENAI_EMBEDDING_MODEL;
+  const model = process.env.CANDID_EMBEDDING_MODEL ?? DEFAULT_OPENAI_EMBEDDING_MODEL;
   const response = await fetch("https://api.openai.com/v1/embeddings", {
     method: "POST",
     headers: {
@@ -50,7 +50,7 @@ async function embedWithOpenAI(text: string): Promise<CandidEmbeddingResult | nu
 }
 
 async function embedWithJina(text: string): Promise<CandidEmbeddingResult | null> {
-  const model = process.env.CANDOR_EMBEDDING_MODEL ?? DEFAULT_JINA_EMBEDDING_MODEL;
+  const model = process.env.CANDID_EMBEDDING_MODEL ?? DEFAULT_JINA_EMBEDDING_MODEL;
   const response = await fetch("https://api.jina.ai/v1/embeddings", {
     method: "POST",
     headers: {

@@ -1,7 +1,7 @@
-export const CANDOR_THREAD_ID = "ongoing";
+export const CANDID_THREAD_ID = "ongoing";
 
 export function isCandidThread(id: string) {
-  return id === CANDOR_THREAD_ID;
+  return id === CANDID_THREAD_ID;
 }
 
 export function candidThreadStorageKey(authId: string) {

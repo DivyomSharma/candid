@@ -31,7 +31,7 @@ export type CandidProviderAdapter = {
   generate(payload: CandidProviderPayload, model: string): Promise<CandidProviderResult>;
 };
 
-const backendUrl = process.env.CANDOR_API_URL ?? process.env.NEXT_PUBLIC_CANDOR_API_URL;
+const backendUrl = process.env.CANDID_API_URL ?? process.env.NEXT_PUBLIC_CANDID_API_URL;
 
 function toOpenAiMessages(payload: CandidProviderPayload) {
   return [

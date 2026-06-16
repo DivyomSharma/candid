@@ -70,5 +70,5 @@ python -m uvicorn main:app --reload --port 8000
 Then set:
 
 ```env
-CANDOR_API_URL="http://localhost:8000"
+CANDID_API_URL="http://localhost:8000"
 ```

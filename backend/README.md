@@ -27,7 +27,7 @@ npm run backend:dev
 The Next.js app expects:
 
 ```env
-CANDOR_API_URL="http://localhost:8000"
+CANDID_API_URL="http://localhost:8000"
 ```
 
 ## Endpoints

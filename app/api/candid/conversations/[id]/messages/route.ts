@@ -5,7 +5,7 @@ import { accessProfileFor, getCandidAccess } from "@/lib/candid/access";
 import { createEmptyMemory, normalizeMemory } from "@/lib/candid/memory";
 import { getCurrentUserId } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { CANDOR_THREAD_ID, isCandidThread } from "@/lib/candid/thread";
+import { CANDID_THREAD_ID, isCandidThread } from "@/lib/candid/thread";
 import {
   fetchRecentMessages,
   getOrCreateCandidUser,
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       content: aiContent,
     },
     userMessage: persistedUserMessage,
-    conversationId: CANDOR_THREAD_ID,
+    conversationId: CANDID_THREAD_ID,
   });
   } catch (error) {
     logCandidInternal({ event: "conversation_message_failed", level: "error", error });
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         role: "ai",
         content: candidFailureReply(error, content),
       },
-      conversationId: CANDOR_THREAD_ID,
+      conversationId: CANDID_THREAD_ID,
     });
   }
 }

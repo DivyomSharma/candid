@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useTheme, accents } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHaptics } from "@/hooks/use-haptics";
-import { CANDOR_THREAD_ID, candidThreadPresenceStorageKey, candidThreadReadStorageKey, candidThreadStorageKey } from "@/lib/candid/thread";
+import { CANDID_THREAD_ID, candidThreadPresenceStorageKey, candidThreadReadStorageKey, candidThreadStorageKey } from "@/lib/candid/thread";
 
 const navItems = [
   { href: "/candid/home", label: "home", icon: Home },
@@ -174,7 +174,7 @@ export function BottomNav() {
       <nav className="fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-[100] flex justify-center gap-2 px-3 pointer-events-none sm:bottom-[calc(1.25rem+env(safe-area-inset-bottom))] sm:gap-3 sm:px-6">
         <div className="pointer-events-auto glass-card shadow-2xl flex max-w-[calc(100vw-4.5rem)] items-center gap-0.5 rounded-full px-1.5 py-1.5 max-md:backdrop-blur-md md:backdrop-blur-3xl sm:max-w-none sm:gap-1 sm:px-2 sm:py-2">
         <Link
-          href={`/candid/session/${CANDOR_THREAD_ID}`}
+          href={`/candid/session/${CANDID_THREAD_ID}`}
           onClick={triggerLight}
           className={cn(
             "relative flex h-9 items-center rounded-full px-3 text-sm font-light tracking-tight transition-colors active:scale-95 sm:h-10 sm:px-4",
