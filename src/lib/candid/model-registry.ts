@@ -18,7 +18,7 @@ export type CandidRoutePlan = {
 
 export const MODEL_REGISTRY = {
   router: process.env.ROUTER_MODEL ?? "llama-3.1-8b-instant",
-  chat: process.env.CHAT_MODEL ?? "qwen/qwen-32b",
+  chat: process.env.CHAT_MODEL ?? "qwen/qwen-2.5-72b-instruct",
   deep: process.env.DEEP_MODEL ?? "openai/gpt-oss-120b",
   resonance: process.env.RESONANCE_MODEL ?? "llama-3.3-70b-versatile",
   async: process.env.ASYNC_MODEL ?? "groq/compound",
