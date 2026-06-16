@@ -14,7 +14,7 @@ export async function getLearningBias(memory: CandidMemory): Promise<CandidLearn
     const supabaseAdmin = getSupabaseAdmin();
     const traitCluster = buildTraitCluster(memory);
     const { data, error } = await supabaseAdmin
-      .from("candid_learning_events")
+      .from("candor_learning_events")
       .select("choice_pattern, insight_type, accepted, engagement_signal")
       .eq("trait_cluster", traitCluster)
       .order("created_at", { ascending: false })
@@ -49,14 +49,14 @@ export async function logLearningEvent(userId: string, memory: CandidMemory, eve
   try {
     const supabaseAdmin = getSupabaseAdmin();
     const { data: user } = await supabaseAdmin
-      .from("candid_users")
+      .from("candor_users")
       .select("id")
       .eq("clerk_id", userId)
       .maybeSingle();
 
     if (!user) return;
 
-    await supabaseAdmin.from("candid_learning_events").insert({
+    await supabaseAdmin.from("candor_learning_events").insert({
       user_id: user.id,
       trait_cluster: event.traitCluster,
       choice_pattern: event.choicePattern,

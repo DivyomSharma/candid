@@ -13,7 +13,7 @@ export type PersistedMessage = CandidHistoryMessage & {
 export async function getOrCreateCandidUser(authId: string) {
   const supabaseAdmin = getSupabaseAdmin();
   const { data: existing } = await supabaseAdmin
-    .from("candid_users")
+    .from("candor_users")
     .select("id")
     .eq("clerk_id", authId)
     .maybeSingle();
@@ -24,7 +24,7 @@ export async function getOrCreateCandidUser(authId: string) {
   }
 
   const { data: created, error } = await supabaseAdmin
-    .from("candid_users")
+    .from("candor_users")
     .insert({ clerk_id: authId })
     .select("id")
     .single();
@@ -42,7 +42,7 @@ export async function fetchRecentMessages(input: {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     let query = supabaseAdmin
-      .from("candid_messages")
+      .from("candor_messages")
       .select("id, role, content, created_at")
       .eq("user_id", input.userId)
       .is("deleted_at", null)
@@ -76,7 +76,7 @@ export async function clearCanonicalMessages(userId: string) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     await supabaseAdmin
-      .from("candid_messages")
+      .from("candor_messages")
       .update({ deleted_at: new Date().toISOString() })
       .eq("user_id", userId)
       .is("deleted_at", null);
@@ -96,7 +96,7 @@ export async function persistMessage(input: {
     const content = input.role === "ai" ? sanitizeCandidReply(input.content) : input.content;
     const expiresAt = new Date(Date.now() + (input.expiresInDays ?? 21) * 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabaseAdmin
-      .from("candid_messages")
+      .from("candor_messages")
       .insert({
         user_id: input.userId,
         role: input.role,

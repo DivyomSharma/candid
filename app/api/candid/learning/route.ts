@@ -8,7 +8,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 async function getOrCreateUser(authId: string) {
   const supabaseAdmin = getSupabaseAdmin();
   const { data: existing } = await supabaseAdmin
-    .from("candid_users")
+    .from("candor_users")
     .select("id")
     .eq("clerk_id", authId)
     .maybeSingle();
@@ -16,7 +16,7 @@ async function getOrCreateUser(authId: string) {
   if (existing) return existing;
 
   const { data: created, error } = await supabaseAdmin
-    .from("candid_users")
+    .from("candor_users")
     .insert({ clerk_id: authId })
     .select("id")
     .single();
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin();
     const user = await getOrCreateUser(authId);
     const { data: traits } = await supabaseAdmin
-      .from("candid_traits")
+      .from("candor_traits")
       .select("data")
       .eq("user_id", user.id)
       .maybeSingle();
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     const nextMemory = applyLearningEvent(memory, event);
 
-    await supabaseAdmin.from("candid_traits").upsert(
+    await supabaseAdmin.from("candor_traits").upsert(
       { user_id: user.id, data: nextMemory },
       { onConflict: "user_id" },
     );

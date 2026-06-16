@@ -32,7 +32,7 @@ async function getUserTraits(authId: string) {
   const supabaseAdmin = getSupabaseAdmin();
   const user = await getOrCreateUser(authId);
   const { data: traits } = await supabaseAdmin
-    .from("candid_traits")
+    .from("candor_traits")
     .select("data")
     .eq("user_id", user.id)
     .maybeSingle();
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   aiContent = sanitizeCandidReply(aiContent, content);
 
-  await supabaseAdmin.from("candid_traits").upsert(
+  await supabaseAdmin.from("candor_traits").upsert(
     { user_id: saved.userId, data: memory },
     { onConflict: "user_id" },
   );

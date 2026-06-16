@@ -19,7 +19,7 @@ export async function GET() {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     const { data: user } = await supabaseAdmin
-      .from("candid_users")
+      .from("candor_users")
       .select("id")
       .eq("clerk_id", userId)
       .maybeSingle();
@@ -32,7 +32,7 @@ export async function GET() {
     }
 
     const { data: traits } = await supabaseAdmin
-      .from("candid_traits")
+      .from("candor_traits")
       .select("data")
       .eq("user_id", user.id)
       .maybeSingle();

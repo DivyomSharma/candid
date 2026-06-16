@@ -46,7 +46,7 @@ async function retrieveVectorMemories(input: {
 }): Promise<CandidRetrievedMemory[]> {
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const { data, error } = await supabaseAdmin.rpc("match_candid_memories", {
+    const { data, error } = await supabaseAdmin.rpc("match_candor_memories", {
       query_user_id: input.userId,
       query_embedding: input.embedding,
       query_text: input.message,

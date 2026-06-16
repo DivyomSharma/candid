@@ -31,8 +31,8 @@ type AuthMetadata = {
 export async function getPublicIdentityForCandidUserId(userId: string): Promise<PublicCandidIdentity> {
   const supabaseAdmin = getSupabaseAdmin();
   const [{ data: user }, { data: profile }] = await Promise.all([
-    supabaseAdmin.from("candid_users").select("clerk_id").eq("id", userId).maybeSingle(),
-    supabaseAdmin.from("candid_profiles").select("user_id, username, display_name, dob, district, city, lat, lon, cover_url, identity_chips, candid_badge, objects, photos, shelf_items").eq("user_id", userId).maybeSingle(),
+    supabaseAdmin.from("candor_users").select("clerk_id").eq("id", userId).maybeSingle(),
+    supabaseAdmin.from("candor_profiles").select("user_id, username, display_name, dob, district, city, lat, lon, cover_url, identity_chips, candid_badge, objects, photos, shelf_items").eq("user_id", userId).maybeSingle(),
   ]);
 
   const authId = user?.clerk_id;
@@ -52,8 +52,8 @@ export async function getPublicIdentitiesForCandidUserIds(userIds: string[]) {
 
   const supabaseAdmin = getSupabaseAdmin();
   const [{ data: users }, { data: profiles }] = await Promise.all([
-    supabaseAdmin.from("candid_users").select("id, clerk_id").in("id", uniqueIds),
-    supabaseAdmin.from("candid_profiles").select("user_id, username, display_name, dob, district, city, lat, lon, cover_url, identity_chips, candid_badge, objects, photos, shelf_items").in("user_id", uniqueIds),
+    supabaseAdmin.from("candor_users").select("id, clerk_id").in("id", uniqueIds),
+    supabaseAdmin.from("candor_profiles").select("user_id, username, display_name, dob, district, city, lat, lon, cover_url, identity_chips, candid_badge, objects, photos, shelf_items").in("user_id", uniqueIds),
   ]);
 
   const profileMap = new Map(

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const accessProfile = accessProfileFor(access.tier);
 
     const { data: traitsRow } = await supabaseAdmin
-      .from("candid_traits")
+      .from("candor_traits")
       .select("data")
       .eq("user_id", user.id)
       .maybeSingle();
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       aiContent = sanitizeCandidReply(aiContent, opening);
 
       // Upsert traits
-      await supabaseAdmin.from("candid_traits").upsert(
+      await supabaseAdmin.from("candor_traits").upsert(
         { user_id: user.id, data: memory },
         { onConflict: "user_id" },
       );

@@ -53,7 +53,7 @@ export const emptyCandidPersonalProfile: CandidPersonalProfile = {
 export async function getCandidPersonalProfile(userId: string): Promise<CandidPersonalProfile> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data } = await supabaseAdmin
-    .from("candid_profiles")
+    .from("candor_profiles")
     .select("username, display_name, dob, gender_identity, city, district, state, country, lat, lon, timezone, cover_url, identity_chips, candid_badge, objects, photos, shelf_items, relationship_preference, short_bio, occupation, education")
     .eq("user_id", userId)
     .maybeSingle();
@@ -63,7 +63,7 @@ export async function getCandidPersonalProfile(userId: string): Promise<CandidPe
 
 export async function upsertCandidPersonalProfile(userId: string, profile: CandidPersonalProfile) {
   const supabaseAdmin = getSupabaseAdmin();
-  await supabaseAdmin.from("candid_profiles").upsert(
+  await supabaseAdmin.from("candor_profiles").upsert(
     {
       user_id: userId,
       username: cleanUsername(profile.username),

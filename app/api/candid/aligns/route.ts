@@ -19,7 +19,7 @@ type AlignmentRow = {
 async function getOrCreateUser(authId: string) {
   const supabaseAdmin = getSupabaseAdmin();
   const { data: existing } = await supabaseAdmin
-    .from("candid_users")
+    .from("candor_users")
     .select("id")
     .eq("clerk_id", authId)
     .maybeSingle();
@@ -27,7 +27,7 @@ async function getOrCreateUser(authId: string) {
   if (existing) return existing;
 
   const { data: created, error } = await supabaseAdmin
-    .from("candid_users")
+    .from("candor_users")
     .insert({ clerk_id: authId })
     .select("id")
     .single();
@@ -79,7 +79,7 @@ export async function GET() {
   const access = await getCandidAccess(user.id);
   const accessProfile = accessProfileFor(access.tier);
   const { data: traits } = await supabaseAdmin
-    .from("candid_traits")
+    .from("candor_traits")
     .select("data")
     .eq("user_id", user.id)
     .maybeSingle();
@@ -92,7 +92,7 @@ export async function GET() {
   }
 
   const { data: allTraits } = await supabaseAdmin
-    .from("candid_traits")
+    .from("candor_traits")
     .select("user_id, data")
     .neq("user_id", user.id);
 

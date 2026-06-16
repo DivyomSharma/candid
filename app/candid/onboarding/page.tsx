@@ -18,14 +18,14 @@ export default async function OnboardingPage(props: { searchParams: Promise<{ ed
   if (clerkId) {
     const supabase = getSupabaseAdmin();
     const { data: userRow } = await supabase
-      .from("candid_users")
+      .from("candor_users")
       .select("id")
       .eq("clerk_id", clerkId)
       .maybeSingle();
 
     if (userRow) {
       const { data: profile } = await supabase
-        .from("candid_profiles")
+        .from("candor_profiles")
         .select("*")
         .eq("user_id", userRow.id)
         .maybeSingle();

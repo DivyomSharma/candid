@@ -8,7 +8,7 @@ export async function getMemoryControlSnapshot(userId: string) {
   const [events, facts, messages, initiatives] = await Promise.all([
     safeCount("candid_memory_events", userId),
     safeCount("candid_memory_facts", userId),
-    safeCount("candid_messages", userId),
+    safeCount("candor_messages", userId),
     safeCount("candid_initiatives", userId),
   ]);
 
@@ -64,7 +64,7 @@ export async function clearEverythingCandidKnows(userId: string) {
   await Promise.all([
     clearRelationalMemory(userId),
     clearCanonicalMessages(userId),
-    supabaseAdmin.from("candid_traits").upsert(
+    supabaseAdmin.from("candor_traits").upsert(
       {
         user_id: userId,
         data: createEmptyMemory(),

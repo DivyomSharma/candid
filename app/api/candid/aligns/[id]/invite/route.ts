@@ -7,7 +7,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!authId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const supabaseAdmin = getSupabaseAdmin();
-  const { data: user } = await supabaseAdmin.from("candid_users").select("id").eq("clerk_id", authId).maybeSingle();
+  const { data: user } = await supabaseAdmin.from("candor_users").select("id").eq("clerk_id", authId).maybeSingle();
   if (!user) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const { id } = await params;

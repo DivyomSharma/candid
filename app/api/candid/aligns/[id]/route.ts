@@ -18,7 +18,7 @@ type AlignmentRow = {
 
 async function getUser(authId: string) {
   const supabaseAdmin = getSupabaseAdmin();
-  const { data } = await supabaseAdmin.from("candid_users").select("id").eq("clerk_id", authId).maybeSingle();
+  const { data } = await supabaseAdmin.from("candor_users").select("id").eq("clerk_id", authId).maybeSingle();
   return data;
 }
 
@@ -52,7 +52,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const otherUserId = alignment.user_a_id === user.id ? alignment.user_b_id : alignment.user_a_id;
   const { data: traits } = await supabaseAdmin
-    .from("candid_traits")
+    .from("candor_traits")
     .select("data")
     .eq("user_id", otherUserId)
     .maybeSingle();

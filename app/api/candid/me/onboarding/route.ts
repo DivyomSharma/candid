@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     // Fetch internal UUID mapping
     let internalUserId;
     const { data: userRow, error: userError } = await supabase
-      .from("candid_users")
+      .from("candor_users")
       .select("id")
       .eq("clerk_id", clerkId)
       .maybeSingle();
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     if (!userRow) {
       // Lazy create the user if webhook missed them
       const { data: newUser, error: createError } = await supabase
-        .from("candid_users")
+        .from("candor_users")
         .insert({ clerk_id: clerkId })
         .select("id")
         .single();
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     }
 
     // Upsert the profile data
-    const { error } = await supabase.from("candid_profiles").upsert({
+    const { error } = await supabase.from("candor_profiles").upsert({
       user_id: internalUserId,
       display_name: name,
       username: username || null,

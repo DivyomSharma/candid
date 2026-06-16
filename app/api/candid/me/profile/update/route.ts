@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const user = await getOrCreateCandidUser(authId);
 
     const { data: traits } = await supabaseAdmin
-      .from("candid_traits")
+      .from("candor_traits")
       .select("data")
       .eq("user_id", user.id)
       .maybeSingle();
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       profileV4: updatedProfile,
     };
 
-    await supabaseAdmin.from("candid_traits").upsert(
+    await supabaseAdmin.from("candor_traits").upsert(
       { user_id: user.id, data: nextMemory },
       { onConflict: "user_id" }
     );
