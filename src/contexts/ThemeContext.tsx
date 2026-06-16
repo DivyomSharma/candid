@@ -33,14 +33,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const savedMode = localStorage.getItem("candid-mode") as ThemeMode | null;
-    const savedAccent = localStorage.getItem("candid-accent") as ThemeAccent | null;
 
     if (savedMode) {
       setModeState(savedMode);
-    }
-
-    if (savedAccent) {
-      setAccentState(savedAccent);
     }
   }, []);
 
