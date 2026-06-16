@@ -107,7 +107,7 @@ export default function ChatDemo() {
                         <path d="M12 7l4 0l0 4" />
                       </svg>
                       <span className="text-[11px] font-medium tracking-wide uppercase text-accent">
-                        {isUser ? "You" : "Candor"}
+                        {isUser ? "You" : "Candid"}
                       </span>
                     </div>
                   )}

@@ -1,6 +1,6 @@
-# Candor
+# Candid
 
-Candor is a Next.js App Router app using Supabase Auth, Supabase Postgres, and Groq-powered conversation endpoints.
+Candid is a Next.js App Router app using Supabase Auth, Supabase Postgres, and Groq-powered conversation endpoints.
 
 ## Vercel Deployment
 
@@ -21,7 +21,7 @@ GROQ_MODEL="llama-3.3-70b-versatile"
 Run the SQL in `supabase/schema.sql` once in the Supabase SQL editor. Then visit:
 
 ```text
-https://your-domain/api/candor/db-health
+https://your-domain/api/candid/db-health
 ```
 
 Expected response:

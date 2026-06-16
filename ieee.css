@@ -1,0 +1,47 @@
+body {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 10pt;
+  line-height: 1.15;
+  margin: 0;
+  padding: 0;
+  column-count: 2;
+  column-gap: 4.22mm;
+  text-align: justify;
+}
+@page {
+  size: A4;
+  margin: 19mm 14.32mm 43mm 14.32mm;
+}
+h1, h2, h3, h4, h5, h6 {
+  column-span: none;
+}
+h1 {
+  font-size: 24pt;
+  text-align: center;
+  column-span: all;
+  margin-bottom: 12pt;
+}
+h2 {
+  font-variant: small-caps;
+  text-align: center;
+  font-size: 10pt;
+  font-weight: normal;
+  margin-top: 12pt;
+  margin-bottom: 6pt;
+}
+h3 {
+  font-style: italic;
+  font-size: 10pt;
+  font-weight: normal;
+  margin-top: 10pt;
+  margin-bottom: 4pt;
+}
+p {
+  text-indent: 10pt;
+  margin: 0;
+}
+.references p {
+  text-indent: -15pt;
+  padding-left: 15pt;
+  font-size: 8pt;
+}

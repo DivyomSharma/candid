@@ -18,10 +18,10 @@ export default function ContinuityTrialSection() {
               experience continuity
             </p>
             <h2 className="text-3xl md:text-5xl font-light leading-tight mb-6">
-              candor becomes more perceptive over time.
+              candid becomes more perceptive over time.
             </h2>
             <p className="text-foreground-secondary text-sm md:text-base font-light leading-7 max-w-xl">
-              new users begin with a full seven-day continuity experience. it is complete, uninterrupted, and meant to let candor carry enough rhythm, chemistry, and emotional context for the difference to feel real before anything else gets explained.
+              new users begin with a full seven-day continuity experience. it is complete, uninterrupted, and meant to let candid carry enough rhythm, chemistry, and emotional context for the difference to feel real before anything else gets explained.
             </p>
           </div>
 
@@ -56,7 +56,7 @@ export default function ContinuityTrialSection() {
               </div>
 
               <p className="text-sm font-light text-foreground-secondary leading-7">
-                after that, candor softens back into echo instead of hard-locking the experience. the point is not punishment. the point is that longer continuity makes chemistry, pacing, and relational understanding feel more natural.
+                after that, candid softens back into echo instead of hard-locking the experience. the point is not punishment. the point is that longer continuity makes chemistry, pacing, and relational understanding feel more natural.
               </p>
             </div>
           </motion.div>

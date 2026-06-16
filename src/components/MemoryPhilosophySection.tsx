@@ -28,7 +28,7 @@ export default function MemoryPhilosophySection() {
           className="mt-12"
         >
           <Link
-            href="/candor/memory-controls"
+            href="/candid/memory-controls"
             className="group flex items-center gap-2 text-xs font-light text-foreground-secondary/70 hover:text-foreground transition-colors"
           >
             inspect continuity

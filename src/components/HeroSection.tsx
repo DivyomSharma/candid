@@ -39,7 +39,7 @@ export default function HeroSection() {
           transition={{ delay: 0.4, duration: 0.8 }}
           className="text-foreground-secondary text-lg md:text-xl font-light max-w-lg mx-auto mb-10"
         >
-          Candor carries social rhythm, chemistry, and context gently, so connection can unfold without performance.
+          Candid carries social rhythm, chemistry, and context gently, so connection can unfold without performance.
         </motion.p>
 
         <motion.div
@@ -49,11 +49,11 @@ export default function HeroSection() {
           className="relative inline-block"
         >
           <Link
-            href="/candor/home"
+            href="/candid/home"
             className="inline-block px-8 py-3.5 rounded-full bg-accent text-primary-foreground font-medium text-sm tracking-wide
                        hover:scale-105 transition-transform duration-300 soft-shadow"
           >
-            Enter Candor
+            Enter Candid
           </Link>
         </motion.div>
       </motion.div>

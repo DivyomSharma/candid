@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getPublicProfileByHandle } from "@/lib/candor/public-profile";
+import { getPublicProfileByHandle } from "@/lib/candid/public-profile";
 
 export const size = {
   width: 1200,
@@ -29,12 +29,12 @@ export default async function Image({ params }: { params: Promise<{ handle: stri
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 28, opacity: 0.72 }}>candor</div>
+          <div style={{ fontSize: 28, opacity: 0.72 }}>candid</div>
           <div style={{ fontSize: 22, opacity: 0.56 }}>{profile?.handle ?? `@${handle}`}</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-          <div style={{ fontSize: 68, fontWeight: 300, lineHeight: 1.02 }}>{profile?.username ?? "candor profile"}</div>
+          <div style={{ fontSize: 68, fontWeight: 300, lineHeight: 1.02 }}>{profile?.username ?? "candid profile"}</div>
           <div style={{ maxWidth: 860, fontSize: 28, lineHeight: 1.45, opacity: 0.84 }}>
             {profile?.shareCards[0]?.lines.join(" ") ?? "conversation may feel unusually natural"}
           </div>

@@ -1,4 +1,4 @@
-# Candor FastAPI Backend
+# Candid FastAPI Backend
 
 This service powers the Next.js app's AI calls.
 

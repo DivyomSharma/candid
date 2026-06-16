@@ -32,8 +32,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [accent, setAccentState] = useState<ThemeAccent>("sand");
 
   useEffect(() => {
-    const savedMode = localStorage.getItem("candor-mode") as ThemeMode | null;
-    const savedAccent = localStorage.getItem("candor-accent") as ThemeAccent | null;
+    const savedMode = localStorage.getItem("candid-mode") as ThemeMode | null;
+    const savedAccent = localStorage.getItem("candid-accent") as ThemeAccent | null;
 
     if (savedMode) {
       setModeState(savedMode);
@@ -46,12 +46,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setMode = (m: ThemeMode) => {
     setModeState(m);
-    if (typeof window !== "undefined") localStorage.setItem("candor-mode", m);
+    if (typeof window !== "undefined") localStorage.setItem("candid-mode", m);
   };
 
   const setAccent = (a: ThemeAccent) => {
     setAccentState(a);
-    if (typeof window !== "undefined") localStorage.setItem("candor-accent", a);
+    if (typeof window !== "undefined") localStorage.setItem("candid-accent", a);
   };
 
   useEffect(() => {

@@ -3,7 +3,7 @@ import TrustPageShell from "@/components/TrustPageShell";
 
 export const metadata: Metadata = {
   title: "Support",
-  description: "How to reach the Candor team for support, privacy, or continuity issues.",
+  description: "How to reach the Candid team for support, privacy, or continuity issues.",
 };
 
 export default function SupportPage() {
@@ -13,7 +13,7 @@ export default function SupportPage() {
     <TrustPageShell
       eyebrow="support"
       title="support, privacy, and memory requests"
-      intro="candor should be reachable when something feels wrong, unclear, or too sticky. support includes technical issues, privacy questions, and continuity or memory concerns."
+      intro="candid should be reachable when something feels wrong, unclear, or too sticky. support includes technical issues, privacy questions, and continuity or memory concerns."
     >
       <section className="space-y-3">
         <h2 className="text-lg font-medium text-foreground">what support should cover</h2>

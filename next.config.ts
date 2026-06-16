@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/",
-        destination: "/candor",
+        destination: "/candid",
         permanent: true,
       },
     ];
@@ -31,23 +31,23 @@ const nextConfig: NextConfig = {
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/candor/login",
+        source: "/candid/login",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/candor/home",
+        source: "/candid/home",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/candor/you",
+        source: "/candid/you",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/candor/aligns/:path*",
+        source: "/candid/aligns/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/candor/session/:path*",
+        source: "/candid/session/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
     ];

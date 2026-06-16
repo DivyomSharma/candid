@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 const signals = [
   {
     label: "memory controls",
-    detail: "inspect, edit, or delete what candor keeps about you",
+    detail: "inspect, edit, or delete what candid keeps about you",
   },
   {
     label: "deletable continuity",
@@ -67,7 +67,7 @@ export default function TrustSignalsSection() {
           className="mt-12 text-center"
         >
           <p className="text-sm font-light text-foreground-secondary/50 leading-relaxed max-w-sm mx-auto">
-            candor is not designed to replace human connection. the goal is helping people understand themselves, communicate more clearly, and discover stronger human compatibility.
+            candid is not designed to replace human connection. the goal is helping people understand themselves, communicate more clearly, and discover stronger human compatibility.
           </p>
         </motion.div>
       </div>

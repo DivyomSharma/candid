@@ -1,15 +1,15 @@
 export const siteConfig = {
-  name: "Candor",
-  url: "https://www.candorai.xyz",
-  landingPath: "/candor",
+  name: "Candid",
+  url: "https://www.candidai.xyz",
+  landingPath: "/candid",
   description:
-    "Candor is a social app built around continuity, chemistry, and honest conversation before connection.",
+    "Candid is a social app built around continuity, chemistry, and honest conversation before connection.",
   socialDescription:
     "No swipes. Just honest conversations. Built for continuity, chemistry, and being understood before you're seen.",
-  ogImage: "/og-candor.png",
+  ogImage: "/og-candid.png",
   keywords: [
-    "Candor",
-    "candorai",
+    "Candid",
+    "candidai",
     "social app",
     "honest conversations",
     "dating app",

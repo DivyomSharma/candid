@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { ProfileSurface } from "@/components/candor/ProfileSurface";
-import { getPublicProfileByHandle } from "@/lib/candor/public-profile";
+import { ProfileSurface } from "@/components/candid/ProfileSurface";
+import { getPublicProfileByHandle } from "@/lib/candid/public-profile";
 
-export default async function PublicCandorProfilePage({
+export default async function PublicCandidProfilePage({
   params,
 }: {
   params: Promise<{ handle: string }>;
@@ -18,7 +18,7 @@ export default async function PublicCandorProfilePage({
     <ProfileSurface
       profile={profile}
       heading={profile.username}
-      subheading="candor's public read. soft enough to share, specific enough to feel real."
+      subheading="candid's public read. soft enough to share, specific enough to feel real."
       showBottomNav={false}
       publicMode
     />

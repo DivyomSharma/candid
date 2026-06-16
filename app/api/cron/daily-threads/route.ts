@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { logCandorInternal } from "@/lib/candor/logger";
+import { logCandidInternal } from "@/lib/candid/logger";
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  logCandorInternal({
+  logCandidInternal({
     event: "cron_daily_threads_started",
     context: {},
   });
@@ -19,14 +19,14 @@ export async function GET(request: Request) {
     // and store it in KV or a database table for each active user.
     // For now, this just acts as a placeholder for the batch logic.
 
-    logCandorInternal({
+    logCandidInternal({
       event: "cron_daily_threads_completed",
       context: {},
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logCandorInternal({
+    logCandidInternal({
       event: "cron_daily_threads_failed",
       level: "error",
       error,

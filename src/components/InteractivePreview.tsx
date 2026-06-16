@@ -18,7 +18,7 @@ const SCENARIOS: Record<string, { prompt: string; quickReplies: string[]; reply:
   side: {
     prompt: "chaos or stability?\n\nwhich one makes you feel more alive?",
     quickReplies: ["a little chaos", "stability, always", "depends who with"],
-    reply: "candor keeps that as texture. early chemistry should feel curious, not final.",
+    reply: "candid keeps that as texture. early chemistry should feel curious, not final.",
   },
   thread: {
     prompt: "what kind of silence\nfeels comfortable to you?",
@@ -129,7 +129,7 @@ export default function InteractivePreview() {
               className="surface space-y-6 rounded-3xl p-7 soft-shadow md:p-9"
             >
               <div>
-                <p className="mb-3 text-[10px] font-medium uppercase tracking-widest text-accent/70">Candor</p>
+                <p className="mb-3 text-[10px] font-medium uppercase tracking-widest text-accent/70">Candid</p>
                 <div className="surface-secondary whitespace-pre-line rounded-2xl rounded-tl-sm px-5 py-4 text-sm font-light leading-relaxed text-foreground-secondary">
                   {scenario.prompt}
                 </div>
@@ -180,7 +180,7 @@ export default function InteractivePreview() {
                     </div>
 
                     <div className="flex flex-col items-start">
-                      <p className="mb-1 text-[10px] font-medium uppercase tracking-widest text-accent/70">Candor</p>
+                      <p className="mb-1 text-[10px] font-medium uppercase tracking-widest text-accent/70">Candid</p>
                       <div className="surface-secondary max-w-[85%] rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm font-light leading-relaxed text-foreground-secondary">
                         {typedReply}
                         {typedReply.length < (scenario?.reply.length ?? 0) ? (
@@ -208,7 +208,7 @@ export default function InteractivePreview() {
                 href="#waitlist"
                 className="inline-block rounded-full bg-accent px-8 py-3.5 text-sm font-medium tracking-wide text-primary-foreground soft-shadow transition-transform duration-300 hover:scale-105"
               >
-                enter candor
+                enter candid
               </a>
               <button onClick={reset} className="text-xs font-light text-foreground-secondary/40 transition-colors hover:text-foreground-secondary/70">
                 try another signal

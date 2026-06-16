@@ -89,7 +89,7 @@ export default function SubscriptionSection() {
           transition={{ delay: 0.6, duration: 0.7 }}
           className="text-center mt-12 text-sm font-light text-foreground-secondary/60 max-w-xl mx-auto leading-7"
         >
-          candor is not selling more ai. it is selling deeper relational continuity, clearer chemistry, and a more mature understanding of how connection actually unfolds.
+          candid is not selling more ai. it is selling deeper relational continuity, clearer chemistry, and a more mature understanding of how connection actually unfolds.
         </motion.p>
       </div>
     </section>

@@ -49,7 +49,7 @@ export default function AIChatPreview() {
             </div>
           </div>
 
-          {/* Candor */}
+          {/* Candid */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -62,7 +62,7 @@ export default function AIChatPreview() {
                 <path d="M12 3c0 7-6 10-6 10h12s-6-3-6-10" />
                 <circle cx="12" cy="17" r="1" />
               </svg>
-              <span className="text-[10px] font-medium tracking-wide uppercase text-accent/60">Candor</span>
+              <span className="text-[10px] font-medium tracking-wide uppercase text-accent/60">Candid</span>
             </div>
             <div className="px-5 py-2.5 rounded-full border border-border/50 text-xs text-foreground-secondary/60 font-light italic">
               wait, you both clock safety before you open up. that is... useful, honestly.

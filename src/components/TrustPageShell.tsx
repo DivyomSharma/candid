@@ -18,14 +18,14 @@ export default function TrustPageShell({
         <section className="mx-auto max-w-4xl px-6 pb-24 pt-28 sm:px-8 md:px-10">
           <div className="rounded-[2rem] border border-border/60 bg-[hsl(var(--surface)/0.74)] px-6 py-10 shadow-[0_24px_80px_-32px_hsl(var(--foreground)/0.22)] backdrop-blur-xl sm:px-10 sm:py-14">
             <div className="mb-10 flex items-center justify-between gap-6">
-              <Link href="/candor" className="text-lg font-light tracking-wide text-foreground transition hover:text-foreground-secondary">
-                candor
+              <Link href="/candid" className="text-lg font-light tracking-wide text-foreground transition hover:text-foreground-secondary">
+                candid
               </Link>
               <div className="flex flex-wrap items-center justify-end gap-3 text-xs uppercase tracking-[0.28em] text-foreground-secondary/70">
                 <span>{eyebrow}</span>
                 <span className="h-px w-10 bg-border/70" />
-                <Link href="/candor" className="tracking-[0.2em] text-foreground-secondary/60 transition hover:text-foreground">
-                  back to candor
+                <Link href="/candid" className="tracking-[0.2em] text-foreground-secondary/60 transition hover:text-foreground">
+                  back to candid
                 </Link>
               </div>
             </div>

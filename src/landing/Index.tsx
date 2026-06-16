@@ -26,7 +26,7 @@ export default function Index() {
       <WaitlistSection />
 
       <footer className="space-y-4 py-10 text-center text-xs text-foreground-secondary/40 font-light">
-        <div>© 2026 Candor. A quieter way to connect.</div>
+        <div>© 2026 Candid. A quieter way to connect.</div>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] uppercase tracking-[0.16em] text-foreground-secondary/55">
           <Link href="/about" className="transition hover:text-foreground">
             about

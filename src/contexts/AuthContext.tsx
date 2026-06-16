@@ -12,7 +12,7 @@ import { useClerk, useUser as useClerkUser } from "@clerk/nextjs";
 import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { createSupabaseBrowser } from "@/lib/supabase-browser";
 
-export type CandorAuthUser = {
+export type CandidAuthUser = {
   id: string;
   email: string | null;
   firstName: string | null;
@@ -20,7 +20,7 @@ export type CandorAuthUser = {
 };
 
 interface AuthContextType {
-  user: CandorAuthUser | null;
+  user: CandidAuthUser | null;
   session: Session | null;
   isLoaded: boolean;
   isSignedIn: boolean;
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await Promise.allSettled([supabase.auth.signOut(), clerkSignOut()]);
   }, [clerkSignOut]);
 
-  const user: CandorAuthUser | null = supabaseUser
+  const user: CandidAuthUser | null = supabaseUser
     ? {
         id: supabaseUser.id,
         email: supabaseUser.email ?? null,

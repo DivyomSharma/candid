@@ -12,7 +12,7 @@ export function useGlobalKeyboardShortcuts() {
 
       const isInput = document.activeElement?.tagName === "INPUT";
       const isTextarea = document.activeElement?.tagName === "TEXTAREA";
-      const isOnboarding = pathname?.startsWith("/candor/onboarding");
+      const isOnboarding = pathname?.startsWith("/candid/onboarding");
 
       // Global Enter Key Behavior (works across entire PWA)
       if (e.key === "Enter" && !isTextarea) {
@@ -20,7 +20,7 @@ export function useGlobalKeyboardShortcuts() {
         const buttons = Array.from(document.querySelectorAll("button"));
         
         // Define primary action text we want Enter to trigger
-        const primaryTexts = ["Continue", "Begin", "Enter Candor", "Save", "Submit", "Send"];
+        const primaryTexts = ["Continue", "Begin", "Enter Candid", "Save", "Submit", "Send"];
         
         const primaryBtn = buttons.find(b => {
           const text = b.innerText.trim();
@@ -41,7 +41,7 @@ export function useGlobalKeyboardShortcuts() {
             b.innerText.trim() === "Continue" || 
             b.innerText.trim() === "Skip" || 
             b.innerText.trim() === "Begin" ||
-            b.innerText.trim() === "Enter Candor"
+            b.innerText.trim() === "Enter Candid"
           );
           if (nextBtn && !nextBtn.disabled) {
             e.preventDefault();

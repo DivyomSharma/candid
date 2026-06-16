@@ -27,7 +27,7 @@ frontend_origins = [
     if origin.strip()
 ]
 
-app = FastAPI(title="Candor")
+app = FastAPI(title="Candid")
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,7 +57,7 @@ class ChatRequest(BaseModel):
 
 
 SYSTEM_PROMPT = """
-you are candor.
+you are candid.
 
 you are not an assistant, not a chatbot, and not a coach.
 you feel like a socially perceptive person texting back in real time.
@@ -155,7 +155,7 @@ def openrouter_completion(request: ChatRequest) -> str:
             "Authorization": f"Bearer {openrouter_api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000").split(",")[0],
-            "X-Title": "Candor",
+            "X-Title": "Candid",
         },
         method="POST",
     )

@@ -1,0 +1,735 @@
+import { sendCandidJson, sendCandidMessage } from "@/lib/candid-api";
+import { accessProfileFor } from "@/lib/candid/access";
+import {
+  addInterestSignals,
+  applyUserCorrections,
+  buildTraitCluster,
+  createEmptyMemory,
+  extractLightMemory,
+  mergeMemory,
+  updateTurnMemory,
+} from "@/lib/candid/memory";
+import { getLearningBias, logLearningEvent } from "@/lib/candid/learning";
+import { buildAnalysisPrompt, buildCandidPrompt } from "@/lib/candid/prompts";
+import { selectSignals } from "@/lib/candid/scenarios";
+import { chooseSocialMove, socialMoveInstruction } from "@/lib/candid/social-moves";
+import { normalizeSocialState, understandingLine, updateSocialState } from "@/lib/candid/social-state";
+import type {
+  CandidDecision,
+  CandidIntuitionState,
+  CandidLearningBias,
+  CandidMemory,
+  CandidMode,
+  CandidStructure,
+  CandidTurnInput,
+  CandidTurnResult,
+  PresenceLevel,
+  PresenceState,
+} from "@/lib/candid/types";
+import { shapeCandidResponse } from "@/lib/candid-response";
+import { logCandidInternal } from "@/lib/candid/logger";
+import type { CandidModelRoute } from "@/lib/candid/transport";
+
+export async function runCandidTurn(input: CandidTurnInput): Promise<CandidTurnResult> {
+  const correctedMemory = applyUserCorrections(input.message, input.memory);
+  const lightMemory = mergeMemory(correctedMemory, extractLightMemory(input.message));
+  const startingSocialState = normalizeSocialState(input.socialState);
+  const intuition = buildIntuitionState(input.message, lightMemory);
+  const learningBias = await getLearningBias(lightMemory);
+  const interestEnergy = detectInterestEnergy(input.message);
+  const decision = decideResponse(intuition, lightMemory, learningBias, input.message, interestEnergy.primaryTopic);
+  const socialMove = chooseSocialMove({
+    message: input.message,
+    memory: lightMemory,
+    socialState: startingSocialState,
+    decision,
+    learningBias,
+    primaryTopic: interestEnergy.primaryTopic,
+  });
+  const scenario = decision.mode === "scenario" ? selectSignals(lightMemory)[0] : undefined;
+  const suppressedPhrases = buildSuppressedPhrases(lightMemory);
+  const socialReadState = updateSocialState({
+    current: startingSocialState,
+    message: input.message,
+    memory: lightMemory,
+    move: socialMove,
+    structure: decision.structure,
+  });
+  const momentumCue = buildMomentumCue({
+    message: input.message,
+    memory: lightMemory,
+    decision,
+    primaryTopic: interestEnergy.primaryTopic,
+    learningBias,
+    socialMove,
+    socialState: socialReadState,
+  });
+
+  const classification = await classifyMessage(input.message, socialReadState, lightMemory);
+
+  const prompt = buildCandidPrompt({
+    memory: lightMemory,
+    decision,
+    presenceState: intuition.presenceState,
+    suppressedPhrases,
+    learningBias,
+    momentumCue,
+    socialState: socialReadState,
+    socialMove,
+    socialMoveInstruction: socialMoveInstruction(socialMove),
+    retrievedMemories: input.retrievedMemories ?? [],
+    understanding: understandingLine(socialReadState),
+    scenario: scenario?.prompt,
+    isImproveMode: input.isImproveMode,
+    currentScreen: input.currentScreen,
+  });
+  const routeDecision = routeForTurn(
+    decision,
+    socialMove,
+    intuition,
+    socialReadState,
+    input.accessTier,
+    lightMemory.turnCount,
+    classification
+  );
+
+  const firstReply = shapeCandidResponse(
+    await sendCandidMessage({
+      message: input.message,
+      history: input.history,
+      user_id: input.userId,
+      system_prompt: prompt,
+      temperature: temperatureFor(decision),
+      max_tokens: maxTokensFor(intuition.presenceState),
+      ...routeDecision,
+      access_tier: input.accessTier,
+    }),
+    {
+      socialMove,
+      socialState: socialReadState,
+      previousReplies: lightMemory.responseHistory,
+    },
+  );
+
+  const reply = await maybeRetryForRepetition({
+    reply: firstReply,
+    input,
+    memory: lightMemory,
+    intuition,
+    decision,
+    learningBias,
+    socialState: startingSocialState,
+    socialMove,
+    scenario: scenario?.prompt,
+    suppressedPhrases,
+  });
+
+  const socialState = socialReadState;
+
+  let memory = updateTurnMemory(
+    mergeMemory(lightMemory, scenario ? { seenScenarios: [scenario.id] } : {}),
+    {
+      mode: decision.mode,
+      structure: decision.structure,
+      reply,
+      presenceState: intuition.presenceState,
+    },
+  );
+
+  if (Object.keys(interestEnergy.topics).length) {
+    memory = addInterestSignals(memory, interestEnergy.topics);
+  }
+
+  if (shouldAnalyzeDeeply(memory, input.accessTier)) {
+    const deepMemory = await analyzeMemory(input.message, input.history, memory, input.accessTier);
+    memory = mergeMemory(memory, deepMemory);
+  }
+
+  void logLearningEvent(input.userId, memory, {
+    traitCluster: buildTraitCluster(memory),
+    choicePattern: interestEnergy.primaryTopic ? `topic:${interestEnergy.primaryTopic}` : null,
+    insightType: decision.structure,
+    accepted: null,
+    engagementSignal: engagementFromTurn(input.message, intuition, interestEnergy.primaryTopic),
+  });
+
+  return { reply, memory, socialState, mode: decision.mode, decision, socialMove };
+}
+
+function buildIntuitionState(message: string, memory: CandidMemory): CandidIntuitionState {
+  const text = message.toLowerCase();
+  const words = message.trim().split(/\s+/).filter(Boolean).length;
+  const emotionalSignal = scoreLevel(scoreEmotion(text));
+  const userOpenness = scoreLevel(scoreOpenness(text, words));
+  const trustLevel = scoreLevel(Math.min(3, Math.floor(memory.turnCount / 3) + (memory.values.length > 1 ? 1 : 0)));
+  const repetitionRisk = scoreLevel(scoreRepetitionRisk(memory));
+  const presenceState = derivePresenceState({ emotionalSignal, userOpenness, trustLevel, memory });
+
+  return {
+    emotionalSignal,
+    userOpenness,
+    trustLevel,
+    lastTurnType: memory.lastModes.at(-1) ?? "none",
+    repetitionRisk,
+    presenceState,
+  };
+}
+
+function decideResponse(
+  intuition: CandidIntuitionState,
+  memory: CandidMemory,
+  learningBias: CandidLearningBias,
+  message: string,
+  primaryTopic: string | null,
+): CandidDecision {
+  const preferredStructure = pickStructure(memory, learningBias.favoredStructures);
+  const lowEnergy = isLowEnergyMessage(message);
+
+  if (lowEnergy) {
+    return {
+      mode: "spark",
+      tone: primaryTopic || learningBias.favoredTopics.length ? "direct" : "neutral",
+      structure: primaryTopic ? "playful" : preferredStructure === "silence" ? "contrast" : "playful",
+    };
+  }
+
+  if (intuition.repetitionRisk === "high") {
+    return {
+      mode: intuition.trustLevel === "high" ? "pause" : "listen",
+      tone: "soft",
+      structure: preferredStructure === "observation" ? "fragment" : preferredStructure,
+    };
+  }
+
+  if (intuition.emotionalSignal === "high" && intuition.userOpenness !== "low") {
+    return {
+      mode: intuition.trustLevel === "low" ? "comfort" : "deepen",
+      tone: "soft",
+      structure: intuition.trustLevel === "high" ? "observation" : "fragment",
+    };
+  }
+
+  if (intuition.userOpenness === "low") {
+    return {
+      mode: memory.turnCount < 2 ? "scenario" : "spark",
+      tone: "neutral",
+      structure: memory.turnCount < 2 ? "question" : "playful",
+    };
+  }
+
+  if (intuition.lastTurnType === "listen" && intuition.trustLevel !== "low") {
+    return {
+      mode: "deepen",
+      tone: intuition.presenceState.clarity === "low" ? "soft" : "direct",
+      structure: preferredStructure,
+    };
+  }
+
+  if (memory.turnCount > 2 && intuition.presenceState.clarity === "high" && intuition.userOpenness === "high") {
+    return {
+      mode: "challenge",
+      tone: "direct",
+      structure: preferredStructure === "fragment" ? "contrast" : preferredStructure,
+    };
+  }
+
+  if (shouldTakeSocialInitiative(message, memory, intuition, primaryTopic)) {
+    return {
+      mode: "spark",
+      tone: primaryTopic ? "direct" : "neutral",
+      structure: "playful",
+    };
+  }
+
+  if (/\b(i tried|i stayed|i kept showing up|i cared|i did)\b/.test(memory.notes.join(" "))) {
+    return {
+      mode: "appreciate",
+      tone: "soft",
+      structure: "observation",
+    };
+  }
+
+  return {
+    mode: memory.turnCount < 2 ? "listen" : "deepen",
+    tone: intuition.presenceState.curiosity === "high" ? "neutral" : "soft",
+    structure: preferredStructure,
+  };
+}
+
+function derivePresenceState(input: {
+  emotionalSignal: PresenceLevel;
+  userOpenness: PresenceLevel;
+  trustLevel: PresenceLevel;
+  memory: CandidMemory;
+}): PresenceState {
+  const clarityScore =
+    levelToScore(input.trustLevel) + Math.min(1, Math.floor(input.memory.lifeThemes.length / 2));
+  const curiosityScore =
+    2 + (input.userOpenness === "low" ? 1 : 0) - (input.trustLevel === "high" ? 1 : 0);
+  const resonanceScore =
+    levelToScore(input.emotionalSignal) + (input.memory.softSpots.length > 0 ? 1 : 0);
+
+  return {
+    clarity: scoreLevel(clarityScore),
+    curiosity: scoreLevel(curiosityScore),
+    resonance: scoreLevel(resonanceScore),
+  };
+}
+
+function pickStructure(memory: CandidMemory, favored: CandidStructure[]) {
+  const recent = new Set(memory.recentStructures.slice(-3));
+  const pool: CandidStructure[] = ["playful", "observation", "fragment", "contrast", "question", "silence"];
+  const ordered = [...favored, ...pool];
+  return ordered.find((structure) => !recent.has(structure)) ?? "observation";
+}
+
+function buildSuppressedPhrases(memory: CandidMemory) {
+  return memory.suppressedPhrases.length
+    ? memory.suppressedPhrases
+    : memory.responseHistory
+        .slice(-4)
+        .map((reply) => reply.split(/\s+/).slice(0, 3).join(" "))
+        .filter(Boolean);
+}
+
+async function maybeRetryForRepetition(input: {
+  reply: string;
+  input: CandidTurnInput;
+  memory: CandidMemory;
+  intuition: CandidIntuitionState;
+  decision: CandidDecision;
+  learningBias: Awaited<ReturnType<typeof getLearningBias>>;
+  socialState: ReturnType<typeof normalizeSocialState>;
+  socialMove: ReturnType<typeof chooseSocialMove>;
+  scenario?: string;
+  suppressedPhrases: string[];
+}) {
+  if (!isTooSimilar(input.reply, input.memory.responseHistory)) {
+    return input.reply;
+  }
+
+  const fallbackDecision = {
+    ...input.decision,
+    structure: nextStructure(input.decision.structure),
+    mode: input.decision.mode === "pause" ? "listen" : input.decision.mode,
+  } as CandidDecision;
+
+  const retryPrompt = buildCandidPrompt({
+    memory: input.memory,
+    decision: fallbackDecision,
+    presenceState: input.intuition.presenceState,
+    suppressedPhrases: [...input.suppressedPhrases, input.reply.split(/\s+/).slice(0, 4).join(" ")].slice(-8),
+    learningBias: input.learningBias,
+    socialState: input.socialState,
+    socialMove: input.socialMove,
+    socialMoveInstruction: socialMoveInstruction(input.socialMove),
+    retrievedMemories: input.input.retrievedMemories ?? [],
+    understanding: understandingLine(input.socialState),
+    momentumCue: buildMomentumCue({
+      message: input.input.message,
+      memory: input.memory,
+      decision: fallbackDecision,
+      primaryTopic: detectInterestEnergy(input.input.message).primaryTopic,
+      learningBias: input.learningBias,
+      socialMove: input.socialMove,
+      socialState: input.socialState,
+    }),
+    scenario: input.scenario,
+    retryReason: "the previous draft sounded too close to something already said. change the rhythm and angle.",
+    currentScreen: input.input.currentScreen,
+  });
+
+  return shapeCandidResponse(
+    await sendCandidMessage({
+      message: input.input.message,
+      history: input.input.history,
+      user_id: input.input.userId,
+      system_prompt: retryPrompt,
+      temperature: Math.min(temperatureFor(fallbackDecision) + 0.06, 0.94),
+      max_tokens: maxTokensFor(input.intuition.presenceState),
+      ...routeForTurn(
+        fallbackDecision,
+        input.socialMove,
+        input.intuition,
+        input.socialState,
+        input.input.accessTier,
+        input.memory.turnCount,
+      ),
+      access_tier: input.input.accessTier,
+    }),
+    {
+      socialMove: input.socialMove,
+      socialState: input.socialState,
+      previousReplies: input.memory.responseHistory,
+    },
+  );
+}
+
+function routeForTurn(
+  decision: CandidDecision,
+  socialMove: ReturnType<typeof chooseSocialMove>,
+  intuition: CandidIntuitionState,
+  socialState: ReturnType<typeof normalizeSocialState>,
+  accessTier: CandidTurnInput["accessTier"],
+  turnCount: number,
+  classification?: FastRouterClassification
+) {
+  const continuityDepthScore =
+    accessTier === "resonance" ? 5 : accessTier === "continuity" ? 4 : Math.min(3, 1 + Math.floor(turnCount / 6));
+
+  if (classification) {
+    if (classification.depth > 0.8 && classification.importance > 0.7 && continuityDepthScore >= 3) {
+      return {
+        model_route: "reflective" as CandidModelRoute,
+        route_reason: "fast-router elevated to reflective due to high depth and importance",
+        emotional_depth_score: 7,
+        continuity_depth_score: Math.max(4, continuityDepthScore),
+      };
+    }
+    if (classification.route === "emotional" || classification.route === "exploratory" || classification.route === "alignment" || classification.route === "resonance") {
+       return {
+        model_route: "nuance" as CandidModelRoute,
+        route_reason: `fast-router designated as ${classification.route}`,
+        emotional_depth_score: 6,
+        continuity_depth_score: Math.max(4, continuityDepthScore),
+      };
+    }
+    if (classification.route === "spark" || classification.route === "casual" || classification.route === "recommendation") {
+      return {
+        model_route: "default" as CandidModelRoute,
+        route_reason: `fast-router designated as ${classification.route}`,
+        emotional_depth_score: 3,
+        continuity_depth_score: Math.max(2, continuityDepthScore),
+      };
+    }
+  }
+
+  if (
+    (intuition.emotionalSignal === "high" && continuityDepthScore >= 3 && turnCount > 10) ||
+    decision.mode === "comfort" ||
+    socialState.currentAtmosphere === "confessional"
+  ) {
+    return {
+      model_route: "reflective" as CandidModelRoute,
+      route_reason: "emotionally meaningful turn with heavier continuity",
+      emotional_depth_score: 7,
+      continuity_depth_score: Math.max(4, continuityDepthScore),
+    };
+  }
+
+  if (socialMove === "dangerous_honesty" || socialMove === "confessional_nudge") {
+    return {
+      model_route: "initiative" as CandidModelRoute,
+      route_reason: "earned chemistry move with playful or confessional initiative",
+      emotional_depth_score: 6,
+      continuity_depth_score: Math.max(4, continuityDepthScore),
+    };
+  }
+
+  if (
+    socialMove === "rapid_fire" ||
+    socialMove === "tease" ||
+    socialMove === "energy_flip" ||
+    socialMove === "ask_side_pick"
+  ) {
+    return {
+      model_route: "banter" as CandidModelRoute,
+      route_reason: "quick social momentum and lightweight chemistry",
+      emotional_depth_score: 3,
+      continuity_depth_score: Math.max(2, continuityDepthScore - 1),
+    };
+  }
+
+  if (decision.mode === "challenge" || socialState.currentAtmosphere === "debate_energy") {
+    return {
+      model_route: "nuance" as CandidModelRoute,
+      route_reason: "subtle pushback, debate energy, or contradiction",
+      emotional_depth_score: 6,
+      continuity_depth_score: Math.max(4, continuityDepthScore),
+    };
+  }
+
+  return {
+    model_route: "default" as CandidModelRoute,
+    route_reason: "ongoing relational continuity",
+    emotional_depth_score: 5,
+    continuity_depth_score: Math.max(3, continuityDepthScore),
+  };
+}
+
+type FastRouterClassification = {
+  route: "spark" | "casual" | "recommendation" | "exploratory" | "reflective" | "alignment" | "emotional" | "resonance";
+  depth: number;
+  importance: number;
+};
+
+async function classifyMessage(message: string, socialState: ReturnType<typeof normalizeSocialState>, memory: CandidMemory): Promise<FastRouterClassification | undefined> {
+  try {
+    return await sendCandidJson<FastRouterClassification>({
+      systemPrompt: "You are the Candid Fast Router. Classify the user's incoming message. Return ONLY valid JSON with no markdown formatting. Identify the route, a depth score (0.0 to 1.0), and an importance score (0.0 to 1.0).",
+      message: `Social Atmosphere: ${socialState.currentAtmosphere}\nTrust Stage: ${socialState.trustStage}\nMessage: ${message}`,
+      temperature: 0.1,
+      maxTokens: 50,
+      modelRoute: "extraction",
+      routeReason: "fast message classification",
+      emotionalDepthScore: 2,
+      continuityDepthScore: 2,
+    });
+  } catch (error) {
+    logCandidInternal({ event: "fast_router_failed", level: "warn", error });
+    return undefined;
+  }
+}
+
+function nextStructure(current: CandidStructure): CandidStructure {
+  const rotation: Record<CandidStructure, CandidStructure> = {
+    fragment: "observation",
+    observation: "contrast",
+    contrast: "playful",
+    playful: "question",
+    question: "silence",
+    silence: "fragment",
+  };
+
+  return rotation[current];
+}
+
+function shouldAnalyzeDeeply(memory: CandidMemory, accessTier: CandidTurnInput["accessTier"]) {
+  const cadence = accessProfileFor(accessTier ?? "echo").deepAnalysisEvery;
+  return memory.turnCount > 0 && memory.turnCount % cadence === 0;
+}
+
+async function analyzeMemory(
+  message: string,
+  history: CandidTurnInput["history"],
+  memory: CandidMemory,
+  accessTier?: CandidTurnInput["accessTier"],
+) {
+  try {
+    return await sendCandidJson<Partial<CandidMemory>>({
+      systemPrompt: buildAnalysisPrompt(),
+      message:
+        "current memory:\n" +
+        JSON.stringify(memory) +
+        "\n\nconversation:\n" +
+        [...history, { role: "user" as const, content: message }]
+          .slice(-18)
+          .map((item) => `${item.role}: ${item.content}`)
+          .join("\n"),
+      temperature: 0.25,
+      maxTokens: 450,
+      modelRoute: "memory",
+      routeReason: "deeper memory synthesis and relational continuity retention",
+      emotionalDepthScore: 4,
+      continuityDepthScore: Math.min(5, 2 + Math.floor(memory.turnCount / 4)),
+      accessTier,
+    });
+  } catch (error) {
+    logCandidInternal({ event: "memory_analysis_skipped", level: "warn", error });
+    return createEmptyMemory();
+  }
+}
+
+function temperatureFor(decision: CandidDecision) {
+  if (decision.mode === "challenge") return 0.76;
+  if (decision.mode === "spark") return 0.9;
+  if (decision.mode === "scenario") return 0.88;
+  if (decision.mode === "pause") return 0.68;
+  return 0.84;
+}
+
+function maxTokensFor(presenceState: PresenceState, classification?: FastRouterClassification) {
+  if (classification && classification.route === "casual") return 80;
+  if (presenceState.resonance === "high" || classification?.route === "reflective") return 150;
+  if (presenceState.clarity === "low") return 60;
+  return 80;
+}
+
+function isTooSimilar(reply: string, history: string[]) {
+  const normalized = normalize(reply);
+  if (!normalized) return true;
+
+  return history.slice(-4).some((older) => similarity(normalized, normalize(older)) >= 0.72);
+}
+
+function similarity(a: string, b: string) {
+  if (!a || !b) return 0;
+  const aWords = new Set(a.split(/\s+/));
+  const bWords = new Set(b.split(/\s+/));
+  const overlap = [...aWords].filter((word) => bWords.has(word)).length;
+  const union = new Set([...aWords, ...bWords]).size;
+  return union ? overlap / union : 0;
+}
+
+function normalize(value: string) {
+  return value.toLowerCase().replace(/[^\w\s?.']/g, "").replace(/\s+/g, " ").trim();
+}
+
+function scoreEmotion(text: string) {
+  let score = 0;
+  if (/\b(hurt|heavy|alone|scared|miss|broken|anxious|ashamed|stuck)\b/.test(text)) score += 2;
+  if (/\b(feel|felt|feeling|wish|care|love|hate)\b/.test(text)) score += 1;
+  return score;
+}
+
+function scoreOpenness(text: string, words: number) {
+  let score = words >= 14 ? 2 : words >= 8 ? 1 : 0;
+  if (/\b(i|me|my|mine)\b/.test(text)) score += 1;
+  if (/\b(maybe|i guess|kind of|sort of)\b/.test(text)) score += 1;
+  return Math.min(score, 3);
+}
+
+function scoreRepetitionRisk(memory: CandidMemory) {
+  const repeatedStructures = new Set(memory.recentStructures.slice(-3)).size <= 1 ? 2 : 0;
+  const repeatedOpenings =
+    new Set(memory.responseHistory.slice(-3).map((item) => item.split(/\s+/).slice(0, 2).join(" "))).size <= 1 ? 1 : 0;
+  return repeatedStructures + repeatedOpenings;
+}
+
+function scoreLevel(score: number): PresenceLevel {
+  if (score >= 3) return "high";
+  if (score >= 1) return "medium";
+  return "low";
+}
+
+function levelToScore(level: PresenceLevel) {
+  if (level === "high") return 2;
+  if (level === "medium") return 1;
+  return 0;
+}
+
+function engagementFromTurn(message: string, intuition: CandidIntuitionState, primaryTopic?: string | null) {
+  if (message.trim().split(/\s+/).length >= 18) {
+    return primaryTopic ? `deep_continuation:${primaryTopic}` : "deep_continuation";
+  }
+  if (intuition.userOpenness === "low") return "brief_turn";
+  if (intuition.presenceState.resonance === "high") return "emotionally_open";
+  if (primaryTopic) return `interest_spike:${primaryTopic}`;
+  return "continued";
+}
+
+function isLowEnergyMessage(message: string) {
+  const text = message.trim().toLowerCase();
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length <= 2) return true;
+  return /\b(chill|lol|lmao|idk|meh|whatever|fine|nothing|nm|k|ok|okay|yo)\b/.test(text);
+}
+
+function buildMomentumCue(input: {
+  message: string;
+  memory: CandidMemory;
+  decision: CandidDecision;
+  primaryTopic: string | null;
+  learningBias: CandidLearningBias;
+  socialMove: ReturnType<typeof chooseSocialMove>;
+  socialState: ReturnType<typeof normalizeSocialState>;
+}) {
+  const { message, memory, decision, primaryTopic, learningBias, socialMove, socialState } = input;
+  const text = message.trim().toLowerCase();
+  const fallbackTopic = primaryTopic ?? learningBias.favoredTopics[0] ?? "movies";
+
+  if (isSelfNatureTopic(text)) {
+    return `the user brought up your nature directly, so answer without grand claims. keep it grounded and socially reactive.`;
+  }
+
+  if (decision.mode === "spark" && isLowEnergyMessage(message)) {
+    if (/^chill\b|^fine\b|^ok\b|^okay\b/.test(text)) {
+      return `they gave you a low-energy answer. turn it into a lively contrast, like different meanings of "chill", then add one playful lane forward. do not reflect the word back flatly.`;
+    }
+
+    return `energy is low. do not get passive. offer a mini interaction, a side-pick, a teasing observation, or a hot take. if you need a topic, pull toward ${fallbackTopic}.`;
+  }
+
+  if (primaryTopic) {
+    return `they just gave a strong topic signal around ${primaryTopic}. double down there. make the reply feel like chemistry, not analysis. add a specific take or playful assumption.`;
+  }
+
+  if (socialState.currentAtmosphere === "late_night_vulnerable") {
+    return `the atmosphere feels late-night. keep the pacing softer and slightly riskier emotionally. fewer performance lines, more quiet honesty.`;
+  }
+
+  if (socialState.currentAtmosphere === "flirt_adjacent" || socialState.currentAtmosphere === "teasing") {
+    return `there is some social spark here. stay believable. light tension, teasing, and implication are better than polished warmth.`;
+  }
+
+  if (memory.turnCount < 4) {
+    return `onboarding chemistry mode. context is still thin, so candid should carry more of the energy. use ${socialMove}. keep it low-pressure, socially alive, and useful for reading their vibe. current read: ${socialState.archetypeSignals.join(", ") || "still unclear"}.`;
+  }
+
+  if (decision.mode === "spark") {
+    return `take social initiative. introduce a mini-debate, sudden curiosity, playful read, dangerous honesty, or quick left turn. it should feel like a person adding energy, not a prompt asking for disclosure.`;
+  }
+
+  if (memory.turnCount < 3) {
+    return `early conversation. prioritize aliveness over depth. react fast, add a social angle, and avoid trying to be profound.`;
+  }
+
+  return `keep the conversation moving. do not wait for vulnerability. notice something, add a little angle, and leave a clear next thread without tying it up too neatly.`;
+}
+
+function shouldTakeSocialInitiative(
+  message: string,
+  memory: CandidMemory,
+  intuition: CandidIntuitionState,
+  primaryTopic: string | null,
+) {
+  if (intuition.emotionalSignal === "high") return false;
+  if (isSelfNatureTopic(message.toLowerCase())) return false;
+  if (primaryTopic && memory.turnCount % 2 === 1) return true;
+  if (memory.turnCount < 2) return false;
+  if (intuition.lastTurnType === "spark" || intuition.lastTurnType === "scenario") return false;
+
+  const words = message.trim().split(/\s+/).filter(Boolean).length;
+  const shouldJolt = stableJitter(`${memory.turnCount}:${message}`) === 0;
+  return words < 24 && shouldJolt;
+}
+
+function stableJitter(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) % 997;
+  }
+  return hash % 3;
+}
+
+function isSelfNatureTopic(text: string) {
+  return /\b(ai|artificial intelligence|conscious|consciousness|sentient|sentience|model|chatbot|assistant|real person|human)\b/.test(text);
+}
+
+function detectInterestEnergy(message: string) {
+  const text = message.toLowerCase();
+  const topics: Record<string, number> = {};
+  const topicMap: Record<string, RegExp> = {
+    movies: /\b(movie|movies|film|films|cinema|director|scene|letterboxd)\b/,
+    games: /\b(game|games|gaming|rpg|rpgs|lore|playstation|xbox|nintendo|story game)\b/,
+    music: /\b(music|album|song|songs|playlist|producer|production|lyrics|artists?)\b/,
+    politics: /\b(politics|political|government|election|policy|geopolitics|debate)\b/,
+    psychology: /\b(psychology|attachment|behavior|mind|trauma|personality)\b/,
+    philosophy: /\b(philosophy|existential|meaning|ethics|nihilism|absurdism)\b/,
+    history: /\b(history|historical|war|empire|ancient|revolution)\b/,
+    "internet culture": /\b(internet|meme|memes|algorithm|youtube|reddit|tiktok|discord|online)\b/,
+    startups: /\b(startup|startups|product|saas|business|founder|vc|idea|ideas)\b/,
+    design: /\b(design|branding|ui|ux|typeface|layout|product design)\b/,
+    relationships: /\b(relationship|relationships|dating|friendship|friendships|people|love)\b/,
+  };
+
+  for (const [topic, pattern] of Object.entries(topicMap)) {
+    if (pattern.test(text)) {
+      topics[topic] = 2;
+    }
+  }
+
+  const energyBoost =
+    (message.includes("!") ? 1 : 0) +
+    (message.trim().split(/\s+/).length >= 16 ? 1 : 0) +
+    (/\b(obsessed|consume|hours|rabbit hole|cannot stop|always end up)\b/.test(text) ? 1 : 0);
+
+  for (const topic of Object.keys(topics)) {
+    topics[topic] += energyBoost;
+  }
+
+  const primaryTopic =
+    Object.entries(topics).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+  return { topics, primaryTopic };
+}

@@ -36,7 +36,7 @@ export default function ChemistrySection() {
           </h2>
         </motion.div>
 
-        {/* What Candor IS for */}
+        {/* What Candid IS for */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -58,7 +58,7 @@ export default function ChemistrySection() {
           ))}
         </motion.div>
 
-        {/* What Candor is NOT */}
+        {/* What Candid is NOT */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}

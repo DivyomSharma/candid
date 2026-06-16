@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 
 const evolutions = [
-  { label: "pacing", description: "candor learns when to move faster, when to let silence breathe, and when the thread needs a sideways turn." },
+  { label: "pacing", description: "candid learns when to move faster, when to let silence breathe, and when the thread needs a sideways turn." },
   { label: "chemistry", description: "what creates resonance between you and other people becomes clearer with continuity." },
   { label: "conversational energy", description: "how your energy shifts across topics, moods, and social atmospheres slowly becomes legible." },
   { label: "emotional rhythm", description: "the cadence of how you open up, pull back, joke, soften, and return." },

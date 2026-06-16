@@ -36,12 +36,12 @@ export default clerkMiddleware(async (auth, request) => {
   const { userId } = await auth();
   const url = request.nextUrl;
   
-  // Protect /candor routes (require onboarding)
-  if (userId && url.pathname.startsWith('/candor') && url.pathname !== '/candor/onboarding' && url.pathname !== '/candor/login') {
-    const hasOnboarded = request.cookies.get('candor_onboarded');
+  // Protect /candid routes (require onboarding)
+  if (userId && url.pathname.startsWith('/candid') && url.pathname !== '/candid/onboarding' && url.pathname !== '/candid/login') {
+    const hasOnboarded = request.cookies.get('candid_onboarded');
     if (!hasOnboarded) {
       // User is logged in but hasn't completed onboarding, redirect them
-      return NextResponse.redirect(new URL('/candor/onboarding', request.url));
+      return NextResponse.redirect(new URL('/candid/onboarding', request.url));
     }
   }
   

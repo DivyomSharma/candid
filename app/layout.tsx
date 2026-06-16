@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "lenis/dist/lenis.css";
 import "@/index.css";
-import { Providers } from "@/components/candor/Providers";
+import { Providers } from "@/components/candid/Providers";
 import { siteConfig, siteUrl } from "@/lib/site";
-import { OfflineBanner } from "@/components/candor/OfflineBanner";
+import { OfflineBanner } from "@/components/candid/OfflineBanner";
 import { ViewTransitions } from "next-view-transitions";
 
 export const viewport: Viewport = {
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
         url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: "Candor - No swipes. Just honest conversations.",
+        alt: "Candid - No swipes. Just honest conversations.",
       },
     ],
   },

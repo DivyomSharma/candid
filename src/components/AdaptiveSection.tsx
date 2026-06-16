@@ -40,7 +40,7 @@ export default function AdaptiveSection() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-light leading-tight">
-            candor adapts to your rhythm.
+            candid adapts to your rhythm.
           </h2>
           <p className="mt-5 text-sm font-light text-foreground-secondary tracking-wide">
             not everyone opens the same way.

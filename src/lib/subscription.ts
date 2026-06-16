@@ -1,5 +1,5 @@
 /**
- * Candor Subscription & Relational Depth System
+ * Candid Subscription & Relational Depth System
  *
  * Subscription tiers scale relational depth, continuity, and understanding —
  * NOT basic chat quantity.
@@ -24,7 +24,7 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, SubscriptionTierMeta> 
     meaning: "the beginning of understanding",
     tone: "light, welcoming, curious, exploratory",
     description:
-      "experience candor's emotional intelligence and conversational atmosphere. echo should still feel magical.",
+      "experience candid's emotional intelligence and conversational atmosphere. echo should still feel magical.",
     features: [
       "lightweight continuity",
       "exploratory aligns",
@@ -54,7 +54,7 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, SubscriptionTierMeta> 
     meaning: "deep relational intelligence",
     tone: "rare, premium, emotionally mature, deeply perceptive",
     description:
-      "candor truly understands relational patterns and chemistry deeply. the richest possible continuity.",
+      "candid truly understands relational patterns and chemistry deeply. the richest possible continuity.",
     features: [
       "longest relational continuity",
       "strongest compatibility modeling",
@@ -89,28 +89,28 @@ export const UNDERSTANDING_STATES: UnderstandingState[] = [
 /** Soft language surfaced per understanding state. Never XP bars or percentages. */
 export const UNDERSTANDING_LANGUAGE: Record<UnderstandingState, string[]> = {
   spark: [
-    "candor is beginning to notice something",
+    "candid is beginning to notice something",
     "the first signals are forming",
   ],
   rhythm: [
-    "candor is beginning to understand your rhythm",
+    "candid is beginning to understand your rhythm",
     "your conversational pace is becoming familiar",
   ],
   patterns: [
     "patterns are becoming clearer lately",
-    "candor is starting to see how you think",
+    "candid is starting to see how you think",
   ],
   nuance: [
-    "candor notices your energy more naturally now",
+    "candid notices your energy more naturally now",
     "the subtleties are starting to emerge",
   ],
   continuity: [
     "your continuity feels stronger",
-    "the understanding between you and candor is deepening",
+    "the understanding between you and candid is deepening",
   ],
   resonance: [
-    "candor understands your relational patterns deeply",
-    "there's a real resonance in how candor reads you now",
+    "candid understands your relational patterns deeply",
+    "there's a real resonance in how candid reads you now",
   ],
 };
 
